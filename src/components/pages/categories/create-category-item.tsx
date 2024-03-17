@@ -17,13 +17,19 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 import { CategoryItemSchema } from "@/schemas/category-item-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon } from "@radix-ui/react-icons";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-const CreateCategoryItem = () => {
+const CreateCategoryItem = ({ categoryId }: { categoryId: number }) => {
+  const { toast } = useToast();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
   const form = useForm<z.infer<typeof CategoryItemSchema>>({
     resolver: zodResolver(CategoryItemSchema),
     defaultValues: {
@@ -32,10 +38,32 @@ const CreateCategoryItem = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof CategoryItemSchema>) => {
-    console.log(values);
+    const res = await fetch(
+      `http://localhost:3000/api/v1/categories/${categoryId}`,
+      {
+        method: "POST",
+        body: JSON.stringify(values),
+      }
+    );
+    const data = await res.json();
+
+    if (data.status == "success") {
+      toast({
+        title: data.msg,
+      });
+    } else {
+      toast({
+        title: data.msg,
+        variant: "destructive",
+      });
+    }
+
+    setOpen(false);
+    router.refresh();
+    form.reset();
   };
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="text-xs md:text-sm">
           <PlusIcon className="mr-2 h-4 w-4" /> 新增

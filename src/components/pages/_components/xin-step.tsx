@@ -4,7 +4,7 @@ import React, { useState } from "react";
 export type STEP = {
   id: string | number;
   name: string;
-  field?: string[];
+  fields?: string[];
 };
 
 interface XinStepProps {

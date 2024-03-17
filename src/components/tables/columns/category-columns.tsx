@@ -1,9 +1,9 @@
 "use client";
-import { Category } from "@/lib/definitions";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { DataTableColumnHeader } from "@/components/tables/data-table-column-header";
 import CategoryCellAction from "../actions/category/category-cell-action";
+import { Category } from "@prisma/client";
 
 export const categoryColumns: ColumnDef<Category>[] = [
   {

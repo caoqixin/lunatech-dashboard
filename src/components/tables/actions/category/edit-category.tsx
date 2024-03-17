@@ -17,13 +17,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 import { CategorySchema } from "@/schemas/category-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil2Icon } from "@radix-ui/react-icons";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 export function EditCategory({ name, id }: { name: string; id: number }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const { toast } = useToast();
+
   const form = useForm<z.infer<typeof CategorySchema>>({
     resolver: zodResolver(CategorySchema),
     defaultValues: {
@@ -32,10 +39,29 @@ export function EditCategory({ name, id }: { name: string; id: number }) {
   });
 
   const onSubmit = async (values: z.infer<typeof CategorySchema>) => {
-    console.log(values);
+    const res = await fetch(`http://localhost:3000/api/v1/categories/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(values),
+    });
+
+    const data = await res.json();
+
+    if (data.status == "success") {
+      toast({
+        title: data.msg,
+      });
+    } else {
+      toast({
+        title: data.msg,
+        variant: "destructive",
+      });
+    }
+
+    setOpen(false);
+    router.refresh();
   };
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="secondary" className="flex items-center gap-2">
           <Pencil2Icon className="w-4 h-4" /> 修改

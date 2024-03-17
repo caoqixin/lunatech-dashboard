@@ -14,10 +14,12 @@ const CreateRepairForm = ({}: CreateRepairFormProps) => {
     {
       id: 1,
       name: "用户资料",
+      fields: ["name", "tel", "email"],
     },
     {
       id: 2,
       name: "维修信息",
+      fields: ["phone", "problem", "status", "deposit", "price"],
     },
     {
       id: 3,
@@ -29,8 +31,17 @@ const CreateRepairForm = ({}: CreateRepairFormProps) => {
     resolver: zodResolver(RepairSchema),
     defaultValues: {
       phone: "",
+      problem: [],
+      status: "未维修",
+      deposit: "0.00",
+      price: "0.00",
+      name: "",
+      tel: "",
+      email: "",
     },
+    mode: "onChange",
   });
+
   return (
     <>
       <XinStepForm steps={steps} form={form} />
