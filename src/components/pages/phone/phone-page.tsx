@@ -7,38 +7,39 @@ import { DataTable } from "@/components/tables/data-table";
 import { Separator } from "@/components/ui/separator";
 import CreatePhone from "./create-phone";
 import { phoneColumns } from "@/components/tables/columns/phone-columns";
+import { unstable_noStore } from "next/cache";
+import prisma from "@/lib/prisma";
 
 interface PhonePageProps {
   brandId: number;
 }
 
-async function getData(brandId: number): Promise<Phone[]> {
-  return phones.filter((items) => {
-    return items.brandId === brandId;
-  });
-}
-
 const PhonePage = async ({ brandId }: PhonePageProps) => {
-  const brandTitle = brands.find((items) => {
-    return items.id === brandId;
+  unstable_noStore();
+  const brand = await prisma.brand.findFirst({
+    where: {
+      id: brandId,
+    },
   });
 
-  if (brandTitle === undefined) {
+  if (brand === null) {
     return notFound();
   }
 
   const breadcrumbItems: BreadCrumbType[] = [
     { title: "手机品牌管理", link: "/dashboard/phones" },
-    { title: brandTitle.name, link: `/dashboard/phones/${brandId}` },
+    { title: brand.name, link: `/dashboard/phones/${brandId}` },
   ];
 
-  const data = await getData(brandId);
+  const res = await fetch(`http://localhost:3000/api/v1/brands/${brandId}`);
+
+  const data = await res.json();
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <BreadCrumb items={breadcrumbItems} />
       <>
-        <XinHeader title={brandTitle.name} back>
-          <CreatePhone />
+        <XinHeader title={brand.name} back>
+          <CreatePhone brandId={brandId} />
         </XinHeader>
         <Separator />
         <DataTable columns={phoneColumns} data={data} searchKey="name" />

@@ -8,6 +8,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -27,4 +28,37 @@ model CategoryItem {
   category Category @relation(fields: [categoryId], references: [id])
   categoryId Int
 
+  @@map("category_items")
+}
+
+model Supplier {
+  id Int @id @default(autoincrement())
+  name String @unique
+  description String?
+  site String?
+  username String?
+  password String?
+
+
+  @@map("suppliers")
+}
+
+model Brand {
+  id Int @id @default(autoincrement())
+  name String @unique
+  phones Phone[]
+
+  @@map("brands")
+}
+
+model Phone {
+  id Int @id @default(autoincrement())
+  name String @unique
+  code String? @unique
+  isTablet Boolean
+  brand Brand @relation(fields: [brandId], references: [id])
+  brandId Int
+
+
+  @@map("phones")
 }

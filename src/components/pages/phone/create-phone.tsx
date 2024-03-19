@@ -18,13 +18,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 import { PhoneSchema } from "@/schemas/brand-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon } from "@radix-ui/react-icons";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-const CreatePhone = () => {
+const CreatePhone = ({ brandId }: { brandId: number }) => {
+  const { toast } = useToast();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+
   const form = useForm<z.infer<typeof PhoneSchema>>({
     resolver: zodResolver(PhoneSchema),
     defaultValues: {
@@ -35,10 +42,29 @@ const CreatePhone = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof PhoneSchema>) => {
-    console.log(values);
+    const res = await fetch(`http://localhost:3000/api/v1/brands/${brandId}`, {
+      method: "POST",
+      body: JSON.stringify(values),
+    });
+    const data = await res.json();
+
+    if (data.status == "success") {
+      toast({
+        title: data.msg,
+      });
+    } else {
+      toast({
+        title: data.msg,
+        variant: "destructive",
+      });
+    }
+
+    setOpen(false);
+    router.refresh();
+    form.reset();
   };
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="text-xs md:text-sm">
           <PlusIcon className="mr-2 h-4 w-4" /> 新增
@@ -95,6 +121,7 @@ const CreatePhone = () => {
                 </FormItem>
               )}
             />
+
             <DialogFooter>
               <Button type="submit">添加</Button>
             </DialogFooter>

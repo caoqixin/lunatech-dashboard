@@ -9,9 +9,9 @@ export async function GET(
   noStore();
   const id = params.id;
 
-  const items = await prisma.categoryItem.findMany({
+  const items = await prisma.phone.findMany({
     where: {
-      categoryId: parseInt(id),
+      brandId: parseInt(id),
     },
     orderBy: {
       id: "asc",
@@ -28,25 +28,27 @@ export async function POST(
 ) {
   noStore();
   const id = params.id;
-  const { name } = await req.json();
+  const { name, code, isTablet } = await req.json();
 
   try {
-    await prisma.category.update({
+    await prisma.brand.update({
       where: {
         id: parseInt(id),
       },
       data: {
-        items: {
+        phones: {
           create: {
             name: name,
+            code: code,
+            isTablet: isTablet,
           },
         },
       },
       include: {
-        items: true,
+        phones: true,
       },
     });
-    revalidatePath(`/dashboard/categories/${id}`);
+    revalidatePath(`/dashboard/phones/${id}`);
     return Response.json({ msg: "创建成功", status: "success" });
   } catch (error) {
     return Response.json({ msg: "创建失败", status: "error" });
@@ -63,7 +65,7 @@ export async function PUT(
   const { name } = await req.json();
 
   try {
-    await prisma.category.update({
+    await prisma.brand.update({
       where: {
         id: parseInt(id),
       },
@@ -71,7 +73,7 @@ export async function PUT(
         name: name,
       },
     });
-    revalidatePath("/dashboard/categories");
+    revalidatePath("/dashboard/phones");
     return Response.json({ msg: "更新成功", status: "success" });
   } catch (error) {
     return Response.json({ msg: "更新失败", status: "error" });
@@ -87,12 +89,12 @@ export async function DELETE(
   const { id } = params;
 
   try {
-    await prisma.category.delete({
+    await prisma.brand.delete({
       where: {
         id: parseInt(id),
       },
     });
-    revalidatePath("/dashboard/categories");
+    revalidatePath("/dashboard/phones");
     return Response.json({ msg: "删除成功", status: "success" });
   } catch (error) {
     return Response.json({ msg: "删除失败", status: "error" });

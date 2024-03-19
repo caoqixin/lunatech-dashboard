@@ -17,13 +17,19 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 import { SupplierSchema } from "@/schemas/supplier-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon } from "@radix-ui/react-icons";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const CreateSupplier = () => {
+  const { toast } = useToast();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
   const form = useForm<z.infer<typeof SupplierSchema>>({
     resolver: zodResolver(SupplierSchema),
     defaultValues: {
@@ -36,10 +42,30 @@ const CreateSupplier = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof SupplierSchema>) => {
-    console.log(values);
+    const res = await fetch("http://localhost:3000/api/v1/suppliers", {
+      method: "POST",
+      body: JSON.stringify(values),
+    });
+
+    const data = await res.json();
+
+    if (data.status == "success") {
+      toast({
+        title: data.msg,
+      });
+    } else {
+      toast({
+        title: data.msg,
+        variant: "destructive",
+      });
+    }
+
+    setOpen(false);
+    router.refresh();
+    form.reset();
   };
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="text-xs md:text-sm">
           <PlusIcon className="mr-2 h-4 w-4" /> 新增

@@ -8,18 +8,22 @@ export async function PUT(
   noStore();
 
   const { id } = params;
-  const { name } = await req.json();
+  const { name, description, username, site, password } = await req.json();
 
   try {
-    const updatedData = await prisma.categoryItem.update({
+    await prisma.supplier.update({
       where: {
         id: parseInt(id),
       },
       data: {
         name: name,
+        description: description,
+        site: site,
+        username: username,
+        password: password,
       },
     });
-    revalidatePath(`/dashboard/categories/${updatedData.categoryId}`);
+    revalidatePath("/dashboard/suppliers");
     return Response.json({ msg: "更新成功", status: "success" });
   } catch (error) {
     return Response.json({ msg: "更新失败", status: "error" });
@@ -35,17 +39,12 @@ export async function DELETE(
   const { id } = params;
 
   try {
-    const current = await prisma.categoryItem.findFirst({
+    await prisma.supplier.delete({
       where: {
         id: parseInt(id),
       },
     });
-    await prisma.categoryItem.delete({
-      where: {
-        id: parseInt(id),
-      },
-    });
-    revalidatePath(`/dashboard/categories/${current?.categoryId}`);
+    revalidatePath("/dashboard/suppliers");
     return Response.json({ msg: "删除成功", status: "success" });
   } catch (error) {
     return Response.json({ msg: "删除失败", status: "error" });

@@ -8,18 +8,20 @@ export async function PUT(
   noStore();
 
   const { id } = params;
-  const { name } = await req.json();
+  const { name, code, isTablet } = await req.json();
 
   try {
-    const updatedData = await prisma.categoryItem.update({
+    const updatedData = await prisma.phone.update({
       where: {
         id: parseInt(id),
       },
       data: {
         name: name,
+        code: code,
+        isTablet: isTablet,
       },
     });
-    revalidatePath(`/dashboard/categories/${updatedData.categoryId}`);
+    revalidatePath(`/dashboard/phones/${updatedData.brandId}`);
     return Response.json({ msg: "更新成功", status: "success" });
   } catch (error) {
     return Response.json({ msg: "更新失败", status: "error" });
@@ -35,17 +37,17 @@ export async function DELETE(
   const { id } = params;
 
   try {
-    const current = await prisma.categoryItem.findFirst({
+    const current = await prisma.phone.findFirst({
       where: {
         id: parseInt(id),
       },
     });
-    await prisma.categoryItem.delete({
+    await prisma.phone.delete({
       where: {
         id: parseInt(id),
       },
     });
-    revalidatePath(`/dashboard/categories/${current?.categoryId}`);
+    revalidatePath(`/dashboard/phones/${current?.brandId}`);
     return Response.json({ msg: "删除成功", status: "success" });
   } catch (error) {
     return Response.json({ msg: "删除失败", status: "error" });
