@@ -18,9 +18,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { Supplier } from "@/lib/definitions";
 import { SupplierSchema } from "@/schemas/supplier-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Supplier } from "@prisma/client";
 import { Pencil2Icon } from "@radix-ui/react-icons";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

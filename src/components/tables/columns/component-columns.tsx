@@ -1,10 +1,11 @@
 "use client";
 
-import { RepairComponent } from "@/lib/definitions";
 import { ColumnDef } from "@tanstack/react-table";
 import ComponentCellAction from "../actions/component/component-cell-action";
+import { toEUR } from "@/lib/utils";
+import { Component } from "@prisma/client";
 
-export const componentColumns: ColumnDef<RepairComponent>[] = [
+export const componentColumns: ColumnDef<Component>[] = [
   {
     accessorKey: "code",
     header: "编号",
@@ -28,6 +29,11 @@ export const componentColumns: ColumnDef<RepairComponent>[] = [
   {
     accessorKey: "public_price",
     header: "报价",
+    cell: ({ row }) => {
+      const public_price = row.original.public_price;
+
+      return <>{toEUR(public_price)}</>;
+    },
   },
   {
     id: "actions",

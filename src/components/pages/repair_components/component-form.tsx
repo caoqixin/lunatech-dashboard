@@ -20,10 +20,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Brand, Category } from "@/lib/definitions";
 import { ComponentSchema } from "@/schemas/componet-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useParams, useRouter } from "next/navigation";
+import { Brand, Category, Supplier } from "@prisma/client";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -46,10 +46,8 @@ const qualities = [
 
 const ComponentForm = ({ initialData }: ComponentFormProps) => {
   const action = initialData ? "修改" : "创建";
-  const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const defaultValues = initialData
@@ -75,44 +73,57 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
 
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [brands, setBrands] = useState<Brand[] | null>(null);
+  const [supplier, setSupplier] = useState<Supplier[] | null>(null);
 
   const getAllBrands = async () => {
     try {
-      const response = await fetch("/api/v1/brands", {
-        method: "GET",
-      });
+      const response = await fetch("http://localhost:3000/api/v1/brands");
 
-      if (response) {
-        const { data } = await response.json();
+      if (response.ok) {
+        const data = await response.json();
         if (data) {
           setBrands(data);
         }
       }
     } catch (error) {
-      console.log(error);
+      setBrands(null);
     }
   };
 
   const getAllCategories = async () => {
     try {
-      const response = await fetch("/api/v1/categories", {
-        method: "GET",
-      });
+      const response = await fetch(`http://localhost:3000/api/v1/categories`);
 
-      if (response) {
-        const { data } = await response.json();
+      if (response.ok) {
+        const data = await response.json();
         if (data) {
           setCategories(data);
         }
       }
     } catch (error) {
-      console.log(error);
+      setCategories(null);
+    }
+  };
+
+  const getAllSuppliers = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/api/v1/suppliers");
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data) {
+          setSupplier(data);
+        }
+      }
+    } catch (error) {
+      setSupplier(null);
     }
   };
 
   useEffect(() => {
     getAllCategories();
     getAllBrands();
+    getAllSuppliers();
     if (defaultValues.brand) {
       getPhonesByName(defaultValues.brand);
     }
@@ -122,18 +133,18 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
 
   const getPhonesByName = async (name: string) => {
     try {
-      const response = await fetch(`/api/v1/brands/${name}`, {
-        method: "GET",
-      });
+      const response = await fetch(
+        `http://localhost:3000/api/v1/brands/phones/${name}`
+      );
 
-      if (response) {
-        const { data } = await response.json();
+      if (response.ok) {
+        const data = await response.json();
         if (data) {
           setPhones(data);
         }
       }
     } catch (error) {
-      console.log(error);
+      setPhones(null);
     }
   };
   const onBrandChange = async (value: string) => {
@@ -141,13 +152,59 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
     await getPhonesByName(value);
   };
 
-  const onSubmit = (data: ComponentFormValue) => {
-    console.log(data);
-  };
-
   const onModelChange = (value: any, data: string[]) => {
     form.setValue(value, data);
   };
+
+  const onSubmit = async (values: ComponentFormValue) => {
+    setLoading(true);
+    if (initialData == null) {
+      const res = await fetch("http://localhost:3000/api/v1/components/", {
+        method: "POST",
+        body: JSON.stringify(values),
+      });
+
+      const data = await res.json();
+
+      if (data.status == "success") {
+        toast({
+          title: data.msg,
+        });
+      } else {
+        toast({
+          title: data.msg,
+          variant: "destructive",
+        });
+      }
+      form.reset();
+    } else {
+      const res = await fetch(
+        `http://localhost:3000/api/v1/components/${initialData.id}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(values),
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.status == "success") {
+        toast({
+          title: data.msg,
+        });
+      } else {
+        toast({
+          title: data.msg,
+          variant: "destructive",
+        });
+      }
+    }
+
+    setLoading(false);
+    router.push("/dashboard/components");
+    router.refresh();
+  };
+
   return (
     <ScrollArea className="h-[calc(100vh-220px)]">
       <Form {...form}>
@@ -273,6 +330,34 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
                         categories.map((category) => (
                           <SelectItem key={category.id} value={category.name}>
                             {category.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="supplier"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>供应商</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择供应商" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {supplier &&
+                        supplier.map((item) => (
+                          <SelectItem key={item.id} value={item.name}>
+                            {item.name}
                           </SelectItem>
                         ))}
                     </SelectContent>

@@ -54,6 +54,7 @@ export function DataTable<TData, TValue>({
   const [sorting, setSorting] = useState<SortingState>([]);
   // 搜索
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
   // 列可见
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const table = useReactTable({

@@ -1,4 +1,4 @@
-import { Phone } from "@/lib/definitions";
+import { Phone } from "@prisma/client";
 import { DeletePhone } from "./delete-phone";
 import { EditPhone } from "./edit-phone";
 

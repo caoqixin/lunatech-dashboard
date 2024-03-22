@@ -6,22 +6,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Repair } from "@/lib/definitions";
-import { repairs } from "@/lib/placeholder-data";
-
-async function showRepairs(id: number): Promise<Repair[]> {
-  setTimeout(() => console.log("loading data..."), 5000);
-  return repairs.filter((value) => {
-    return value.customerId == id;
-  });
-}
+import { Repair } from "@prisma/client";
+import dayjs from "dayjs";
 
 export default async function ShowRepairData({
   customerId,
 }: {
   customerId: number;
 }) {
-  const repairs = await showRepairs(customerId);
+  const res = await fetch(
+    `http://localhost:3000/api/v1/customers/${customerId}`
+  );
+
+  const data = await res.json();
 
   return (
     <Table>
@@ -34,14 +31,26 @@ export default async function ShowRepairData({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {repairs.map((repair) => (
-          <TableRow key={repair.id}>
-            <TableCell className="font-medium">{repair.phone}</TableCell>
-            <TableCell>{repair.problem.toString()}</TableCell>
-            <TableCell>{repair.updatedAt.toLocaleDateString()}</TableCell>
-            <TableCell className="text-right">{repair.price}</TableCell>
+        {data.repairs.length !== 0 ? (
+          data.repairs.map((repair: Repair) => (
+            <TableRow key={repair.id}>
+              <TableCell className="font-medium">{repair.phone}</TableCell>
+              <TableCell>{repair.problem.toString()}</TableCell>
+              <TableCell>
+                {dayjs(repair.updatedAt).format("DD/MM/YYYY")}
+              </TableCell>
+              <TableCell className="text-right">
+                {repair.price.toString()}
+              </TableCell>
+            </TableRow>
+          ))
+        ) : (
+          <TableRow>
+            <TableCell align="center" colSpan={4}>
+              暂无维修历史记录
+            </TableCell>
           </TableRow>
-        ))}
+        )}
       </TableBody>
     </Table>
   );

@@ -39,7 +39,7 @@ export async function POST(
         phones: {
           create: {
             name: name,
-            code: code,
+            code: code ?? null,
             isTablet: isTablet,
           },
         },
@@ -51,6 +51,8 @@ export async function POST(
     revalidatePath(`/dashboard/phones/${id}`);
     return Response.json({ msg: "创建成功", status: "success" });
   } catch (error) {
+    console.log(error);
+
     return Response.json({ msg: "创建失败", status: "error" });
   }
 }

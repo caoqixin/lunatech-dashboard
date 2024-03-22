@@ -36,7 +36,6 @@ const CreatePhone = ({ brandId }: { brandId: number }) => {
     resolver: zodResolver(PhoneSchema),
     defaultValues: {
       name: "",
-      code: "",
       isTablet: false,
     },
   });

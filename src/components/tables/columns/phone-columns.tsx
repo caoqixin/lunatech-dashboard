@@ -1,8 +1,8 @@
 "use client";
-import { Phone } from "@/lib/definitions";
 import { ColumnDef } from "@tanstack/react-table";
 import PhoneCellAction from "../actions/phone/phone-cell-action";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Phone } from "@prisma/client";
 
 export const phoneColumns: ColumnDef<Phone>[] = [
   {

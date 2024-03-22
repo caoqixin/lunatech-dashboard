@@ -1,7 +1,7 @@
-import { Supplier } from "@/lib/definitions";
 import { EditSupplier } from "./edit-supplier";
 import { DeleteSupplier } from "./delete-supplier";
 import ViewInfo from "./view-info";
+import { Supplier } from "@prisma/client";
 
 const SupplierCellAction = (supplier: Supplier) => {
   return (

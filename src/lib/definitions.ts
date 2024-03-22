@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 export type Category = {
   id: number;
   name: string;
@@ -71,3 +73,11 @@ export type RepairComponent = {
   purchase_price: string;
   public_price?: string;
 };
+
+export type RepiarWithCustomer = Prisma.RepairGetPayload<{
+  include: { customer: true };
+}>;
+
+export type WarrantyWithRepair = Prisma.WarrantyGetPayload<{
+  include: { repair: { include: { customer: true } } };
+}>;

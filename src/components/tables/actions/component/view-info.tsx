@@ -1,18 +1,14 @@
-import { RepairComponent, Supplier } from "@/lib/definitions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { EyeOpenIcon } from "@radix-ui/react-icons";
-import { Suspense } from "react";
 
 export default function ViewInfo({
   name,
@@ -32,7 +28,7 @@ export default function ViewInfo({
         <DialogHeader>
           <DialogTitle>{name} 详情信息</DialogTitle>
         </DialogHeader>
-        <Suspense fallback={<div>loading ....</div>}>{children}</Suspense>
+        {children}
         <DialogFooter>
           <DialogClose asChild>
             <Button type="button" variant="secondary">

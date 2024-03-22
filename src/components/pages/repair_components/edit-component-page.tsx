@@ -4,18 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { ResetIcon } from "@radix-ui/react-icons";
-import { RepairComponent } from "@/lib/definitions";
-import { components } from "@/lib/placeholder-data";
 import ComponentForm from "./component-form";
-
-async function getComponent(id: number): Promise<RepairComponent> {
-  return components.filter((value) => {
-    return value.id == id;
-  })[0];
-}
+import { unstable_noStore } from "next/cache";
 
 const EditComponentPage = async ({ id }: { id: number }) => {
-  const component = await getComponent(id);
+  unstable_noStore();
+
+  const res = await fetch(
+    `${process.env.BASE_URL}/api/v1/components/${id}/edit`
+  );
+  const component = await res.json();
 
   const breadcrumbItems: BreadCrumbType[] = [
     { title: "配件管理", link: "/dashboard/components" },

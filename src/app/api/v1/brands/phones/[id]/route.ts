@@ -1,6 +1,25 @@
 import prisma from "@/lib/prisma";
 import { unstable_noStore as noStore, revalidatePath } from "next/cache";
 
+// find by name
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params;
+
+  const data = await prisma.brand.findFirst({
+    where: {
+      name: id,
+    },
+    include: {
+      phones: true,
+    },
+  });
+
+  return Response.json(data?.phones);
+}
+
 export async function PUT(
   req: Request,
   { params }: { params: { id: string } }

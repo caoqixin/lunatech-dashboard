@@ -54,7 +54,7 @@ model Brand {
 model Phone {
   id Int @id @default(autoincrement())
   name String @unique
-  code String? @unique
+  code String?
   isTablet Boolean
   brand Brand @relation(fields: [brandId], references: [id])
   brandId Int
@@ -62,3 +62,62 @@ model Phone {
 
   @@map("phones")
 }
+
+model Customer {
+  id Int @id @default(autoincrement())
+  name String
+  tel String @unique
+  email String?
+  repairs Repair[]
+
+  @@map("customers")
+}
+
+model Repair {
+  id Int @id @default(autoincrement())
+  phone String
+  problem String[]
+  status String @default("未维修")
+  deposit Decimal @default(0.00)
+  price Decimal
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isRework Boolean @default(false)
+  customer Customer @relation(fields: [customerId], references: [id])
+  customerId Int
+  warranty Warranty?
+
+  @@map("repairs")
+}
+
+model Component {
+  id Int @id @default(autoincrement())
+  code String? @unique
+  name String
+  alias String?
+  brand String
+  model String[]
+  category String
+  quality String @default("compatibile")
+  supplier String
+  stock Int
+  purchase_price Decimal
+  public_price Decimal
+
+
+  @@map("components")
+}
+
+model Warranty {
+  id String @id @default(cuid())
+  createdAt DateTime @default(now())
+  days Int
+  isRework Boolean @default(false)
+  reworkCount Int @default(0)
+  repair Repair @relation(fields: [repairId], references: [id])
+  repairId Int @unique
+
+
+  @@map("warranties")
+}
+

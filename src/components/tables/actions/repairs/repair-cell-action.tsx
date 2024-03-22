@@ -1,24 +1,27 @@
-import { Repair } from "@/lib/definitions";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { EyeOpenIcon, Pencil2Icon } from "@radix-ui/react-icons";
+import { Pencil2Icon } from "@radix-ui/react-icons";
 import { DeleteRepair } from "./delete-repair";
+import ViewInfo from "./view-info";
+import { Suspense } from "react";
+import ShowDetail from "./show-detail";
+import { Repair } from "@prisma/client";
 
 const RepairCellAction = (repair: Repair) => {
   return (
     <div className="flex items-center gap-3 justify-end">
-      <Button variant="secondary" className="flex items-center gap-2" asChild>
-        <Link href={`/dashboard/repairs/${repair.id}`}>
-          <EyeOpenIcon className="w-4 h-4" /> 查看
-        </Link>
-      </Button>
+      <ViewInfo name={repair.phone}>
+        <Suspense fallback={<div>loading....</div>}>
+          <ShowDetail id={repair.id} />
+        </Suspense>
+      </ViewInfo>
       <Button variant="secondary" className="flex items-center gap-2" asChild>
         <Link href={`/dashboard/repairs/${repair.id}/edit`}>
           <Pencil2Icon className="w-4 h-4" /> 修改
         </Link>
       </Button>
 
-      <DeleteRepair {...repair} />
+      {!repair.isRework && <DeleteRepair {...repair} />}
     </div>
   );
 };

@@ -21,8 +21,6 @@ const DashboardNav = ({ routes, setOpen }: DashboardNavProps) => {
   const pathname = usePathname();
   const router = useRouter();
 
-  console.log(segment);
-
   if (!routes?.length) {
     return null;
   }

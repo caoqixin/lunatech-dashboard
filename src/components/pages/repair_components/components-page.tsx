@@ -1,6 +1,4 @@
 import BreadCrumb, { BreadCrumbType } from "@/components/breadcrumb";
-import { RepairComponent } from "@/lib/definitions";
-import { components } from "@/lib/placeholder-data";
 import XinHeader from "../_components/xin-header";
 import { Separator } from "@/components/ui/separator";
 import { DataTable } from "@/components/tables/data-table";
@@ -8,17 +6,18 @@ import { componentColumns } from "@/components/tables/columns/component-columns"
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "@radix-ui/react-icons";
 import Link from "next/link";
+import { revalidatePath, unstable_noStore } from "next/cache";
 
 const breadcrumbItems: BreadCrumbType[] = [
   { title: "配件管理", link: "/dashboard/components" },
 ];
 
-async function getData(): Promise<RepairComponent[]> {
-  return components;
-}
-
 const ComponentPage = async () => {
-  const data = await getData();
+  unstable_noStore();
+  revalidatePath("/dashboard/components");
+
+  const res = await fetch(`${process.env.BASE_URL}/api/v1/components`);
+  const data = await res.json();
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <BreadCrumb items={breadcrumbItems} />

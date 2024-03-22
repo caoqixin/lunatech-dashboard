@@ -45,9 +45,6 @@ const CreateRepairForm = ({}: CreateRepairFormProps) => {
   return (
     <>
       <XinStepForm steps={steps} form={form} />
-      {/* <Form>
-        <form className="space-y-8 px-1 w-full"></form>
-      </Form> */}
     </>
   );
 };

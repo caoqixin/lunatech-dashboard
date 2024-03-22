@@ -4,17 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { ResetIcon } from "@radix-ui/react-icons";
-import { Repair } from "@/lib/definitions";
-import { repairs } from "@/lib/placeholder-data";
-
-async function getRepair(id: number): Promise<Repair> {
-  return repairs.filter((value) => {
-    return value.id == id;
-  })[0];
-}
+import { EditRepairForm } from "./edit-repair-form";
 
 const EditRepairPage = async ({ id }: { id: number }) => {
-  const repair = await getRepair(id);
+  const res = await fetch(`http://localhost:3000/api/v1/repairs/${id}/edit`);
+
+  const repair = await res.json();
 
   const breadcrumbItems: BreadCrumbType[] = [
     { title: "维修管理", link: "/dashboard/repairs" },
@@ -35,7 +30,7 @@ const EditRepairPage = async ({ id }: { id: number }) => {
           </Button>
         </XinHeader>
         <Separator />
-        {/* <ComponentForm initialData={component} /> */}
+        <EditRepairForm initialData={repair} />
       </>
     </div>
   );

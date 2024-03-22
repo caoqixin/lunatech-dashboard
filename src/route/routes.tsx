@@ -50,9 +50,9 @@ export const routes: Route[] = [
   },
   {
     id: 5,
-    title: "订单中心",
-    label: "orders",
-    href: "/dashboard/orders",
+    title: "保修管理",
+    label: "warranties",
+    href: "/dashboard/warranties",
     icon: <FileTextIcon />,
   },
   {

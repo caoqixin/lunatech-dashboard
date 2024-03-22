@@ -17,28 +17,57 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Customer } from "@/lib/definitions";
+import { useToast } from "@/components/ui/use-toast";
 import { CustomerSchema } from "@/schemas/customer-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Customer } from "@prisma/client";
 import { Pencil2Icon } from "@radix-ui/react-icons";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 export function EditCustomer(customer: Customer) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+
   const form = useForm<z.infer<typeof CustomerSchema>>({
     resolver: zodResolver(CustomerSchema),
     defaultValues: {
       name: customer.name,
       tel: customer.tel,
-      email: customer.email,
+      email: customer.email ?? "",
     },
   });
 
   const onSubmit = async (values: z.infer<typeof CustomerSchema>) => {
-    console.log(values);
+    const res = await fetch(
+      `http://localhost:3000/api/v1/customers/${customer.id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(values),
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.status == "success") {
+      toast({
+        title: data.msg,
+      });
+    } else {
+      toast({
+        title: data.msg,
+        variant: "destructive",
+      });
+    }
+
+    setOpen(false);
+    router.refresh();
   };
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="secondary" className="flex items-center gap-2">
           <Pencil2Icon className="w-4 h-4" /> 修改

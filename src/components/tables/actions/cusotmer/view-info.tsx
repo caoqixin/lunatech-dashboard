@@ -19,8 +19,6 @@ export default function ViewInfo({
   name: string;
   children: React.ReactNode;
 }) {
-  // console.log(customer);
-
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -32,7 +30,8 @@ export default function ViewInfo({
         <DialogHeader>
           <DialogTitle>{name} 的维修记录</DialogTitle>
         </DialogHeader>
-        <Suspense fallback={<div>loading ....</div>}>{children}</Suspense>
+        {children}
+
         <DialogFooter>
           <DialogClose asChild>
             <Button type="button" variant="secondary">

@@ -7,5 +7,5 @@ export const CustomerSchema = z.object({
   tel: z.string().min(1, {
     message: "电话号码不能为空",
   }),
-  email: z.string(),
+  email: z.string().optional(),
 });

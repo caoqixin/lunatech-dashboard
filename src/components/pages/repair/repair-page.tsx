@@ -6,12 +6,17 @@ import { PlusIcon } from "@radix-ui/react-icons";
 import { Separator } from "@/components/ui/separator";
 import { DataTable } from "@/components/tables/data-table";
 import { repairColumns } from "@/components/tables/columns/repair-columns";
-import { repairs } from "@/lib/placeholder-data";
+import { revalidatePath, unstable_noStore } from "next/cache";
 
 const breadcrumbItems: BreadCrumbType[] = [
   { title: "维修管理", link: "/dashboard/repairs" },
 ];
-const RepairPage = () => {
+const RepairPage = async () => {
+  unstable_noStore();
+  const res = await fetch("http://localhost:3000/api/v1/repairs");
+
+  const data = await res.json();
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <BreadCrumb items={breadcrumbItems} />
@@ -24,7 +29,7 @@ const RepairPage = () => {
           </Button>
         </XinHeader>
         <Separator />
-        <DataTable columns={repairColumns} data={repairs} />
+        <DataTable columns={repairColumns} data={data} />
       </>
     </div>
   );

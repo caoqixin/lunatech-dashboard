@@ -1,8 +1,8 @@
 "use client";
 
-import { Customer } from "@/lib/definitions";
 import { ColumnDef } from "@tanstack/react-table";
 import CustomerCellAction from "../actions/cusotmer/customer-cell-action";
+import { Customer } from "@prisma/client";
 
 export const customerColumns: ColumnDef<Customer>[] = [
   {

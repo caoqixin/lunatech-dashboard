@@ -31,8 +31,8 @@ export function DataTablePagination<TData>({
           <p className="text-sm font-medium">每页</p>
           <Select
             value={`${table.getState().pagination.pageSize}`}
-            onValueChange={(value: number) => {
-              table.setPageSize(value);
+            onValueChange={(value: string) => {
+              table.setPageSize(parseInt(value));
             }}
           >
             <SelectTrigger className="h-8 w-[70px] focus-visible:ring-0">

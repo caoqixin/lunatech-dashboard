@@ -1,23 +1,34 @@
 "use client";
 
-import { Badge, badgeVariants } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Repair } from "@/lib/definitions";
-import { customers } from "@/lib/placeholder-data";
+import { Badge } from "@/components/ui/badge";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import RepairCellAction from "../actions/repairs/repair-cell-action";
 import MoreProblem from "../actions/repairs/more-problem";
 import SelectStatus from "../actions/repairs/select-status";
+import { useEffect, useState } from "react";
+import { Customer, Repair } from "@prisma/client";
+import { toEUR } from "@/lib/utils";
 
 export const repairColumns: ColumnDef<Repair>[] = [
   {
     header: "联系方式",
     cell: ({ row }) => {
       const customerId = row.original.customerId;
-      const customer = customers.filter((item) => item.id == customerId)[0];
+      const [customer, setCustomer] = useState<Customer | null>(null);
+      const getCustomer = async () => {
+        const res = await fetch(
+          `http://localhost:3000/api/v1/customers/${customerId}`
+        );
+        const data = await res.json();
 
-      return <>{customer.tel}</>;
+        setCustomer(data);
+      };
+      useEffect(() => {
+        getCustomer();
+      }, []);
+
+      return <>{customer?.tel}</>;
     },
   },
   {
@@ -53,9 +64,9 @@ export const repairColumns: ColumnDef<Repair>[] = [
     accessorKey: "status",
     header: "状态",
     cell: ({ row }) => {
-      const { id, status } = row.original;
+      const { id, status, isRework } = row.original;
 
-      return <SelectStatus id={id} status={status} />;
+      return <SelectStatus id={id} status={status} isRework={isRework} />;
     },
   },
   {
@@ -70,14 +81,13 @@ export const repairColumns: ColumnDef<Repair>[] = [
   {
     header: "应付款",
     cell: ({ row }) => {
-      const { deposit, price } = row.original;
+      const { deposit, price, isRework } = row.original;
 
-      const formattedNumber = new Intl.NumberFormat("it-IT", {
-        style: "currency",
-        currency: "EUR",
-      }).format(price - (deposit ?? 0));
+      const formattedNumber = toEUR(
+        parseFloat(price.toString()) - (parseFloat(deposit.toString()) ?? 0)
+      );
 
-      return <>{formattedNumber}</>;
+      return <>{!isRework && formattedNumber}</>;
     },
   },
   {

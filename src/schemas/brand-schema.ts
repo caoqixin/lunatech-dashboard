@@ -10,6 +10,6 @@ export const PhoneSchema = z.object({
   name: z.string().min(1, {
     message: "名称不能为空",
   }),
-  code: z.string().default(""),
+  code: z.string().optional(),
   isTablet: z.boolean().default(false),
 });

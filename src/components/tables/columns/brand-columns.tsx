@@ -1,9 +1,9 @@
 "use client";
-import { Brand } from "@/lib/definitions";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { DataTableColumnHeader } from "@/components/tables/data-table-column-header";
 import BrandCellAction from "../actions/brand/brand-cell-action";
+import { Brand } from "@prisma/client";
 
 export const brandColumns: ColumnDef<Brand>[] = [
   {
