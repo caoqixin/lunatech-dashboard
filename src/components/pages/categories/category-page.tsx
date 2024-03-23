@@ -1,18 +1,28 @@
 import BreadCrumb, { BreadCrumbType } from "@/components/breadcrumb";
 import XinHeader from "../_components/xin-header";
 import { Separator } from "@/components/ui/separator";
-import { DataTable } from "@/components/tables/data-table";
 import CreateCategory from "./create-category";
-import { categoryColumns } from "@/components/tables/columns/category-columns";
 import { unstable_noStore } from "next/cache";
+import { searchParamsValue } from "@/schemas/search-params-schema";
+import { Suspense } from "react";
+import { DataTableSkeleton } from "@/components/tables/v2/data-table-skeleton";
+import { CategoryTable } from "@/components/tables/v2/category/category-table";
 
-const breadcrumbItems: BreadCrumbType[] = [
-  { title: "分类管理", link: "/dashboard/categories" },
-];
+interface CategoryPageProps {
+  search: searchParamsValue;
+}
 
-const CategoryPage = async () => {
+const CategoryPage = async ({ search }: CategoryPageProps) => {
   unstable_noStore();
-  const res = await fetch("http://localhost:3000/api/v1/categories");
+  const stringSeatch = search as unknown as Record<string, string>;
+  const searchParams = new URLSearchParams(stringSeatch).toString();
+
+  const breadcrumbItems: BreadCrumbType[] = [
+    { title: "分类管理", link: "/dashboard/categories" },
+  ];
+  const res = await fetch(
+    `http://localhost:3000/api/v1/categories?${searchParams}`
+  );
 
   const data = await res.json();
 
@@ -24,7 +34,9 @@ const CategoryPage = async () => {
           <CreateCategory />
         </XinHeader>
         <Separator />
-        <DataTable columns={categoryColumns} data={data} />
+        <Suspense fallback={<DataTableSkeleton columnCount={3} rowCount={5} />}>
+          <CategoryTable data={data} />
+        </Suspense>
       </>
     </div>
   );

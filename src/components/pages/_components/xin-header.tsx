@@ -8,14 +8,14 @@ type XinHeaderProps = {
   title: string;
   description?: string;
   children: React.ReactNode;
-  back?: boolean;
+  back?: string;
 };
 
 const XinHeader = ({ title, description, children, back }: XinHeaderProps) => {
   const router = useRouter();
 
   const goBack = () => {
-    router.back();
+    back && router.push(back);
   };
   return (
     <div className="flex items-start justify-between">

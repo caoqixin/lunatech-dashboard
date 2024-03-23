@@ -1,15 +1,40 @@
 import prisma from "@/lib/prisma";
 import { unstable_noStore as noStore, revalidatePath } from "next/cache";
+import { type NextRequest } from "next/server";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   noStore();
+  const query = request.nextUrl.searchParams;
+  const per_page = Number(query.get("per_page")) ?? 10;
+  const page = Number(query.get("page")) ?? 1;
+  const skip = (page - 1) * per_page;
+  const name = query.get("name") ?? "";
+
   const components = await prisma.component.findMany({
     orderBy: {
       id: "asc",
     },
+    where: {
+      name: {
+        contains: name,
+        mode: "insensitive",
+      },
+    },
+    skip,
+    take: per_page,
   });
 
-  return Response.json(components);
+  const total = await prisma.component.count({
+    where: {
+      name: {
+        contains: name,
+        mode: "insensitive",
+      },
+    },
+  });
+  const pageCount = Math.ceil(total / per_page);
+
+  return Response.json({ components, pageCount });
 }
 
 export async function POST(req: Request) {

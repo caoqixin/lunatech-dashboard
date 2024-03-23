@@ -37,7 +37,6 @@ interface XinStepFormProps {
 const XinStepForm = ({ steps, form }: XinStepFormProps) => {
   const [previousStep, setPreviousStep] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
-  const [phones, setPhones] = useState<Phone[] | null>(null);
   const [problems, setProblems] = useState<Option[] | null>(null);
   const statuses = ["未维修", "维修中", "已维修"];
   const { toast } = useToast();

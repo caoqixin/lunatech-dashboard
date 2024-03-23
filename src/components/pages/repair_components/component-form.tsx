@@ -49,6 +49,7 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  initialData.stock = initialData.stock.toString();
 
   const defaultValues = initialData
     ? initialData
@@ -77,7 +78,9 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
 
   const getAllBrands = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/v1/brands");
+      const response = await fetch(
+        "http://localhost:3000/api/v1/form/options/brand"
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -92,7 +95,9 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
 
   const getAllCategories = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/categories`);
+      const response = await fetch(
+        `http://localhost:3000/api/v1/form/options/category`
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -107,7 +112,9 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
 
   const getAllSuppliers = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/v1/suppliers");
+      const response = await fetch(
+        "http://localhost:3000/api/v1/form/options/supplier"
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -402,6 +409,7 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
                   <FormControl>
                     <Input
                       disabled={loading}
+                      type="number"
                       placeholder="库存数量"
                       {...field}
                     />

@@ -1,17 +1,29 @@
 import BreadCrumb, { BreadCrumbType } from "@/components/breadcrumb";
 import XinHeader from "../_components/xin-header";
-import { DataTable } from "@/components/tables/data-table";
 import { Separator } from "@/components/ui/separator";
 import CreateBrand from "./create-brand";
-import { brandColumns } from "@/components/tables/columns/brand-columns";
 import { unstable_noStore } from "next/cache";
+import { searchParamsValue } from "@/schemas/search-params-schema";
+import { BrandTable } from "@/components/tables/v2/brand/brand-table";
+import { Suspense } from "react";
+import { DataTableSkeleton } from "@/components/tables/v2/data-table-skeleton";
 
-const breadcrumbItems: BreadCrumbType[] = [
-  { title: "手机品牌管理", link: "/dashboard/brands" },
-];
-const BrandPage = async () => {
+interface BrandPageProps {
+  search: searchParamsValue;
+}
+
+const BrandPage = async ({ search }: BrandPageProps) => {
   unstable_noStore();
-  const res = await fetch("http://localhost:3000/api/v1/brands");
+
+  const stringSeatch = search as unknown as Record<string, string>;
+  const searchParams = new URLSearchParams(stringSeatch).toString();
+
+  const breadcrumbItems: BreadCrumbType[] = [
+    { title: "手机品牌管理", link: "/dashboard/brands" },
+  ];
+  const res = await fetch(
+    `http://localhost:3000/api/v1/brands?${searchParams}`
+  );
 
   const data = await res.json();
   return (
@@ -22,7 +34,9 @@ const BrandPage = async () => {
           <CreateBrand />
         </XinHeader>
         <Separator />
-        <DataTable columns={brandColumns} data={data} />
+        <Suspense fallback={<DataTableSkeleton columnCount={3} rowCount={5} />}>
+          <BrandTable data={data} />
+        </Suspense>
       </>
     </div>
   );

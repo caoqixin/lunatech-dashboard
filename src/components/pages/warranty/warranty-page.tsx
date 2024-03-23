@@ -4,13 +4,27 @@ import { Separator } from "@/components/ui/separator";
 import { DataTable } from "@/components/tables/data-table";
 import { warrantyColumns } from "@/components/tables/columns/warranty-columns";
 import { unstable_noStore } from "next/cache";
+import { searchWarrantyParamsValue } from "@/schemas/search-params-schema";
+import { Suspense } from "react";
+import { DataTableSkeleton } from "@/components/tables/v2/data-table-skeleton";
+import { WarrantyTable } from "@/components/tables/v2/warranty/warranty-table";
 
-const breadcrumbItems: BreadCrumbType[] = [
-  { title: "保修管理", link: "/dashboard/warranties" },
-];
-const WarrantyPage = async () => {
+interface WarrantyPageProps {
+  search: searchWarrantyParamsValue;
+}
+
+const WarrantyPage = async ({ search }: WarrantyPageProps) => {
   unstable_noStore();
-  const res = await fetch("http://localhost:3000/api/v1/warranties");
+
+  const stringSeatch = search as unknown as Record<string, string>;
+  const searchParams = new URLSearchParams(stringSeatch).toString();
+
+  const breadcrumbItems: BreadCrumbType[] = [
+    { title: "保修管理", link: "/dashboard/warranties" },
+  ];
+  const res = await fetch(
+    `http://localhost:3000/api/v1/warranties?${searchParams}`
+  );
 
   const data = await res.json();
 
@@ -20,11 +34,9 @@ const WarrantyPage = async () => {
       <>
         <XinHeader title="保修管理">{""}</XinHeader>
         <Separator />
-        <DataTable
-          columns={warrantyColumns}
-          data={data}
-          searchKey="contact_tel"
-        />
+        <Suspense fallback={<DataTableSkeleton columnCount={4} rowCount={5} />}>
+          <WarrantyTable data={data} />
+        </Suspense>
       </>
     </div>
   );
