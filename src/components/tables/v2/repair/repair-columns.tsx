@@ -9,6 +9,7 @@ import SelectStatus from "./action/select-status";
 import { useEffect, useState } from "react";
 import { Customer, Repair } from "@prisma/client";
 import { toEUR } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const repairColumns: ColumnDef<Repair>[] = [
   {
@@ -28,7 +29,11 @@ export const repairColumns: ColumnDef<Repair>[] = [
         getCustomer();
       }, []);
 
-      return <>{customer?.tel}</>;
+      return (
+        <>
+          {customer == null ? <Skeleton className="h-6 w-32" /> : customer?.tel}
+        </>
+      );
     },
   },
   {

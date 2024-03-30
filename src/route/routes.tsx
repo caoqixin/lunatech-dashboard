@@ -90,3 +90,11 @@ export const routes: Route[] = [
     icon: <ExitIcon />,
   },
 ];
+
+export const authRoutes = ["/login", "/dashboard", "/dashboard/"];
+
+export const apiAuthPrefix = "/api/auth";
+
+export const dashboardPrefix = "/dashboard";
+
+export const DEFAULT_LOGIN_REDIRECT = "/dashboard";

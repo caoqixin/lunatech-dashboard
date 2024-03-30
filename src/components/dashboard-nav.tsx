@@ -3,13 +3,10 @@
 import { cn } from "@/lib/utils";
 import { Route } from "@/route/routes";
 import Link from "next/link";
-import {
-  usePathname,
-  useRouter,
-  useSelectedLayoutSegment,
-} from "next/navigation";
+import { usePathname, useSelectedLayoutSegment } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
 import { Button } from "./ui/button";
+import { logoutUser } from "@/app/actions/logout";
 
 interface DashboardNavProps {
   routes: Route[];
@@ -19,7 +16,9 @@ interface DashboardNavProps {
 const DashboardNav = ({ routes, setOpen }: DashboardNavProps) => {
   const segment = useSelectedLayoutSegment();
   const pathname = usePathname();
-  const router = useRouter();
+  const logout = async () => {
+    await logoutUser();
+  };
 
   if (!routes?.length) {
     return null;
@@ -47,11 +46,7 @@ const DashboardNav = ({ routes, setOpen }: DashboardNavProps) => {
           );
         } else {
           return (
-            <Button
-              key={route.id}
-              className="mt-3 gap-2"
-              onClick={() => router.push("/login")}
-            >
+            <Button key={route.id} className="mt-3 gap-2" onClick={logout}>
               {route.icon}
               <span>{route.title}</span>
             </Button>

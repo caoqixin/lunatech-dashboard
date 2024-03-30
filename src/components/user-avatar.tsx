@@ -13,15 +13,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { Session } from "next-auth";
+import { logoutUser } from "@/app/actions/logout";
+import Link from "next/link";
 
-const UserAvatar = () => {
+const UserAvatar = ({ user }: { user: Session | null }) => {
+  const logout = async () => {
+    await logoutUser();
+  };
   // 用户登出逻辑
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar>
-            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+            <AvatarImage
+              src={user?.user?.image ?? ""}
+              alt={user?.user?.name ?? ""}
+            />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
         </Button>
@@ -30,9 +39,11 @@ const UserAvatar = () => {
         <DropdownMenuLabel className="font-normal">
           <div className="px-2 py-1.5 text-sm font-normal">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">Cao</p>
+              <p className="text-sm font-medium leading-none">
+                {user?.user?.name}
+              </p>
               <p className="text-xs leading-none text-muted-foreground">
-                caoqixin@qq.com
+                {user?.user?.email}
               </p>
             </div>
           </div>
@@ -40,12 +51,12 @@ const UserAvatar = () => {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem>个人中心</DropdownMenuItem>
-          <DropdownMenuItem>设置</DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/settings">设置</Link>
+          </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => console.log("logout")}>
-          登出
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={logout}>登出</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

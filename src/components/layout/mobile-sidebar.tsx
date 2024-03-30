@@ -28,7 +28,7 @@ const MobileSidebar = ({ className }: SidebarProps) => {
         <SheetContent side="left" className="!px-0">
           <SheetHeader className="items-center">
             <SheetTitle className="font-medium mt-2 mb-2 px-4 text-lg tracking-tight">
-              Xintech - Admin
+              Luna Tech
             </SheetTitle>
             <SheetDescription className="text-gray-400">
               管理后台

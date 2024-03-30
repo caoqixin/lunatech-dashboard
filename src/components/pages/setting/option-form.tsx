@@ -3,6 +3,7 @@ import { SettingReturnValue, setting } from "@/app/actions/settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
 import { Setting } from "@prisma/client";
 import { useRouter } from "next/navigation";
@@ -64,14 +65,18 @@ const OptionForm = ({ label, name, placeholder = label }: OptionFormProps) => {
           {label}:
         </Label>
         <div className="flex gap-2">
-          <Input
-            id={name}
-            name={name}
-            className="w-full"
-            placeholder={placeholder}
-            value={option ?? ""}
-            onChange={(e) => setOption(e.target.value)}
-          />
+          {option == null ? (
+            <Skeleton className="h-9 w-full rounded-md border" />
+          ) : (
+            <Input
+              id={name}
+              name={name}
+              className="w-full"
+              placeholder={placeholder}
+              value={option ?? ""}
+              onChange={(e) => setOption(e.target.value)}
+            />
+          )}
           <Button type="submit">保存</Button>
         </div>
       </div>

@@ -14,13 +14,13 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useTransition } from "react";
+import { login } from "@/app/actions/login";
+import { useToast } from "../ui/use-toast";
 
 export default function LoginForm() {
-  // const searchParams = useSearchParams();
-  // const callbackUrl = searchParams.get('callbackUrl')
-  const [loading, setLoading] = useState<boolean>(false);
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -29,11 +29,16 @@ export default function LoginForm() {
     },
   });
 
-  const router = useRouter();
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
-    console.log(values);
     // 登录逻辑
-    router.push("/dashboard");
+    startTransition(() => {
+      login(values).catch((err) => {
+        toast({
+          variant: "destructive",
+          title: err,
+        });
+      });
+    });
   };
 
   return (
@@ -50,7 +55,12 @@ export default function LoginForm() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="email" {...field} autoComplete="none" />
+                  <Input
+                    placeholder="email"
+                    disabled={isPending}
+                    {...field}
+                    autoComplete="none"
+                  />
                 </FormControl>
 
                 <FormMessage />
@@ -64,13 +74,18 @@ export default function LoginForm() {
               <FormItem className="mt-4">
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input placeholder="密码" autoComplete="none" {...field} />
+                  <Input
+                    placeholder="密码"
+                    disabled={isPending}
+                    autoComplete="none"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button disabled={loading} className="ml-auto w-full" type="submit">
+          <Button disabled={isPending} className="ml-auto w-full" type="submit">
             登录
           </Button>
         </form>

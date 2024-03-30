@@ -21,6 +21,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { RepairFormValue, RepairSchema } from "@/schemas/repair-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Setting } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -35,12 +36,23 @@ export function EditRepairForm({ initialData }: EditRepairFormProps) {
   const [problems, setProblems] = useState<Option[] | null>(null);
   const { toast } = useToast();
   const router = useRouter();
-
-  const getAllProblems = async () => {
+  const [problemApi, setProblemApi] = useState<string | null>(null);
+  const getProblemApi = async () => {
     try {
-      const response = await fetch(`/api/v1/categories/${3}`, {
-        method: "GET",
-      });
+      const res = await fetch(`/api/v1/settings/repair_problem`);
+
+      if (res.ok) {
+        const data: Setting = await res.json();
+        setProblemApi(data.setting_value);
+      }
+    } catch (error) {
+      setProblemApi(null);
+    }
+  };
+
+  const getAllProblems = async (api: string) => {
+    try {
+      const response = await fetch(api);
 
       if (response.ok) {
         const data = await response.json();
@@ -54,8 +66,11 @@ export function EditRepairForm({ initialData }: EditRepairFormProps) {
   };
 
   useEffect(() => {
-    getAllProblems();
-  }, []);
+    getProblemApi();
+    if (problemApi) {
+      getAllProblems(problemApi);
+    }
+  }, [problemApi]);
 
   const onProblemChange = (value: any, data: string[]) => {
     form.setValue(value, data);
