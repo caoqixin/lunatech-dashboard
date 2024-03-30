@@ -22,7 +22,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { ComponentSchema } from "@/schemas/componet-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Brand, Category, Supplier } from "@prisma/client";
+import { Brand, Category, Setting, Supplier } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -49,7 +49,9 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  initialData.stock = initialData.stock.toString();
+  if (initialData != null) {
+    initialData.stock = initialData.stock.toString();
+  }
 
   const defaultValues = initialData
     ? initialData
@@ -75,7 +77,20 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [brands, setBrands] = useState<Brand[] | null>(null);
   const [supplier, setSupplier] = useState<Supplier[] | null>(null);
+  const [categoryApi, setCategoryApi] = useState<string | null>(null);
 
+  const getCategoryApi = async () => {
+    try {
+      const res = await fetch(`/api/v1/settings/repair_category`);
+
+      if (res.ok) {
+        const data: Setting = await res.json();
+        setCategoryApi(data.setting_value);
+      }
+    } catch (error) {
+      setCategoryApi(null);
+    }
+  };
   const getAllBrands = async () => {
     try {
       const response = await fetch(
@@ -93,11 +108,9 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
     }
   };
 
-  const getAllCategories = async () => {
+  const getAllCategories = async (api: string) => {
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/v1/form/options/category`
-      );
+      const response = await fetch(api);
 
       if (response.ok) {
         const data = await response.json();
@@ -128,13 +141,16 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
   };
 
   useEffect(() => {
-    getAllCategories();
+    getCategoryApi();
+    if (categoryApi != null) {
+      getAllCategories(categoryApi);
+    }
     getAllBrands();
     getAllSuppliers();
     if (defaultValues.brand) {
       getPhonesByName(defaultValues.brand);
     }
-  }, []);
+  }, [categoryApi]);
 
   const [phones, setPhones] = useState<Option[] | null>(null);
 

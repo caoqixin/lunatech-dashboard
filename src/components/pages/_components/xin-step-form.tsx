@@ -26,6 +26,7 @@ import {
 import MultiSelect, { Option } from "@/components/ui/multi-select";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
+import { Setting } from "@prisma/client";
 
 type formType = typeof useForm<RepairFormValue>;
 
@@ -41,6 +42,20 @@ const XinStepForm = ({ steps, form }: XinStepFormProps) => {
   const statuses = ["未维修", "维修中", "已维修"];
   const { toast } = useToast();
   const router = useRouter();
+
+  const [problemApi, setProblemApi] = useState<string | null>(null);
+  const getProblemApi = async () => {
+    try {
+      const res = await fetch(`/api/v1/settings/repair_problem`);
+
+      if (res.ok) {
+        const data: Setting = await res.json();
+        setProblemApi(data.setting_value);
+      }
+    } catch (error) {
+      setProblemApi(null);
+    }
+  };
 
   const prev = (e: FormEvent) => {
     e.preventDefault();
@@ -88,11 +103,9 @@ const XinStepForm = ({ steps, form }: XinStepFormProps) => {
     router.refresh();
   };
 
-  const getAllProblems = async () => {
+  const getAllProblems = async (api: string) => {
     try {
-      const response = await fetch(`/api/v1/categories/${3}`, {
-        method: "GET",
-      });
+      const response = await fetch(api);
 
       if (response.ok) {
         const data = await response.json();
@@ -106,8 +119,11 @@ const XinStepForm = ({ steps, form }: XinStepFormProps) => {
   };
 
   useEffect(() => {
-    getAllProblems();
-  }, []);
+    getProblemApi();
+    if (problemApi) {
+      getAllProblems(problemApi);
+    }
+  }, [problemApi]);
 
   const onProblemChange = (value: any, data: string[]) => {
     form.setValue(value, data);

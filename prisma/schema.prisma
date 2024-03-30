@@ -121,3 +121,11 @@ model Warranty {
   @@map("warranties")
 }
 
+model Setting {
+  id Int @id @default(autoincrement())
+  setting_name String @unique
+  setting_value String
+
+  @@map("settings")
+}
+
