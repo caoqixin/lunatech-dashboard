@@ -1,5 +1,6 @@
 import CategoryPage from "@/components/pages/categories/category-page";
 import { SearchParams } from "@/components/tables/v2/types";
+import { auth } from "@/lib/user";
 import { searchParamsSchema } from "@/schemas/search-params-schema";
 import { Metadata } from "next";
 
@@ -11,7 +12,8 @@ export interface CategoryPageProps {
   searchParams: SearchParams;
 }
 
-export default function Page({ searchParams }: CategoryPageProps) {
+export default async function Page({ searchParams }: CategoryPageProps) {
+  await auth();
   const search = searchParamsSchema.parse(searchParams);
   return <CategoryPage search={search} />;
 }

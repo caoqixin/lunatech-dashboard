@@ -1,34 +1,42 @@
-import prisma from "@/lib/prisma";
-import bcrypt from "bcrypt";
+import { createClient } from "@supabase/supabase-js";
 
 const createUser = async () => {
   const email = "caoqixin7@gmail.com";
   const password = "Caoqixin7";
   const name = "xin";
+  const PROJECT_URL = "https://rbihkyhxpsizdphgybgk.supabase.co";
+  const ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJiaWhreWh4cHNpemRwaGd5YmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTA1MjM0MzQsImV4cCI6MjAyNjA5OTQzNH0.EvCEfeiCcI2R2Q50ClMiOe7VEYRu7Yl1KNUwORVK8Q0";
+  const supabase = createClient(PROJECT_URL, ANON_KEY);
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  const existingUser = await prisma.user.findUnique({
-    where: {
+  try {
+    const user = await supabase.auth.signUp({
       email,
-    },
-  });
+      password,
+      options: {
+        data: {
+          name,
+          image: "",
+        },
+      },
+    });
 
-  if (existingUser) {
-    return "用户已存在";
+    return {
+      msg: `${user.data.user?.email} 添加成功`,
+      data: user.data.user,
+    };
+  } catch (error) {
+    return {
+      msg: "添加失败",
+      error: error,
+    };
   }
-
-  await prisma.user.create({
-    data: {
-      name,
-      email,
-      password: hashedPassword,
-    },
-  });
-
-  return `${name} 用户添加成功`;
 };
 
-createUser().then((msg) => {
-  console.log(msg);
-});
+createUser()
+  .then((res) => {
+    console.log(res.data);
+  })
+  .catch((err) => {
+    console.log(err);
+  });

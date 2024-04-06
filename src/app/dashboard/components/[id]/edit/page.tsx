@@ -1,7 +1,10 @@
 import EditComponentPage from "@/components/pages/repair_components/edit-component-page";
+import { auth } from "@/lib/user";
 import { Metadata, ResolvingMetadata } from "next";
 
-export default function Page({ params }: { params: { id: number } }) {
+export default async function Page({ params }: { params: { id: number } }) {
+  await auth();
+
   const { id } = params;
 
   return <EditComponentPage id={id} />;

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useSelectedLayoutSegment } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
 import { Button } from "./ui/button";
-import { logoutUser } from "@/app/actions/logout";
+import { signOut } from "@/lib/actions/auth";
 
 interface DashboardNavProps {
   routes: Route[];
@@ -17,7 +17,7 @@ const DashboardNav = ({ routes, setOpen }: DashboardNavProps) => {
   const segment = useSelectedLayoutSegment();
   const pathname = usePathname();
   const logout = async () => {
-    await logoutUser();
+    await signOut();
   };
 
   if (!routes?.length) {

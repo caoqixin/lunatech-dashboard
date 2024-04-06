@@ -1,6 +1,7 @@
 import PhonePage from "@/components/pages/phone/phone-page";
 import { SearchParams } from "@/components/tables/v2/types";
 import prisma from "@/lib/prisma";
+import { auth } from "@/lib/user";
 import { searchPhoneParamsSchema } from "@/schemas/search-params-schema";
 import { Metadata, ResolvingMetadata } from "next";
 
@@ -11,7 +12,9 @@ export interface PhonePageProps {
   };
 }
 
-export default function Page({ params, searchParams }: PhonePageProps) {
+export default async function Page({ params, searchParams }: PhonePageProps) {
+  await auth();
+
   const brandId = parseInt(params.brandId);
   const search = searchPhoneParamsSchema.parse(searchParams);
 

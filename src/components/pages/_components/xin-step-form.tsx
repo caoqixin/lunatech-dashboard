@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RepairFormValue } from "@/schemas/repair-schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Phone } from "@/lib/definitions";
 import {
   Select,
   SelectContent,

@@ -4,10 +4,12 @@ import MobileSidebar from "./mobile-sidebar";
 import { cn } from "@/lib/utils";
 import UserAvatar from "../user-avatar";
 import { ModeToggle } from "../mode-toggle";
-import { auth } from "@/auth";
+import { getUser } from "@/lib/user";
+import { unstable_noStore } from "next/cache";
 
 const Header = async () => {
-  const user = await auth();
+  unstable_noStore();
+  const { user } = await getUser();
 
   return (
     <div className="fixed top-0 left-0 right-0 supports-backdrop-blur:bg-background/60 border-b bg-background/95 backdrop-blur z-20">

@@ -15,12 +15,14 @@ import {
   FormMessage,
 } from "../ui/form";
 import { useTransition } from "react";
-import { login } from "@/app/actions/login";
+import { login } from "@/lib/actions/auth";
 import { useToast } from "../ui/use-toast";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const router = useRouter();
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -32,11 +34,15 @@ export default function LoginForm() {
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     // 登录逻辑
     startTransition(() => {
-      login(values).catch((err) => {
-        toast({
-          variant: "destructive",
-          title: err,
-        });
+      login(values).then((res) => {
+        if (res.status == "success") {
+          router.push("/dashboard");
+        } else {
+          toast({
+            variant: "destructive",
+            title: res.msg,
+          });
+        }
       });
     });
   };
@@ -75,6 +81,7 @@ export default function LoginForm() {
                 <FormLabel>Password</FormLabel>
                 <FormControl>
                   <Input
+                    type="password"
                     placeholder="密码"
                     disabled={isPending}
                     autoComplete="none"

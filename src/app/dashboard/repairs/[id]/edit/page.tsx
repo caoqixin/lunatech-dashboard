@@ -1,8 +1,10 @@
 import EditRepairPage from "@/components/pages/repair/edit-repair-page";
 import { RepiarWithCustomer } from "@/lib/definitions";
+import { auth } from "@/lib/user";
 import { Metadata, ResolvingMetadata } from "next";
 
-export default function Page({ params }: { params: { id: number } }) {
+export default async function Page({ params }: { params: { id: number } }) {
+  await auth();
   const id = params.id;
 
   return <EditRepairPage id={id} />;

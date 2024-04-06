@@ -1,6 +1,7 @@
 import CategoryItemPage from "@/components/pages/categories/category-items-page";
 import { SearchParams } from "@/components/tables/v2/types";
 import prisma from "@/lib/prisma";
+import { auth } from "@/lib/user";
 import { searchParamsSchema } from "@/schemas/search-params-schema";
 import { Metadata, ResolvingMetadata } from "next";
 
@@ -11,7 +12,11 @@ export interface CategoryItemPageProps {
   };
 }
 
-export default function Page({ params, searchParams }: CategoryItemPageProps) {
+export default async function Page({
+  params,
+  searchParams,
+}: CategoryItemPageProps) {
+  await auth();
   const categoryId = parseInt(params.categoryId);
   const search = searchParamsSchema.parse(searchParams);
 

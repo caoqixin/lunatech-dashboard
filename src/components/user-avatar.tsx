@@ -13,14 +13,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Session } from "next-auth";
-import { logoutUser } from "@/app/actions/logout";
 import Link from "next/link";
+import { signOut } from "@/lib/actions/auth";
+import { User } from "@supabase/supabase-js";
+import { useAvatar } from "@/store/avatar";
 
-const UserAvatar = ({ user }: { user: Session | null }) => {
+const UserAvatar = ({ user }: { user: User | null }) => {
+  const avatar = useAvatar((state) => state.avatar);
+
   const logout = async () => {
-    await logoutUser();
+    await signOut();
   };
+
   // 用户登出逻辑
   return (
     <DropdownMenu>
@@ -28,8 +32,8 @@ const UserAvatar = ({ user }: { user: Session | null }) => {
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar>
             <AvatarImage
-              src={user?.user?.image ?? ""}
-              alt={user?.user?.name ?? ""}
+              src={avatar == "" ? user?.user_metadata.image : avatar}
+              alt={user?.user_metadata.name ?? ""}
             />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
@@ -40,17 +44,19 @@ const UserAvatar = ({ user }: { user: Session | null }) => {
           <div className="px-2 py-1.5 text-sm font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">
-                {user?.user?.name}
+                {user?.user_metadata.name}
               </p>
               <p className="text-xs leading-none text-muted-foreground">
-                {user?.user?.email}
+                {user?.email}
               </p>
             </div>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>个人中心</DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/profile">个人中心</Link>
+          </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/dashboard/settings">设置</Link>
           </DropdownMenuItem>
