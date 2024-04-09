@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface XinCardProps {
   title: string;
-  value: string;
+  value: string | number;
   icon?: React.ReactNode;
 }
 

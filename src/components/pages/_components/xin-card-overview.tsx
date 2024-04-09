@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Overview from "./overview";
+import Overview from "../dashboard/chart/overview";
 
 const XinCardOverview = () => {
   return (

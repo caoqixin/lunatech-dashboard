@@ -6,12 +6,13 @@ import ViewInfo from "./view-info";
 import { Suspense } from "react";
 import ShowDetail from "./show-detail";
 import { Repair } from "@prisma/client";
+import { Loading } from "@/components/pages/_components/loading";
 
 const RepairCellAction = (repair: Repair) => {
   return (
     <div className="flex items-center gap-3 justify-end">
       <ViewInfo name={repair.phone}>
-        <Suspense fallback={<div>loading....</div>}>
+        <Suspense fallback={<Loading />}>
           <ShowDetail id={repair.id} />
         </Suspense>
       </ViewInfo>

@@ -6,12 +6,13 @@ import { Pencil2Icon } from "@radix-ui/react-icons";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Component } from "@prisma/client";
+import { Loading } from "@/components/pages/_components/loading";
 
 const ComponentCellAction = (component: Component) => {
   return (
     <div className="flex items-center gap-3 justify-end">
       <ViewInfo name={component.name}>
-        <Suspense fallback={<div>loading....</div>}>
+        <Suspense fallback={<Loading />}>
           <ShowDetail id={component.id} />
         </Suspense>
       </ViewInfo>

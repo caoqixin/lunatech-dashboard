@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, Repair } from "@prisma/client";
 
 export type RepiarWithCustomer = Prisma.RepairGetPayload<{
   include: { customer: true };
@@ -7,3 +7,22 @@ export type RepiarWithCustomer = Prisma.RepairGetPayload<{
 export type WarrantyWithRepair = Prisma.WarrantyGetPayload<{
   include: { repair: { include: { customer: true } } };
 }>;
+
+export interface RepairMonthData {
+  jan?: Repair[];
+  feb?: Repair[];
+  mar?: Repair[];
+  apr?: Repair[];
+  may?: Repair[];
+  jul?: Repair[];
+  jun?: Repair[];
+  agu?: Repair[];
+  sep?: Repair[];
+  oct?: Repair[];
+  nov?: Repair[];
+  dic?: Repair[];
+}
+
+export interface Result {
+  [key: string]: number | string;
+}

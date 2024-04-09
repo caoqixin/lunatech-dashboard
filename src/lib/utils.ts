@@ -1,4 +1,5 @@
 import { type ClassValue, clsx } from "clsx";
+import dayjs from "dayjs";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -14,4 +15,16 @@ export function toEUR(value: any) {
     currency: "EUR",
     style: "currency",
   }).format(parseFloat(value));
+}
+
+export function getCurrentMonth() {
+  const currentMonth = dayjs().month() + 1;
+  const currentYear = dayjs().year();
+  const start = new Date(`${currentYear}/${currentMonth}/01`).toISOString();
+  const end = new Date(`${currentYear}/${currentMonth}/31`).toISOString();
+
+  return {
+    start,
+    end,
+  };
 }

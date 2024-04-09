@@ -1,8 +1,10 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsTrigger, TabsList, TabsContent } from "@/components/ui/tabs";
-import XinCardWrapper from "../_components/xin-card-wrapper";
+import XinCardWrapper from "./xin-card-wrapper";
 import XinCardOverview from "../_components/xin-card-overview";
-import XinCardTop from "../_components/xin-card-top";
+import XinCardTop from "./xin-card-top";
+
+export const revalidate = 0;
 
 const DashboardPage = () => {
   return (
