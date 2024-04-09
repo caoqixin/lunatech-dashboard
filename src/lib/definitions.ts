@@ -14,8 +14,8 @@ export interface RepairMonthData {
   mar?: Repair[];
   apr?: Repair[];
   may?: Repair[];
-  jul?: Repair[];
   jun?: Repair[];
+  jul?: Repair[];
   agu?: Repair[];
   sep?: Repair[];
   oct?: Repair[];

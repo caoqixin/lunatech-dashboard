@@ -163,8 +163,8 @@ function getRepairMonthData(repairs: Repair[]) {
     mar: [],
     apr: [],
     may: [],
-    jul: [],
     jun: [],
+    jul: [],
     agu: [],
     sep: [],
     oct: [],
@@ -190,10 +190,10 @@ function getRepairMonthData(repairs: Repair[]) {
         data.may?.push(repair);
         break;
       case 5:
-        data.jul?.push(repair);
+        data.jun?.push(repair);
         break;
       case 6:
-        data.jun?.push(repair);
+        data.jul?.push(repair);
         break;
       case 7:
         data.agu?.push(repair);
