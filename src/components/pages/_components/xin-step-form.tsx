@@ -91,14 +91,15 @@ const XinStepForm = ({ steps, form }: XinStepFormProps) => {
       toast({
         title: data.msg,
       });
+      form.reset();
+      router.push("/dashboard/repairs");
     } else {
       toast({
         title: data.msg,
         variant: "destructive",
       });
     }
-    form.reset();
-    router.push("/dashboard/repairs");
+
     router.refresh();
   };
 

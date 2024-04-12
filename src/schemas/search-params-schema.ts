@@ -30,6 +30,12 @@ export const searchComponentParamsSchema = z.object({
   category: z.string().optional(),
 });
 
+export const searchOrderParamsSchema = z.object({
+  tab: z.string().optional(),
+});
+
+export type searchOrderParamsValue = z.infer<typeof searchOrderParamsSchema>;
+
 export type searchComponentParamsValue = z.infer<
   typeof searchComponentParamsSchema
 >;

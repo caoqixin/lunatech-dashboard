@@ -105,6 +105,7 @@ export function EditRepairForm({ initialData }: EditRepairFormProps) {
       toast({
         title: data.msg,
       });
+      router.push("/dashboard/repairs");
     } else {
       toast({
         title: data.msg,
@@ -112,7 +113,6 @@ export function EditRepairForm({ initialData }: EditRepairFormProps) {
       });
     }
 
-    router.push("/dashboard/repairs");
     router.refresh();
   };
   return (

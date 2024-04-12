@@ -31,6 +31,7 @@
     "@supabase/supabase-js": "^2.42.0",
     "@tanstack/react-table": "^8.15.3",
     "@uidotdev/usehooks": "^2.4.1",
+    "@upstash/redis": "^1.29.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "chart.js": "^4.4.2",
@@ -38,6 +39,7 @@
     "clsx": "^2.1.0",
     "cmdk": "^0.2.1",
     "dayjs": "^1.11.10",
+    "lodash": "^4.17.21",
     "next": "14.1.0",
     "next-auth": "5.0.0-beta.16",
     "next-themes": "^0.2.1",
@@ -53,6 +55,7 @@
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.6",
+    "@types/lodash": "^4.17.0",
     "@types/node": "^20.12.4",
     "@types/react": "^18.2.74",
     "@types/react-dom": "^18.2.24",

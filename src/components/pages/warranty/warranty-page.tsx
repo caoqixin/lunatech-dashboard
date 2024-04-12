@@ -1,8 +1,6 @@
 import BreadCrumb, { BreadCrumbType } from "@/components/breadcrumb";
 import XinHeader from "../_components/xin-header";
 import { Separator } from "@/components/ui/separator";
-import { DataTable } from "@/components/tables/data-table";
-import { warrantyColumns } from "@/components/tables/columns/warranty-columns";
 import { unstable_noStore } from "next/cache";
 import { searchWarrantyParamsValue } from "@/schemas/search-params-schema";
 import { Suspense } from "react";
@@ -16,8 +14,8 @@ interface WarrantyPageProps {
 const WarrantyPage = async ({ search }: WarrantyPageProps) => {
   unstable_noStore();
 
-  const stringSeatch = search as unknown as Record<string, string>;
-  const searchParams = new URLSearchParams(stringSeatch).toString();
+  const stringSearch = search as unknown as Record<string, string>;
+  const searchParams = new URLSearchParams(stringSearch).toString();
 
   const breadcrumbItems: BreadCrumbType[] = [
     { title: "保修管理", link: "/dashboard/warranties" },

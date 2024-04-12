@@ -129,4 +129,30 @@ model Setting {
   @@map("settings")
 }
 
+model Order {
+  id String @id @default(cuid())
+  amount Decimal
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orderItem OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id Int @id @default(autoincrement())
+  componentId Int
+  code String?
+  name String
+  category String?
+  public_price String?
+  purchase_price String?
+  status String @default("out")
+  count Int
+  order_id String
+  order Order @relation(fields: [order_id], references: [id])
+
+  @@map("order_items")
+}
+
 

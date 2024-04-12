@@ -26,3 +26,26 @@ export interface RepairMonthData {
 export interface Result {
   [key: string]: number | string;
 }
+
+export type OrderComponent = {
+  id: number;
+  code: string | null;
+  name: string;
+  category: string;
+  public_price: string;
+};
+
+export type ProductComponent = {
+  id: number;
+  code: string | null;
+  name: string;
+  count: number;
+  purchase_price: number;
+};
+
+export type RedisProductType = Record<string, ProductComponent> | null;
+
+export type RedisOrderType = Record<
+  string,
+  OrderComponent & { stock: number }
+> | null;

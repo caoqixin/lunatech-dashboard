@@ -193,13 +193,14 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
         toast({
           title: data.msg,
         });
+        form.reset();
+        router.push("/dashboard/components");
       } else {
         toast({
           title: data.msg,
           variant: "destructive",
         });
       }
-      form.reset();
     } else {
       const res = await fetch(
         `http://localhost:3000/api/v1/components/${initialData.id}`,
@@ -215,6 +216,7 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
         toast({
           title: data.msg,
         });
+        router.push("/dashboard/components");
       } else {
         toast({
           title: data.msg,
@@ -224,7 +226,6 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
     }
 
     setLoading(false);
-    router.push("/dashboard/components");
     router.refresh();
   };
 
