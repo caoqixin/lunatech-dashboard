@@ -49,3 +49,15 @@ export type RedisOrderType = Record<
   string,
   OrderComponent & { stock: number }
 > | null;
+
+export type CrawlBrandData = {
+  brandName: string | undefined;
+  models: {
+    name: string | undefined;
+  }[];
+};
+
+export type DataReturnType = {
+  msg: string;
+  status: "success" | "error";
+};
