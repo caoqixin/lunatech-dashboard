@@ -1,9 +1,11 @@
+import DashboardDataSkeleton from "@/components/pages/_components/skeleton/dashboard-data-skeleton";
 import CategoryItemPage from "@/components/pages/categories/category-items-page";
 import { SearchParams } from "@/components/tables/v2/types";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/user";
 import { searchParamsSchema } from "@/schemas/search-params-schema";
 import { Metadata, ResolvingMetadata } from "next";
+import { Suspense } from "react";
 
 export interface CategoryItemPageProps {
   searchParams: SearchParams;
@@ -20,7 +22,11 @@ export default async function Page({
   const categoryId = parseInt(params.categoryId);
   const search = searchParamsSchema.parse(searchParams);
 
-  return <CategoryItemPage categoryId={categoryId} search={search} />;
+  return (
+    <Suspense fallback={<DashboardDataSkeleton />}>
+      <CategoryItemPage categoryId={categoryId} search={search} />
+    </Suspense>
+  );
 }
 
 export async function generateMetadata(

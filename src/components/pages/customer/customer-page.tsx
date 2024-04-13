@@ -2,17 +2,13 @@ import BreadCrumb, { BreadCrumbType } from "@/components/breadcrumb";
 import XinHeader from "../_components/xin-header";
 import { Separator } from "@/components/ui/separator";
 import CreateCusomer from "./create-customer";
-import { unstable_noStore } from "next/cache";
 import { searchCustomerParamsValue } from "@/schemas/search-params-schema";
-import { Suspense } from "react";
-import { DataTableSkeleton } from "@/components/tables/v2/data-table-skeleton";
 import { CustomerTable } from "@/components/tables/v2/customer/customer-table";
 
 interface CustomerPageProps {
   search: searchCustomerParamsValue;
 }
 const CustomerPage = async ({ search }: CustomerPageProps) => {
-  unstable_noStore();
   const stringSeatch = search as unknown as Record<string, string>;
   const searchParams = new URLSearchParams(stringSeatch).toString();
 
@@ -33,9 +29,7 @@ const CustomerPage = async ({ search }: CustomerPageProps) => {
           <CreateCusomer />
         </XinHeader>
         <Separator />
-        <Suspense fallback={<DataTableSkeleton columnCount={4} rowCount={5} />}>
-          <CustomerTable data={data} />
-        </Suspense>
+        <CustomerTable data={data} />
       </>
     </div>
   );

@@ -3,12 +3,9 @@ import { notFound } from "next/navigation";
 import XinHeader from "../_components/xin-header";
 import { Separator } from "@/components/ui/separator";
 import CreatePhone from "./create-phone";
-import { unstable_noStore } from "next/cache";
 import prisma from "@/lib/prisma";
 import { searchPhoneParamsValue } from "@/schemas/search-params-schema";
-import { Suspense } from "react";
 import { PhoneTable } from "@/components/tables/v2/phone/phone-table";
-import { DataTableSkeleton } from "@/components/tables/v2/data-table-skeleton";
 
 interface PhonePageProps {
   brandId: number;
@@ -16,8 +13,6 @@ interface PhonePageProps {
 }
 
 const PhonePage = async ({ brandId, search }: PhonePageProps) => {
-  unstable_noStore();
-
   const stringSearch = search as unknown as Record<string, string>;
   const searchParams = new URLSearchParams(stringSearch).toString();
 
@@ -49,17 +44,8 @@ const PhonePage = async ({ brandId, search }: PhonePageProps) => {
           <CreatePhone brandId={brandId} />
         </XinHeader>
         <Separator />
-        <Suspense
-          fallback={
-            <DataTableSkeleton
-              columnCount={3}
-              rowCount={5}
-              searchableColumnCount={1}
-            />
-          }
-        >
-          <PhoneTable data={data} />
-        </Suspense>
+
+        <PhoneTable data={data} />
       </>
     </div>
   );

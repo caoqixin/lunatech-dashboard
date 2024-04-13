@@ -2,14 +2,9 @@ import BreadCrumb, { BreadCrumbType } from "@/components/breadcrumb";
 import { notFound } from "next/navigation";
 import XinHeader from "../_components/xin-header";
 import { Separator } from "@/components/ui/separator";
-import { DataTable } from "@/components/tables/data-table";
 import CreateCategoryItem from "./create-category-item";
-import { categoryItemColumns } from "@/components/tables/columns/category-items-columns";
-import { unstable_noStore } from "next/cache";
 import prisma from "@/lib/prisma";
 import { searchParamsValue } from "@/schemas/search-params-schema";
-import { Suspense } from "react";
-import { DataTableSkeleton } from "@/components/tables/v2/data-table-skeleton";
 import { CategoryItemTable } from "@/components/tables/v2/category_item/category-item-table";
 
 interface CategoryItemPageProps {
@@ -21,8 +16,6 @@ const CategoryItemPage = async ({
   categoryId,
   search,
 }: CategoryItemPageProps) => {
-  unstable_noStore();
-
   const stringSearch = search as unknown as Record<string, string>;
   const searchParams = new URLSearchParams(stringSearch).toString();
   // 获取当前所属分类
@@ -55,10 +48,7 @@ const CategoryItemPage = async ({
           <CreateCategoryItem categoryId={categoryId} />
         </XinHeader>
         <Separator />
-        <Suspense fallback={<DataTableSkeleton columnCount={3} rowCount={5} />}>
-          <CategoryItemTable data={data} />
-        </Suspense>
-        <DataTable columns={categoryItemColumns} data={data} />
+        <CategoryItemTable data={data} />
       </>
     </div>
   );

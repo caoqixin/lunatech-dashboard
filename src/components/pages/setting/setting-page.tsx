@@ -1,8 +1,5 @@
 import BreadCrumb, { BreadCrumbType } from "@/components/breadcrumb";
 import XinHeader from "../_components/xin-header";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { PlusIcon } from "@radix-ui/react-icons";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

@@ -3,7 +3,7 @@
 import { Brand } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import React from "react";
-import { brandColumns } from "./brand-columns";
+import { brandColumns, searchableColumns } from "./brand-columns";
 import { useDataTable } from "@/hooks/use-data-table";
 import { DataTable } from "../data-table";
 
@@ -26,7 +26,10 @@ export function BrandTable({ data }: BrandTableProps) {
     data: brands,
     columns,
     pageCount,
+    searchableColumns,
   });
 
-  return <DataTable table={table} columns={columns} />;
+  return (
+    <DataTable table={table} columns={columns} searchKey={searchableColumns} />
+  );
 }

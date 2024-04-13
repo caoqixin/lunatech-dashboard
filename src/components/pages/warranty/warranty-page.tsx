@@ -1,10 +1,7 @@
 import BreadCrumb, { BreadCrumbType } from "@/components/breadcrumb";
 import XinHeader from "../_components/xin-header";
 import { Separator } from "@/components/ui/separator";
-import { unstable_noStore } from "next/cache";
 import { searchWarrantyParamsValue } from "@/schemas/search-params-schema";
-import { Suspense } from "react";
-import { DataTableSkeleton } from "@/components/tables/v2/data-table-skeleton";
 import { WarrantyTable } from "@/components/tables/v2/warranty/warranty-table";
 
 interface WarrantyPageProps {
@@ -12,8 +9,6 @@ interface WarrantyPageProps {
 }
 
 const WarrantyPage = async ({ search }: WarrantyPageProps) => {
-  unstable_noStore();
-
   const stringSearch = search as unknown as Record<string, string>;
   const searchParams = new URLSearchParams(stringSearch).toString();
 
@@ -32,9 +27,7 @@ const WarrantyPage = async ({ search }: WarrantyPageProps) => {
       <>
         <XinHeader title="保修管理">{""}</XinHeader>
         <Separator />
-        <Suspense fallback={<DataTableSkeleton columnCount={4} rowCount={5} />}>
-          <WarrantyTable data={data} />
-        </Suspense>
+        <WarrantyTable data={data} />
       </>
     </div>
   );

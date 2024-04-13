@@ -2,18 +2,13 @@ import BreadCrumb, { BreadCrumbType } from "@/components/breadcrumb";
 import XinHeader from "../_components/xin-header";
 import { Separator } from "@/components/ui/separator";
 import CreateSupplier from "./create-supplier";
-import { unstable_noStore } from "next/cache";
 import { searchParamsValue } from "@/schemas/search-params-schema";
-import { Suspense } from "react";
-import { DataTableSkeleton } from "@/components/tables/v2/data-table-skeleton";
 import { SupplierTable } from "@/components/tables/v2/supplier/supplier-table";
 
 interface SupplierPageProps {
   search: searchParamsValue;
 }
 const SupplierPage = async ({ search }: SupplierPageProps) => {
-  unstable_noStore();
-
   const stringSeatch = search as unknown as Record<string, string>;
   const searchParams = new URLSearchParams(stringSeatch).toString();
 
@@ -33,9 +28,7 @@ const SupplierPage = async ({ search }: SupplierPageProps) => {
           <CreateSupplier />
         </XinHeader>
         <Separator />
-        <Suspense fallback={<DataTableSkeleton columnCount={4} rowCount={5} />}>
-          <SupplierTable data={data} />
-        </Suspense>
+        <SupplierTable data={data} />
       </>
     </div>
   );

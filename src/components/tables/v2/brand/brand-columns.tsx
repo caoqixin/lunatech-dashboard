@@ -4,6 +4,7 @@ import Link from "next/link";
 import { DataTableColumnHeader } from "@/components/tables/data-table-column-header";
 import BrandCellAction from "./action/brand-cell-action";
 import { Brand } from "@prisma/client";
+import { DataTableSearchableColumn } from "../types";
 
 export const brandColumns: ColumnDef<Brand>[] = [
   {
@@ -29,5 +30,12 @@ export const brandColumns: ColumnDef<Brand>[] = [
 
       return <BrandCellAction {...brand} />;
     },
+  },
+];
+
+export const searchableColumns: DataTableSearchableColumn<Brand>[] = [
+  {
+    id: "name",
+    placeholder: "输入品牌...",
   },
 ];

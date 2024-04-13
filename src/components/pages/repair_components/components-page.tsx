@@ -4,10 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "@radix-ui/react-icons";
 import Link from "next/link";
-import { unstable_noStore } from "next/cache";
 import { searchComponentParamsValue } from "@/schemas/search-params-schema";
-import { Suspense, useEffect, useState } from "react";
-import { DataTableSkeleton } from "@/components/tables/v2/data-table-skeleton";
 import { ComponentTable } from "@/components/tables/v2/repair_component/component-table";
 import {
   DataTableFilterableColumn,
@@ -38,7 +35,6 @@ const getAllCategoires = async () => {
 };
 
 const ComponentPage = async ({ search }: ComponentPageProps) => {
-  unstable_noStore();
   const stringSeatch = search as unknown as Record<string, string>;
   const searchParams = new URLSearchParams(stringSeatch).toString();
   const categories = await getAllCategoires();
@@ -71,9 +67,7 @@ const ComponentPage = async ({ search }: ComponentPageProps) => {
           </Button>
         </XinHeader>
         <Separator />
-        <Suspense fallback={<DataTableSkeleton columnCount={4} rowCount={5} />}>
-          <ComponentTable data={data} filterColumn={filterableColumns} />
-        </Suspense>
+        <ComponentTable data={data} filterColumn={filterableColumns} />
       </>
     </div>
   );

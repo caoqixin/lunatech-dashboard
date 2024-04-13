@@ -8,12 +8,19 @@ export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;
   const per_page = Number(params.get("per_page")) ?? 10;
   const page = Number(params.get("page")) ?? 1;
+  const name = params.get("name") ?? "";
 
   const skip = (page - 1) * per_page;
 
   const brands: Brand[] = await prisma.brand.findMany({
     orderBy: {
       id: "asc",
+    },
+    where: {
+      name: {
+        contains: name,
+        mode: "insensitive",
+      },
     },
     take: per_page,
     skip: skip,

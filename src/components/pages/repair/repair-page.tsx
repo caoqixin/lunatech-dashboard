@@ -4,10 +4,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { PlusIcon } from "@radix-ui/react-icons";
 import { Separator } from "@/components/ui/separator";
-import { unstable_noStore } from "next/cache";
 import { searchParamsValue } from "@/schemas/search-params-schema";
-import { Suspense } from "react";
-import { DataTableSkeleton } from "@/components/tables/v2/data-table-skeleton";
 import { RepairTable } from "@/components/tables/v2/repair/repair-table";
 
 interface RepairPageProps {
@@ -15,8 +12,6 @@ interface RepairPageProps {
 }
 
 const RepairPage = async ({ search }: RepairPageProps) => {
-  unstable_noStore();
-
   const stringSeatch = search as unknown as Record<string, string>;
   const searchParams = new URLSearchParams(stringSeatch).toString();
 
@@ -42,9 +37,7 @@ const RepairPage = async ({ search }: RepairPageProps) => {
         </XinHeader>
         <Separator />
 
-        <Suspense fallback={<DataTableSkeleton columnCount={4} rowCount={5} />}>
-          <RepairTable data={data} />
-        </Suspense>
+        <RepairTable data={data} />
       </>
     </div>
   );

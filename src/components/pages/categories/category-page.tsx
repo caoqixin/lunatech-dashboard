@@ -2,10 +2,7 @@ import BreadCrumb, { BreadCrumbType } from "@/components/breadcrumb";
 import XinHeader from "../_components/xin-header";
 import { Separator } from "@/components/ui/separator";
 import CreateCategory from "./create-category";
-import { unstable_noStore } from "next/cache";
 import { searchParamsValue } from "@/schemas/search-params-schema";
-import { Suspense } from "react";
-import { DataTableSkeleton } from "@/components/tables/v2/data-table-skeleton";
 import { CategoryTable } from "@/components/tables/v2/category/category-table";
 
 interface CategoryPageProps {
@@ -13,7 +10,6 @@ interface CategoryPageProps {
 }
 
 const CategoryPage = async ({ search }: CategoryPageProps) => {
-  unstable_noStore();
   const stringSeatch = search as unknown as Record<string, string>;
   const searchParams = new URLSearchParams(stringSeatch).toString();
 
@@ -34,9 +30,7 @@ const CategoryPage = async ({ search }: CategoryPageProps) => {
           <CreateCategory />
         </XinHeader>
         <Separator />
-        <Suspense fallback={<DataTableSkeleton columnCount={3} rowCount={5} />}>
-          <CategoryTable data={data} />
-        </Suspense>
+        <CategoryTable data={data} />
       </>
     </div>
   );
