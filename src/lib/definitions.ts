@@ -8,6 +8,10 @@ export type WarrantyWithRepair = Prisma.WarrantyGetPayload<{
   include: { repair: { include: { customer: true } } };
 }>;
 
+export type PublicPhone = Prisma.PhoneGetPayload<{
+  select: { id: true; name: true };
+}>;
+
 export interface RepairMonthData {
   jan?: Repair[];
   feb?: Repair[];

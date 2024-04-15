@@ -1,5 +1,5 @@
-import { ModeToggle } from "@/components/mode-toggle";
+import HomePage from "@/components/pages/home/home-page";
 
 export default function Home() {
-  return <ModeToggle />;
+  return <HomePage />;
 }

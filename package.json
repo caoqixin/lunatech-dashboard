@@ -1,15 +1,15 @@
 {
-  "name": "xintech-dashboard",
+  "name": "lunatech",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "create-user": "pnpm dlx ts-node -O '{\"module\": \"commonjs\"}' .scriptscreate-user.ts"
   },
   "dependencies": {
-    "@auth/prisma-adapter": "^1.5.2",
     "@hookform/resolvers": "^3.3.4",
     "@prisma/client": "^5.12.1",
     "@radix-ui/react-alert-dialog": "^1.0.5",
@@ -28,18 +28,17 @@
     "@radix-ui/react-toast": "^1.1.5",
     "@radix-ui/react-tooltip": "^1.0.7",
     "@supabase/ssr": "^0.1.0",
-    "@supabase/supabase-js": "^2.42.0",
-    "@tanstack/react-table": "^8.15.3",
+    "@supabase/supabase-js": "^2.42.4",
+    "@tanstack/react-table": "^8.16.0",
     "@uidotdev/usehooks": "^2.4.1",
     "@upstash/redis": "^1.29.0",
-    "bcrypt": "^5.1.1",
-    "bcryptjs": "^2.4.3",
     "chart.js": "^4.4.2",
     "cheerio": "1.0.0-rc.12",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "cmdk": "^0.2.1",
     "dayjs": "^1.11.10",
+    "dotenv": "^16.4.5",
     "lodash": "^4.17.21",
     "next": "14.1.0",
     "next-auth": "5.0.0-beta.16",
@@ -47,23 +46,21 @@
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
-    "react-hook-form": "^7.51.2",
+    "react-hook-form": "^7.51.3",
     "tailwind-merge": "^2.2.2",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.22.4",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
-    "@types/bcrypt": "^5.0.2",
-    "@types/bcryptjs": "^2.4.6",
     "@types/lodash": "^4.17.0",
-    "@types/node": "^20.12.4",
-    "@types/react": "^18.2.74",
-    "@types/react-dom": "^18.2.24",
+    "@types/node": "^20.12.7",
+    "@types/react": "^18.2.78",
+    "@types/react-dom": "^18.2.25",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
     "prisma": "^5.12.1",
     "tailwindcss": "^3.4.3",
-    "typescript": "^5.4.4"
+    "typescript": "^5.4.5"
   }
 }
