@@ -16,7 +16,7 @@ export default prisma.$extends({
   model: {
     brand: {
       async exists(name: string) {
-        const result = await prisma.brand.findFirst({
+        const result = await prisma.brand.findUnique({
           where: {
             name,
           },
@@ -27,7 +27,7 @@ export default prisma.$extends({
     },
     phone: {
       async exists(name: string) {
-        const result = await prisma.phone.findFirst({
+        const result = await prisma.phone.findUnique({
           where: {
             name,
           },

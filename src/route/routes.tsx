@@ -10,6 +10,7 @@ import {
   MixerHorizontalIcon,
   MobileIcon,
   PersonIcon,
+  ZoomInIcon,
 } from "@radix-ui/react-icons";
 
 export interface Route {
@@ -93,6 +94,13 @@ export const routes: Route[] = [
   },
   {
     id: 11,
+    title: "报价",
+    href: "/",
+    label: "preventivo",
+    icon: <ZoomInIcon />,
+  },
+  {
+    id: 12,
     title: "登出",
     label: "logout",
     icon: <ExitIcon />,

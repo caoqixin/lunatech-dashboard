@@ -15,14 +15,21 @@ export async function importBrandAndPhone(data: CrawlBrandData[]) {
         // 如果该品牌已存在
         // 更新该品牌的手机型号
         // 过滤该品牌的手机型号, 看是否存在同样的型号
-        const filteredPhones = item.models
-          .filter(async (model) =>
-            model.name ? await prisma.phone.exists(model.name) : false
-          )
-          .map((item) => ({
-            name: item.name!,
-            isTablet: false,
-          }));
+        const filteredPhones = [];
+        for (const model of item.models) {
+          const isExistsPhone = await prisma.phone.exists(model.name ?? "");
+
+          if (isExistsPhone) {
+            continue;
+          }
+
+          filteredPhones.push(model);
+        }
+
+        const finalPhones = filteredPhones.map((item) => ({
+          name: item.name!,
+          isTablet: item.isTablet ?? false,
+        }));
 
         const res = await prisma.brand.update({
           where: {
@@ -31,7 +38,7 @@ export async function importBrandAndPhone(data: CrawlBrandData[]) {
           data: {
             phones: {
               createMany: {
-                data: filteredPhones,
+                data: finalPhones,
               },
             },
           },
@@ -42,7 +49,7 @@ export async function importBrandAndPhone(data: CrawlBrandData[]) {
       } else {
         const filteredPhones = item.models.map((item) => ({
           name: item.name!,
-          isTablet: false,
+          isTablet: item.isTablet ?? false,
         }));
 
         const res = await prisma.brand.create({

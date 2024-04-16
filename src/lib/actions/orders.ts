@@ -13,6 +13,35 @@ export async function getValue() {
   return data;
 }
 
+export async function addToOrders(id: number) {
+  const component = await prisma.component.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      category: true,
+      public_price: true,
+    },
+  });
+
+  if (!component) return false;
+
+  try {
+    await addToDataList({
+      ...component,
+      stock: 1,
+      public_price: component.public_price.toString(),
+    });
+
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 export async function addToDataList(
   component: OrderComponent & { stock: number }
 ) {

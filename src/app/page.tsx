@@ -1,5 +1,7 @@
 import HomePage from "@/components/pages/home/home-page";
+import { auth } from "@/lib/user";
 
-export default function Home() {
+export default async function Home() {
+  await auth();
   return <HomePage />;
 }

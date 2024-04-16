@@ -12,6 +12,24 @@ export type PublicPhone = Prisma.PhoneGetPayload<{
   select: { id: true; name: true };
 }>;
 
+export type Preventivo = Prisma.ComponentGetPayload<{
+  select: {
+    id: true;
+    name: true;
+    category: true;
+    quality: true;
+    stock: true;
+    public_price: true;
+  };
+}> & {
+  supplier:
+    | {
+        site: string | null;
+        name: string;
+      }
+    | string;
+};
+
 export interface RepairMonthData {
   jan?: Repair[];
   feb?: Repair[];
@@ -55,9 +73,10 @@ export type RedisOrderType = Record<
 > | null;
 
 export type CrawlBrandData = {
-  brandName: string | undefined;
+  brandName?: string;
   models: {
-    name: string | undefined;
+    name?: string;
+    isTablet?: boolean;
   }[];
 };
 
