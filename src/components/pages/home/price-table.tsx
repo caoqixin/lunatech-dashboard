@@ -64,7 +64,13 @@ export default function PriceTable({
                   {_.isString(data.supplier) ? (
                     data.supplier
                   ) : data.supplier.site ? (
-                    <Link href={data.supplier.site}>{data.supplier.name}</Link>
+                    <Link
+                      href={data.supplier.site}
+                      className="text-blue-500"
+                      target="_blank"
+                    >
+                      {data.supplier.name}
+                    </Link>
                   ) : (
                     data.supplier.name
                   )}

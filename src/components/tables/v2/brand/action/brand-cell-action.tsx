@@ -1,6 +1,6 @@
-import { Brand } from "@/lib/definitions";
 import { EditBrand } from "./edit-brand";
 import { DeleteBrand } from "./delete-brand";
+import { Brand } from "@prisma/client";
 
 const BrandCellAction = (brand: Brand) => {
   return (
