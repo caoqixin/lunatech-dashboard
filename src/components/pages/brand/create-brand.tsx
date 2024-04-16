@@ -38,7 +38,7 @@ const CreateBrand = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof BrandSchema>) => {
-    const res = await fetch("http://localhost:3000/api/v1/brands", {
+    const res = await fetch("/api/v1/brands", {
       method: "POST",
       body: JSON.stringify(values),
     });

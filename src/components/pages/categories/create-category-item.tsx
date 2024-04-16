@@ -38,13 +38,10 @@ const CreateCategoryItem = ({ categoryId }: { categoryId: number }) => {
   });
 
   const onSubmit = async (values: z.infer<typeof CategoryItemSchema>) => {
-    const res = await fetch(
-      `http://localhost:3000/api/v1/categories/${categoryId}`,
-      {
-        method: "POST",
-        body: JSON.stringify(values),
-      }
-    );
+    const res = await fetch(`/api/v1/categories/${categoryId}`, {
+      method: "POST",
+      body: JSON.stringify(values),
+    });
     const data = await res.json();
 
     if (data.status == "success") {

@@ -16,7 +16,7 @@ const SupplierPage = async ({ search }: SupplierPageProps) => {
     { title: "供应商管理", link: "/dashboard/suppliers" },
   ];
   const res = await fetch(
-    `http://localhost:3000/api/v1/suppliers?${searchParams}`
+    `${process.env.BASE_URL}/api/v1/suppliers?${searchParams}`
   );
 
   const data = await res.json();

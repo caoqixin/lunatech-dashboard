@@ -41,7 +41,7 @@ const CreateCusomer = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof CustomerSchema>) => {
-    const res = await fetch("http://localhost:3000/api/v1/customers", {
+    const res = await fetch("/api/v1/customers", {
       method: "POST",
       body: JSON.stringify(values),
     });

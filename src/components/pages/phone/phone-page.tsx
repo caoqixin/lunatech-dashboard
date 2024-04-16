@@ -32,7 +32,7 @@ const PhonePage = async ({ brandId, search }: PhonePageProps) => {
   ];
 
   const res = await fetch(
-    `http://localhost:3000/api/v1/brands/${brandId}?${searchParams}`
+    `${process.env.BASE_URL}/api/v1/brands/${brandId}?${searchParams}`
   );
 
   const data = await res.json();

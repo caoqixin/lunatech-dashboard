@@ -16,7 +16,7 @@ const CustomerPage = async ({ search }: CustomerPageProps) => {
     { title: "客户中心", link: "/dashboard/customers" },
   ];
   const res = await fetch(
-    `http://localhost:3000/api/v1/customers?${searchParams}`
+    `${process.env.BASE_URL}/api/v1/customers?${searchParams}`
   );
 
   const data = await res.json();

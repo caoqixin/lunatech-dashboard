@@ -35,7 +35,7 @@ const CategoryItemPage = async ({
   ];
 
   const res = await fetch(
-    `http://localhost:3000/api/v1/categories/${categoryId}?${searchParams}`
+    `${process.env.BASE_URL}/api/v1/categories/${categoryId}?${searchParams}`
   );
 
   const data = await res.json();

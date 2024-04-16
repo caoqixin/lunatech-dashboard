@@ -16,7 +16,7 @@ const WarrantyPage = async ({ search }: WarrantyPageProps) => {
     { title: "保修管理", link: "/dashboard/warranties" },
   ];
   const res = await fetch(
-    `http://localhost:3000/api/v1/warranties?${searchParams}`
+    `${process.env.BASE_URL}/api/v1/warranties?${searchParams}`
   );
 
   const data = await res.json();

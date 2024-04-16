@@ -42,7 +42,7 @@ const CreateSupplier = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof SupplierSchema>) => {
-    const res = await fetch("http://localhost:3000/api/v1/suppliers", {
+    const res = await fetch("/api/v1/suppliers", {
       method: "POST",
       body: JSON.stringify(values),
     });

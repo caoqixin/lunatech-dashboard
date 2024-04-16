@@ -19,7 +19,7 @@ const RepairPage = async ({ search }: RepairPageProps) => {
     { title: "维修管理", link: "/dashboard/repairs" },
   ];
   const res = await fetch(
-    `http://localhost:3000/api/v1/repairs?${searchParams}`
+    `${process.env.BASE_URL}/api/v1/repairs?${searchParams}`
   );
 
   const data = await res.json();

@@ -80,7 +80,7 @@ const XinStepForm = ({ steps, form }: XinStepFormProps) => {
   };
 
   const onSubmit = async (values: any) => {
-    const res = await fetch("http://localhost:3000/api/v1/repairs", {
+    const res = await fetch("/api/v1/repairs", {
       method: "POST",
       body: JSON.stringify(values),
     });

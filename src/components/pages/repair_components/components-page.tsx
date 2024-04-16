@@ -10,17 +10,26 @@ import {
   DataTableFilterableColumn,
   Option,
 } from "@/components/tables/v2/types";
-import { CategoryItem, Component } from "@prisma/client";
+import { CategoryItem, Component, Setting } from "@prisma/client";
 
 interface ComponentPageProps {
   search: searchComponentParamsValue;
 }
 
+const getCategoriesApi = async () => {
+  const res = await fetch(`/api/v1/settings/repair_category`);
+  if (res.ok) {
+    const data: Setting = await res.json();
+    return data.setting_value;
+  }
+
+  return null;
+};
+
 const getAllCategoires = async () => {
+  const categoryApi = await getCategoriesApi();
   try {
-    const res = await fetch(
-      "http://localhost:3000/api/v1/form/options/category_items/1"
-    );
+    const res = await fetch(`${process.env.BASE_URL}${categoryApi}`);
     const data: CategoryItem[] = await res.json();
 
     const options = data.map((item: CategoryItem) => ({

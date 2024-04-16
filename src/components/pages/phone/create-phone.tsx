@@ -41,7 +41,7 @@ const CreatePhone = ({ brandId }: { brandId: number }) => {
   });
 
   const onSubmit = async (values: z.infer<typeof PhoneSchema>) => {
-    const res = await fetch(`http://localhost:3000/api/v1/brands/${brandId}`, {
+    const res = await fetch(`/api/v1/brands/${brandId}`, {
       method: "POST",
       body: JSON.stringify(values),
     });

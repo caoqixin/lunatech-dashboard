@@ -91,13 +91,10 @@ export function EditRepairForm({ initialData }: EditRepairFormProps) {
   });
 
   const onSubmit = async (values: any) => {
-    const res = await fetch(
-      `http://localhost:3000/api/v1/repairs/${initialData.id}`,
-      {
-        method: "PUT",
-        body: JSON.stringify(values),
-      }
-    );
+    const res = await fetch(`/api/v1/repairs/${initialData.id}`, {
+      method: "PUT",
+      body: JSON.stringify(values),
+    });
 
     const data = await res.json();
 

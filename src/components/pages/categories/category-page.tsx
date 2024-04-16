@@ -17,7 +17,7 @@ const CategoryPage = async ({ search }: CategoryPageProps) => {
     { title: "分类管理", link: "/dashboard/categories" },
   ];
   const res = await fetch(
-    `http://localhost:3000/api/v1/categories?${searchParams}`
+    `${process.env.BASE_URL}/api/v1/categories?${searchParams}`
   );
 
   const data = await res.json();

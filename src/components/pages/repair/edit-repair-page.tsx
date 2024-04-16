@@ -7,7 +7,7 @@ import { ResetIcon } from "@radix-ui/react-icons";
 import { EditRepairForm } from "./edit-repair-form";
 
 const EditRepairPage = async ({ id }: { id: number }) => {
-  const res = await fetch(`http://localhost:3000/api/v1/repairs/${id}/edit`);
+  const res = await fetch(`${process.env.BASE_URL}/api/v1/repairs/${id}/edit`);
 
   const repair = await res.json();
 

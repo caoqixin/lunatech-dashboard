@@ -19,7 +19,7 @@ const BrandPage = async ({ search }: BrandPageProps) => {
   ];
 
   const res = await fetch(
-    `http://localhost:3000/api/v1/brands?${searchParams}`
+    `${process.env.BASE_URL}/api/v1/brands?${searchParams}`
   );
 
   const data = await res.json();

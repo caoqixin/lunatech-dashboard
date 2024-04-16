@@ -93,9 +93,7 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
   };
   const getAllBrands = async () => {
     try {
-      const response = await fetch(
-        "http://localhost:3000/api/v1/form/options/brand"
-      );
+      const response = await fetch("/api/v1/form/options/brand");
 
       if (response.ok) {
         const data = await response.json();
@@ -125,9 +123,7 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
 
   const getAllSuppliers = async () => {
     try {
-      const response = await fetch(
-        "http://localhost:3000/api/v1/form/options/supplier"
-      );
+      const response = await fetch("/api/v1/form/options/supplier");
 
       if (response.ok) {
         const data = await response.json();
@@ -156,9 +152,7 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
 
   const getPhonesByName = async (name: string) => {
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/v1/brands/phones/${name}`
-      );
+      const response = await fetch(`/api/v1/brands/phones/${name}`);
 
       if (response.ok) {
         const data = await response.json();
@@ -182,7 +176,7 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
   const onSubmit = async (values: ComponentFormValue) => {
     setLoading(true);
     if (initialData == null) {
-      const res = await fetch("http://localhost:3000/api/v1/components/", {
+      const res = await fetch("/api/v1/components/", {
         method: "POST",
         body: JSON.stringify(values),
       });
@@ -202,13 +196,10 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
         });
       }
     } else {
-      const res = await fetch(
-        `http://localhost:3000/api/v1/components/${initialData.id}`,
-        {
-          method: "PUT",
-          body: JSON.stringify(values),
-        }
-      );
+      const res = await fetch(`/api/v1/components/${initialData.id}`, {
+        method: "PUT",
+        body: JSON.stringify(values),
+      });
 
       const data = await res.json();
 
