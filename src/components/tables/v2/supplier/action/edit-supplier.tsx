@@ -44,13 +44,10 @@ export function EditSupplier(supplier: Supplier) {
   });
 
   const onSubmit = async (values: z.infer<typeof SupplierSchema>) => {
-    const res = await fetch(
-      `http://localhost:3000/api/v1/suppliers/${supplier.id}`,
-      {
-        method: "PUT",
-        body: JSON.stringify(values),
-      }
-    );
+    const res = await fetch(`/api/v1/suppliers/${supplier.id}`, {
+      method: "PUT",
+      body: JSON.stringify(values),
+    });
 
     const data = await res.json();
 

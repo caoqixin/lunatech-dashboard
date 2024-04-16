@@ -15,7 +15,7 @@ export default async function ShowRepairData({
   customerId: number;
 }) {
   const res = await fetch(
-    `http://localhost:3000/api/v1/customers/${customerId}`
+    `${process.env.BASE_URL}/api/v1/customers/${customerId}`
   );
 
   const data = await res.json();

@@ -22,7 +22,7 @@ export function DeleteSupplier({ id, name }: { id: number; name: string }) {
   const { toast } = useToast();
 
   const deleteSupplier = async () => {
-    const res = await fetch(`http://localhost:3000/api/v1/suppliers/${id}`, {
+    const res = await fetch(`/api/v1/suppliers/${id}`, {
       method: "DELETE",
     });
 

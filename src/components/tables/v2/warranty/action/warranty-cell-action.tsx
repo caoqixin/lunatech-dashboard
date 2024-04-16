@@ -9,12 +9,9 @@ export function WarrantyCellAction({ data }: { data: WarrantyWithRepair }) {
   const { toast } = useToast();
   const router = useRouter();
   const rework = async () => {
-    const res = await fetch(
-      `http://localhost:3000/api/v1/warranties/rework/${data.id}`,
-      {
-        method: "PUT",
-      }
-    );
+    const res = await fetch(`/api/v1/warranties/rework/${data.id}`, {
+      method: "PUT",
+    });
 
     const resData = await res.json();
 

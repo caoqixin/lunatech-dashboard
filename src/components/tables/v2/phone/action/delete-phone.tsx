@@ -22,12 +22,9 @@ export function DeletePhone({ id, name }: { id: number; name: string }) {
   const router = useRouter();
 
   const deletePhone = async () => {
-    const res = await fetch(
-      `http://localhost:3000/api/v1/brands/phones/${id}`,
-      {
-        method: "DELETE",
-      }
-    );
+    const res = await fetch(`/api/v1/brands/phones/${id}`, {
+      method: "DELETE",
+    });
 
     const data = await res.json();
 

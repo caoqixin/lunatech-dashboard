@@ -4,7 +4,7 @@ import { Component } from "@prisma/client";
 import React from "react";
 
 const ShowDetail = async ({ id }: { id: number }) => {
-  const res = await fetch(`http://localhost:3000/api/v1/components/${id}`);
+  const res = await fetch(`${process.env.BASE_URL}/api/v1/components/${id}`);
 
   const component: Component = await res.json();
 

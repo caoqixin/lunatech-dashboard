@@ -18,9 +18,7 @@ export const repairColumns: ColumnDef<Repair>[] = [
       const customerId = row.original.customerId;
       const [customer, setCustomer] = useState<Customer | null>(null);
       const getCustomer = async () => {
-        const res = await fetch(
-          `http://localhost:3000/api/v1/customers/${customerId}`
-        );
+        const res = await fetch(`/api/v1/customers/${customerId}`);
         const data = await res.json();
 
         setCustomer(data);

@@ -22,7 +22,7 @@ export function DeleteRepair({ id, phone }: { id: number; phone: string }) {
   const router = useRouter();
 
   const deleteRepair = async () => {
-    const res = await fetch(`http://localhost:3000/api/v1/repairs/${id}`, {
+    const res = await fetch(`/api/v1/repairs/${id}`, {
       method: "DELETE",
     });
 

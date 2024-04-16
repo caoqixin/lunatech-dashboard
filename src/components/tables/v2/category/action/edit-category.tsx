@@ -39,7 +39,7 @@ export function EditCategory({ name, id }: { name: string; id: number }) {
   });
 
   const onSubmit = async (values: z.infer<typeof CategorySchema>) => {
-    const res = await fetch(`http://localhost:3000/api/v1/categories/${id}`, {
+    const res = await fetch(`/api/v1/categories/${id}`, {
       method: "PUT",
       body: JSON.stringify(values),
     });

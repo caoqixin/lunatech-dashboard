@@ -22,7 +22,7 @@ export function DeleteBrand({ id, name }: { id: number; name: string }) {
   const router = useRouter();
 
   const deleteBrand = async () => {
-    const res = await fetch(`http://localhost:3000/api/v1/brands/${id}`, {
+    const res = await fetch(`/api/v1/brands/${id}`, {
       method: "DELETE",
     });
 

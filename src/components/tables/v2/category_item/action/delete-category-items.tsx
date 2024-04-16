@@ -27,12 +27,9 @@ export function DeleteCategoryItems({
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const deleteCategory = async () => {
-    const res = await fetch(
-      `http://localhost:3000/api/v1/categories/items/${id}`,
-      {
-        method: "DELETE",
-      }
-    );
+    const res = await fetch(`/api/v1/categories/items/${id}`, {
+      method: "DELETE",
+    });
 
     const data = await res.json();
 

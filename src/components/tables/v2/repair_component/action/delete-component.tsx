@@ -22,7 +22,7 @@ export function DeleteComponent({ id, name }: { id: number; name: string }) {
   const [open, setOpen] = useState(false);
 
   const deleteComponent = async () => {
-    const res = await fetch(`http://localhost:3000/api/v1/components/${id}`, {
+    const res = await fetch(`/api/v1/components/${id}`, {
       method: "DELETE",
     });
 

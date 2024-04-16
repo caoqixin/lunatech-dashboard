@@ -43,13 +43,10 @@ export function EditPhone(phone: Phone) {
   });
 
   const onSubmit = async (values: z.infer<typeof PhoneSchema>) => {
-    const res = await fetch(
-      `http://localhost:3000/api/v1/brands/phones/${phone.id}`,
-      {
-        method: "PUT",
-        body: JSON.stringify(values),
-      }
-    );
+    const res = await fetch(`/api/v1/brands/phones/${phone.id}`, {
+      method: "PUT",
+      body: JSON.stringify(values),
+    });
 
     const data = await res.json();
 

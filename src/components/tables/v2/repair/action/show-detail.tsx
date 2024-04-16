@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 import React from "react";
 
 const ShowDetail = async ({ id }: { id: number }) => {
-  const res = await fetch(`http://localhost:3000/api/v1/repairs/${id}`);
+  const res = await fetch(`${process.env.BASE_URL}/api/v1/repairs/${id}`);
   const repair: RepiarWithCustomer = await res.json();
 
   return (
