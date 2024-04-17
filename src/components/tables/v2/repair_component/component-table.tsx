@@ -13,7 +13,7 @@ interface ComponentTableProps {
     components: Component[];
     pageCount: number;
   };
-  filterColumn: DataTableFilterableColumn<Component>[];
+  filterColumn?: DataTableFilterableColumn<Component>[];
 }
 
 export function ComponentTable({ data, filterColumn }: ComponentTableProps) {

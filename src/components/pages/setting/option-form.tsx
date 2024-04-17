@@ -27,8 +27,10 @@ const OptionForm = ({ label, name, placeholder = label }: OptionFormProps) => {
   const { toast } = useToast();
   const router = useRouter();
   const [option, setOption] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const getOption = async () => {
+    setLoading(true);
     try {
       const res = await fetch(`/api/v1/settings/${name}`);
 
@@ -36,8 +38,10 @@ const OptionForm = ({ label, name, placeholder = label }: OptionFormProps) => {
         const data: Setting = await res.json();
         setOption(data.setting_value);
       }
+      setLoading(false);
     } catch (error) {
       setOption(null);
+      setLoading(false);
     }
   };
 
@@ -65,7 +69,7 @@ const OptionForm = ({ label, name, placeholder = label }: OptionFormProps) => {
           {label}:
         </Label>
         <div className="flex gap-2">
-          {option == null ? (
+          {loading ? (
             <Skeleton className="h-9 w-full rounded-md border" />
           ) : (
             <Input
