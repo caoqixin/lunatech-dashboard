@@ -14,9 +14,7 @@ export default async function ShowRepairData({
 }: {
   customerId: number;
 }) {
-  const res = await fetch(
-    `${process.env.BASE_URL}/api/v1/customers/${customerId}`
-  );
+  const res = await fetch(`/api/v1/customers/${customerId}`);
 
   const data = await res.json();
 
