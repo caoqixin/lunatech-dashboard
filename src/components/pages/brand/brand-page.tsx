@@ -15,7 +15,7 @@ const BrandPage = async ({ search }: BrandPageProps) => {
   const searchParams = new URLSearchParams(stringSeatch).toString();
 
   const breadcrumbItems: BreadCrumbType[] = [
-    { title: "手机品牌管理", link: "/dashboard/brands" },
+    { title: "手机品牌管理", link: "/dashboard/phones" },
   ];
 
   const res = await fetch(
