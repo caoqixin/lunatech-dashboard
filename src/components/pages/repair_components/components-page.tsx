@@ -22,7 +22,10 @@ const getCategoriesApi = async () => {
   );
   if (res.ok) {
     const data: Setting = await res.json();
-    return data.setting_value;
+    if (data) {
+      return data.setting_value;
+    }
+    return null;
   }
 
   return null;
