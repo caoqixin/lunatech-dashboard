@@ -17,7 +17,9 @@ interface ComponentPageProps {
 }
 
 const getCategoriesApi = async () => {
-  const res = await fetch(`/api/v1/settings/repair_category`);
+  const res = await fetch(
+    `${process.env.BASE_URL}/api/v1/settings/repair_category`
+  );
   if (res.ok) {
     const data: Setting = await res.json();
     return data.setting_value;
