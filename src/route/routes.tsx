@@ -12,12 +12,15 @@ import {
   PersonIcon,
   ZoomInIcon,
 } from "@radix-ui/react-icons";
+import Link from "next/link";
+import { HTMLAttributeAnchorTarget } from "react";
 
 export interface Route {
   id: number;
   title: string;
   label: string;
   href?: string;
+  target?: HTMLAttributeAnchorTarget;
   icon?: React.ReactNode;
 }
 
@@ -25,7 +28,7 @@ export const routes: Route[] = [
   {
     id: 1,
     title: "首页",
-    label: "dashboard",
+    label: "(overview)",
     href: "/dashboard",
     icon: <HomeIcon />,
   },
@@ -98,6 +101,7 @@ export const routes: Route[] = [
     href: "/",
     label: "preventivo",
     icon: <ZoomInIcon />,
+    target: "_blank",
   },
   {
     id: 12,

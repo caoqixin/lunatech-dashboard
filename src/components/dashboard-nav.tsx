@@ -29,7 +29,7 @@ const DashboardNav = ({ routes, setOpen }: DashboardNavProps) => {
       {routes.map((route) => {
         if (route.href) {
           return (
-            <Link key={route.id} href={route.href}>
+            <Link key={route.id} href={route.href} target={route.target}>
               <span
                 className={cn(
                   "flex items-center rounded-md gap-2 px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",

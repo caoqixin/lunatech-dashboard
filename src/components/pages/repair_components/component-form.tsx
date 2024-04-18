@@ -295,12 +295,14 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {brands &&
-                        brands.map((brand) => (
-                          <SelectItem key={brand.id} value={brand.name}>
-                            {brand.name}
-                          </SelectItem>
-                        ))}
+                      <ScrollArea className="h-[200px]">
+                        {brands &&
+                          brands.map((brand) => (
+                            <SelectItem key={brand.id} value={brand.name}>
+                              {brand.name}
+                            </SelectItem>
+                          ))}
+                      </ScrollArea>
                     </SelectContent>
                   </Select>
 
@@ -341,12 +343,14 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {categories &&
-                        categories.map((category) => (
-                          <SelectItem key={category.id} value={category.name}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
+                      <ScrollArea className="h-[200px]">
+                        {categories &&
+                          categories.map((category) => (
+                            <SelectItem key={category.id} value={category.name}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                      </ScrollArea>
                     </SelectContent>
                   </Select>
                   <FormMessage />
