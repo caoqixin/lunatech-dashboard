@@ -25,7 +25,7 @@ export const supplierColumns: ColumnDef<Supplier>[] = [
     cell: ({ row }) => {
       const supplier = row.original;
 
-      return <SupplierCellAction {...supplier} />;
+      return <SupplierCellAction key={supplier.id} {...supplier} />;
     },
   },
 ];

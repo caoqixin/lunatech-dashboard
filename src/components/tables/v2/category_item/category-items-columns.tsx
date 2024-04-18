@@ -13,7 +13,9 @@ export const categoryItemColumns: ColumnDef<CategoryItem>[] = [
     cell: ({ row }) => {
       const categoryItems = row.original;
 
-      return <CategoryItemsCellAction {...categoryItems} />;
+      return (
+        <CategoryItemsCellAction key={categoryItems.id} {...categoryItems} />
+      );
     },
   },
 ];

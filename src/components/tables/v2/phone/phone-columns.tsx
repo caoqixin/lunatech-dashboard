@@ -28,7 +28,7 @@ export const phoneColumns: ColumnDef<Phone>[] = [
     cell: ({ row }) => {
       const phone = row.original;
 
-      return <PhoneCellAction {...phone} />;
+      return <PhoneCellAction key={phone.id} {...phone} />;
     },
   },
 ];

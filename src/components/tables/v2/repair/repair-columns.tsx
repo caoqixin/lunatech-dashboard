@@ -98,7 +98,7 @@ export const repairColumns: ColumnDef<Repair>[] = [
     cell: ({ row }) => {
       const repair = row.original;
 
-      return <RepairCellAction {...repair} />;
+      return <RepairCellAction key={repair.id} {...repair} />;
     },
   },
 ];

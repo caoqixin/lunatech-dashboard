@@ -44,7 +44,7 @@ export const componentColumns: ColumnDef<Component>[] = [
     cell: ({ row }) => {
       const component = row.original;
 
-      return <ComponentCellAction {...component} />;
+      return <ComponentCellAction key={component.id} {...component} />;
     },
   },
 ];

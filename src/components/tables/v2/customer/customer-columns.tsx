@@ -21,9 +21,9 @@ export const customerColumns: ColumnDef<Customer>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
-      const phone = row.original;
+      const customer = row.original;
 
-      return <CustomerCellAction {...phone} />;
+      return <CustomerCellAction key={customer.id} {...customer} />;
     },
   },
 ];

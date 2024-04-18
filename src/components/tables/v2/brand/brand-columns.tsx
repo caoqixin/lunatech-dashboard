@@ -28,7 +28,7 @@ export const brandColumns: ColumnDef<Brand>[] = [
     cell: ({ row }) => {
       const brand = row.original;
 
-      return <BrandCellAction {...brand} />;
+      return <BrandCellAction key={brand.id} {...brand} />;
     },
   },
 ];
