@@ -5,16 +5,13 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "../ui/sheet";
-import { ExitIcon, HamburgerMenuIcon } from "@radix-ui/react-icons";
+import { HamburgerMenuIcon } from "@radix-ui/react-icons";
 import DashboardNav from "../dashboard-nav";
 import { routes } from "@/route/routes";
-import { Button } from "../ui/button";
-
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 const MobileSidebar = ({ className }: SidebarProps) => {
@@ -25,7 +22,10 @@ const MobileSidebar = ({ className }: SidebarProps) => {
         <SheetTrigger asChild>
           <HamburgerMenuIcon className="cursor-pointer" />
         </SheetTrigger>
-        <SheetContent side="left" className="!px-0">
+        <SheetContent
+          side="left"
+          className="!px-0 flex flex-col gap-3 h-dvh overflow-auto"
+        >
           <SheetHeader className="items-center">
             <SheetTitle className="font-medium mt-2 mb-2 px-4 text-lg tracking-tight">
               Luna Tech
@@ -34,10 +34,8 @@ const MobileSidebar = ({ className }: SidebarProps) => {
               管理后台
             </SheetDescription>
           </SheetHeader>
-          <div className="px-4 mt-5">
-            <div className="px-2">
-              <DashboardNav setOpen={setOpen} routes={routes} />
-            </div>
+          <div className="px-4">
+            <DashboardNav setOpen={setOpen} routes={routes} />
           </div>
         </SheetContent>
       </Sheet>

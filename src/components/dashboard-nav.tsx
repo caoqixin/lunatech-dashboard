@@ -25,7 +25,7 @@ const DashboardNav = ({ routes, setOpen }: DashboardNavProps) => {
   }
 
   return (
-    <nav className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2">
       {routes.map((route) => {
         if (route.href) {
           return (
@@ -53,7 +53,7 @@ const DashboardNav = ({ routes, setOpen }: DashboardNavProps) => {
           );
         }
       })}
-    </nav>
+    </div>
   );
 };
 

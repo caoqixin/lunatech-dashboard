@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTableToolbar } from "./data-table-toolbar";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { DataTablePagination } from "./data-table-pagintion";
 
 interface DataTableProps<TData, TValue> {
@@ -120,6 +120,7 @@ export function DataTable<TData, TValue>({
             </TableBody>
           </Table>
         </div>
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
 
       {/* pagination bar */}
