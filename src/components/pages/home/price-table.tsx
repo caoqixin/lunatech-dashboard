@@ -40,7 +40,7 @@ export default function PriceTable({
   };
 
   return (
-    <ScrollArea className="mt-3 px-3 min-w-full">
+    <ScrollArea className="mt-3 px-3 min-w-full touch-auto">
       <Table>
         <TableHeader>
           <TableRow>

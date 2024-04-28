@@ -69,7 +69,7 @@ export function DataTable<TData, TValue>({
       ) : (
         ""
       )}
-      <ScrollArea className="rounded-md border h-[calc(80vh-220px)]">
+      <ScrollArea className="rounded-md border h-[calc(80vh-220px)] touch-auto">
         <div className="relative">
           <Table>
             <TableHeader>

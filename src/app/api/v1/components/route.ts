@@ -9,32 +9,107 @@ export async function GET(request: NextRequest) {
   const page = Number(query.get("page")) ?? 1;
   const skip = (page - 1) * per_page;
   const name = query.get("name") ?? "";
+  const category = query.get("category")?.split(".") ?? [];
 
-  const components = await prisma.component.findMany({
-    orderBy: {
-      id: "asc",
-    },
-    where: {
-      name: {
-        contains: name,
-        mode: "insensitive",
+  if (category.length !== 0) {
+    const components = await prisma.component.findMany({
+      orderBy: {
+        id: "asc",
       },
-    },
-    skip,
-    take: per_page,
-  });
-
-  const total = await prisma.component.count({
-    where: {
-      name: {
-        contains: name,
-        mode: "insensitive",
+      where: {
+        category: {
+          in: category,
+        },
+        OR: [
+          {
+            name: {
+              contains: name,
+              mode: "insensitive",
+            },
+          },
+          {
+            code: {
+              contains: name,
+              mode: "insensitive",
+            },
+          },
+        ],
       },
-    },
-  });
-  const pageCount = Math.ceil(total / per_page);
+      skip,
+      take: per_page,
+    });
 
-  return Response.json({ components, pageCount });
+    const total = await prisma.component.count({
+      where: {
+        category: {
+          in: category,
+        },
+        OR: [
+          {
+            name: {
+              contains: name,
+              mode: "insensitive",
+            },
+          },
+          {
+            code: {
+              contains: name,
+              mode: "insensitive",
+            },
+          },
+        ],
+      },
+    });
+    const pageCount = Math.ceil(total / per_page);
+
+    return Response.json({ components, pageCount });
+  } else {
+    const components = await prisma.component.findMany({
+      orderBy: {
+        id: "asc",
+      },
+      where: {
+        OR: [
+          {
+            name: {
+              contains: name,
+              mode: "insensitive",
+            },
+          },
+          {
+            code: {
+              contains: name,
+              mode: "insensitive",
+            },
+          },
+        ],
+      },
+      skip,
+      take: per_page,
+    });
+
+    const total = await prisma.component.count({
+      where: {
+        OR: [
+          {
+            name: {
+              contains: name,
+              mode: "insensitive",
+            },
+          },
+          {
+            code: {
+              contains: name,
+              mode: "insensitive",
+            },
+          },
+        ],
+      },
+    });
+    const pageCount = Math.ceil(total / per_page);
+
+    return Response.json({ components, pageCount });
+  }
 }
 
 export async function POST(req: Request) {

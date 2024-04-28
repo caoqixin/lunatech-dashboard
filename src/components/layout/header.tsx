@@ -5,10 +5,8 @@ import { cn } from "@/lib/utils";
 import UserAvatar from "../user-avatar";
 import { ModeToggle } from "../mode-toggle";
 import { getUser } from "@/lib/user";
-import { unstable_noStore } from "next/cache";
 
 const Header = async () => {
-  unstable_noStore();
   const { user } = await getUser();
 
   return (

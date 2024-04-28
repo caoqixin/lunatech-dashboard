@@ -1,8 +1,10 @@
 "use server";
 import { createClient } from "./supabase/server";
 import { redirect } from "next/navigation";
+import { unstable_noStore as noStore } from "next/cache";
 
 export async function getUser() {
+  noStore();
   const supabse = createClient();
 
   const {

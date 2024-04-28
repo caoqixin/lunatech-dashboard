@@ -12,7 +12,7 @@ const XinCardTop = async () => {
   const top = await fetchTopRepair(10);
 
   return (
-    <Card className="col-span-4 md:col-span-3">
+    <Card className="lg:col-span-3 col-span-4">
       <CardHeader>
         <CardTitle>维修热榜 TOP 10</CardTitle>
         <CardDescription>热门维修手机型号</CardDescription>
