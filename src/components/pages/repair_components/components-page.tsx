@@ -6,7 +6,10 @@ import { PlusIcon } from "@radix-ui/react-icons";
 import Link from "next/link";
 import { searchComponentParamsValue } from "@/schemas/search-params-schema";
 import { ComponentTable } from "@/components/tables/v2/repair_component/component-table";
-import { DataTableFilterableColumn } from "@/components/tables/v2/types";
+import {
+  DataTableFilterableColumn,
+  Option,
+} from "@/components/tables/v2/types";
 import {
   getAllComponents,
   getCategoryForComponent,
@@ -22,7 +25,9 @@ const breadcrumbItems: BreadCrumbType[] = [
 ];
 
 export default async function ComponentPage({ search }: ComponentPageProps) {
-  const categories = await getCategoryForComponent("repair_category");
+  const categories = (await getCategoryForComponent(
+    "repair_category"
+  )) as Option[];
   const data = await getAllComponents(search);
 
   if (!categories) {
