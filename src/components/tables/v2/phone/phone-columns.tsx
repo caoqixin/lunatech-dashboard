@@ -18,7 +18,7 @@ export const phoneColumns: ColumnDef<Phone>[] = [
     accessorKey: "isTablet",
     header: "平板设备",
     cell: ({ row }) => {
-      const isTablet = row.getValue("isTablet") as boolean;
+      const isTablet = row.original.isTablet;
 
       return <Checkbox checked={isTablet} disabled />;
     },

@@ -18,20 +18,19 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { CustomerSchema } from "@/schemas/customer-schema";
+import { createCustomer } from "@/lib/actions/server/customers";
+import { CustomerSchema, customerSchemaValue } from "@/schemas/customer-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PlusIcon } from "@radix-ui/react-icons";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { PlusIcon, ReloadIcon } from "@radix-ui/react-icons";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 
-const CreateCusomer = () => {
-  const router = useRouter();
+export default function CreateCusomer() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
 
-  const form = useForm<z.infer<typeof CustomerSchema>>({
+  const form = useForm<customerSchemaValue>({
     resolver: zodResolver(CustomerSchema),
     defaultValues: {
       name: "",
@@ -40,28 +39,23 @@ const CreateCusomer = () => {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof CustomerSchema>) => {
-    const res = await fetch("/api/v1/customers", {
-      method: "POST",
-      body: JSON.stringify(values),
+  const onSubmit = async (values: customerSchemaValue) => {
+    startTransition(async () => {
+      const data = await createCustomer(values);
+
+      if (data.status === "success") {
+        toast({
+          title: data.msg,
+        });
+        setOpen(false);
+        form.reset();
+      } else {
+        toast({
+          title: data.msg,
+          variant: "destructive",
+        });
+      }
     });
-
-    const data = await res.json();
-
-    if (data.status == "success") {
-      toast({
-        title: data.msg,
-      });
-    } else {
-      toast({
-        title: data.msg,
-        variant: "destructive",
-      });
-    }
-
-    setOpen(false);
-    router.refresh();
-    form.reset();
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -86,7 +80,7 @@ const CreateCusomer = () => {
                 <FormItem className="grid grid-cols-4 items-center gap-4">
                   <FormLabel className="text-right">用户姓名</FormLabel>
                   <FormControl className="col-span-3">
-                    <Input {...field} />
+                    <Input {...field} disabled={pending} />
                   </FormControl>
                   <FormMessage className="col-span-2 ml-auto" />
                 </FormItem>
@@ -99,7 +93,7 @@ const CreateCusomer = () => {
                 <FormItem className="grid grid-cols-4 items-center gap-4">
                   <FormLabel className="text-right">联系号码</FormLabel>
                   <FormControl className="col-span-3">
-                    <Input {...field} />
+                    <Input {...field} disabled={pending} />
                   </FormControl>
                   <FormMessage className="col-span-2 ml-auto" />
                 </FormItem>
@@ -112,20 +106,25 @@ const CreateCusomer = () => {
                 <FormItem className="grid grid-cols-4 items-center gap-4">
                   <FormLabel className="text-right">邮箱</FormLabel>
                   <FormControl className="col-span-3">
-                    <Input {...field} />
+                    <Input {...field} disabled={pending} />
                   </FormControl>
                   <FormMessage className="col-span-2 ml-auto" />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button type="submit">创建</Button>
+              <Button
+                type="submit"
+                disabled={pending}
+                className="flex items-center gap-2"
+              >
+                {pending && <ReloadIcon className="animate-spin" />}
+                创建
+              </Button>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
   );
-};
-
-export default CreateCusomer;
+}

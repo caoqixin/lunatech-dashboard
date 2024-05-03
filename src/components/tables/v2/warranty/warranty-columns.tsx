@@ -97,9 +97,17 @@ export const warrantyColumns: ColumnDef<WarrantyWithRepair>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
-      const warranty = row.original;
+      const {
+        id,
+        repair: {
+          phone,
+          customer: { name },
+        },
+      } = row.original;
 
-      return <WarrantyCellAction key={warranty.id} data={warranty} />;
+      return (
+        <WarrantyCellAction key={id} id={id} phone={phone} cutomer={name} />
+      );
     },
   },
 ];

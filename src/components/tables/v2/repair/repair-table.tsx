@@ -4,12 +4,12 @@ import { ColumnDef } from "@tanstack/react-table";
 import React from "react";
 import { useDataTable } from "@/hooks/use-data-table";
 import { DataTable } from "../data-table";
-import { Repair } from "@prisma/client";
 import { repairColumns } from "./repair-columns";
+import { ClientRepiar } from "@/lib/definitions";
 
 interface RepairTableProps {
   data: {
-    repairs: Repair[];
+    repairs: ClientRepiar[];
     pageCount: number;
   };
 }
@@ -17,7 +17,7 @@ interface RepairTableProps {
 export function RepairTable({ data }: RepairTableProps) {
   const { repairs, pageCount } = data;
 
-  const columns = React.useMemo<ColumnDef<Repair, unknown>[]>(
+  const columns = React.useMemo<ColumnDef<ClientRepiar, unknown>[]>(
     () => repairColumns,
     []
   );

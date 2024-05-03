@@ -17,6 +17,7 @@ import { fetchComponents } from "@/lib/actions/components";
 import {
   addStock,
   addToDataList,
+  changeOrderPrice,
   getDataList,
   minusStock,
   removeAllItem,
@@ -221,6 +222,32 @@ export default function SellTab({ orders }: { orders: RedisOrderType }) {
     }
   }, [dataList]);
 
+  const changePrice = async (
+    e: ChangeEvent<HTMLInputElement>,
+    data: [string, OrderComponent & { stock: number }]
+  ) => {
+    const price = e.target.value;
+    const key = data[0];
+    const value = data[1];
+
+    if (parseInt(price) < 0) {
+      value.public_price = "0";
+    }
+    value.public_price = price;
+    const res = await changeOrderPrice(key, value);
+    if (res?.status == "success") {
+      toast({
+        title: res.msg,
+      });
+      e.target.value = toEUR(e.target.value);
+    } else {
+      toast({
+        title: res?.msg,
+        variant: "destructive",
+      });
+    }
+  };
+
   const wareHouse = async () => {
     if (dataList) {
       const data = Object.values(dataList);
@@ -307,7 +334,13 @@ export default function SellTab({ orders }: { orders: RedisOrderType }) {
                     <TableCell>{data[1].code}</TableCell>
                     <TableCell>{data[1].name}</TableCell>
                     <TableCell>{data[1].category}</TableCell>
-                    <TableCell>{toEUR(data[1].public_price)}</TableCell>
+                    <TableCell>
+                      <Input
+                        defaultValue={toEUR(data[1].public_price)}
+                        onBlur={(e) => changePrice(e, data)}
+                        className="w-24"
+                      />
+                    </TableCell>
                     <TableCell className="flex items-center gap-2">
                       {data[1].stock > 0 ? (
                         <Tips

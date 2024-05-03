@@ -11,7 +11,7 @@ const breadcrumbItems: BreadCrumbType[] = [
   { title: "添加配件", link: "/dashboard/components/create" },
 ];
 
-const CreateComponentPage = () => {
+export default function CreateComponentPage() {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <BreadCrumb items={breadcrumbItems} />
@@ -28,6 +28,4 @@ const CreateComponentPage = () => {
       </>
     </div>
   );
-};
-
-export default CreateComponentPage;
+}

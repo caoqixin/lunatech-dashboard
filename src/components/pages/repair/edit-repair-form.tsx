@@ -9,7 +9,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import MultiSelect, { Option } from "@/components/ui/multi-select";
+import MultiSelect from "@/components/ui/multi-select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -19,58 +19,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { updateRepair } from "@/lib/actions/server/repairs";
+import { useProblem } from "@/lib/fetcher/use-problem";
 import { RepairFormValue, RepairSchema } from "@/schemas/repair-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Setting } from "@prisma/client";
+import { ReloadIcon } from "@radix-ui/react-icons";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 
 interface EditRepairFormProps {
   initialData: any;
 }
+const statuses = ["未维修", "维修中", "已维修", "已取件", "无法维修"];
+const rework_statuses = ["返修中", "返修完成", "已取件"];
 
 export function EditRepairForm({ initialData }: EditRepairFormProps) {
-  const statuses = ["未维修", "维修中", "已维修", "已取件", "无法维修"];
-  const rework_statuses = ["返修中", "返修完成", "已取件"];
-  const [problems, setProblems] = useState<Option[] | null>(null);
   const { toast } = useToast();
   const router = useRouter();
-  const [problemApi, setProblemApi] = useState<string | null>(null);
-  const getProblemApi = async () => {
-    try {
-      const res = await fetch(`/api/v1/settings/repair_problem`);
-
-      if (res.ok) {
-        const data: Setting = await res.json();
-        setProblemApi(data.setting_value);
-      }
-    } catch (error) {
-      setProblemApi(null);
-    }
-  };
-
-  const getAllProblems = async (api: string) => {
-    try {
-      const response = await fetch(api);
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data) {
-          setProblems(data);
-        }
-      }
-    } catch (error) {
-      setProblems(null);
-    }
-  };
-
-  useEffect(() => {
-    getProblemApi();
-    if (problemApi) {
-      getAllProblems(problemApi);
-    }
-  }, [problemApi]);
+  const problem = useProblem("repair_problem");
+  const [isPending, startTransition] = useTransition();
 
   const onProblemChange = (value: any, data: string[]) => {
     form.setValue(value, data);
@@ -91,26 +59,21 @@ export function EditRepairForm({ initialData }: EditRepairFormProps) {
   });
 
   const onSubmit = async (values: any) => {
-    const res = await fetch(`/api/v1/repairs/${initialData.id}`, {
-      method: "PUT",
-      body: JSON.stringify(values),
+    startTransition(async () => {
+      const data = await updateRepair(initialData.id, values);
+
+      if (data.status === "success") {
+        toast({
+          title: data.msg,
+        });
+        router.push("/dashboard/repairs");
+      } else {
+        toast({
+          title: data.msg,
+          variant: "destructive",
+        });
+      }
     });
-
-    const data = await res.json();
-
-    if (data.status == "success") {
-      toast({
-        title: data.msg,
-      });
-      router.push("/dashboard/repairs");
-    } else {
-      toast({
-        title: data.msg,
-        variant: "destructive",
-      });
-    }
-
-    router.refresh();
   };
   return (
     <>
@@ -127,7 +90,11 @@ export function EditRepairForm({ initialData }: EditRepairFormProps) {
                     <FormItem>
                       <FormLabel>客户名称</FormLabel>
                       <FormControl>
-                        <Input placeholder="客户名称" {...field} />
+                        <Input
+                          placeholder="客户名称"
+                          {...field}
+                          disabled={isPending}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -140,7 +107,11 @@ export function EditRepairForm({ initialData }: EditRepairFormProps) {
                     <FormItem>
                       <FormLabel>联系方式</FormLabel>
                       <FormControl>
-                        <Input placeholder="联系方式" {...field} />
+                        <Input
+                          placeholder="联系方式"
+                          {...field}
+                          disabled={isPending}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -153,7 +124,11 @@ export function EditRepairForm({ initialData }: EditRepairFormProps) {
                     <FormItem>
                       <FormLabel>邮箱</FormLabel>
                       <FormControl>
-                        <Input placeholder="邮箱" {...field} />
+                        <Input
+                          placeholder="邮箱"
+                          {...field}
+                          disabled={isPending}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -169,7 +144,11 @@ export function EditRepairForm({ initialData }: EditRepairFormProps) {
                     <FormItem>
                       <FormLabel>手机型号</FormLabel>
                       <FormControl>
-                        <Input placeholder="手机型号" {...field} />
+                        <Input
+                          placeholder="手机型号"
+                          {...field}
+                          disabled={isPending}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -186,8 +165,9 @@ export function EditRepairForm({ initialData }: EditRepairFormProps) {
                         defaultValues={field.value}
                         placeholder="维修故障"
                         fieldName="problem"
-                        options={problems}
+                        options={problem?.data}
                         setField={onProblemChange}
+                        disabled={isPending}
                       />
                       <FormMessage />
                     </FormItem>
@@ -203,6 +183,7 @@ export function EditRepairForm({ initialData }: EditRepairFormProps) {
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
+                        disabled={isPending}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -236,7 +217,11 @@ export function EditRepairForm({ initialData }: EditRepairFormProps) {
                     <FormItem>
                       <FormLabel>订金</FormLabel>
                       <FormControl>
-                        <Input placeholder="订金" {...field} />
+                        <Input
+                          placeholder="订金"
+                          {...field}
+                          disabled={isPending}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -249,7 +234,11 @@ export function EditRepairForm({ initialData }: EditRepairFormProps) {
                     <FormItem>
                       <FormLabel>价格</FormLabel>
                       <FormControl>
-                        <Input placeholder="价格" {...field} />
+                        <Input
+                          placeholder="价格"
+                          {...field}
+                          disabled={isPending}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -258,7 +247,14 @@ export function EditRepairForm({ initialData }: EditRepairFormProps) {
               </div>
             </div>
             <div className="mt-8 pt-5">
-              <Button type="submit">完成</Button>
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="flex gap-2 items-center"
+              >
+                {isPending && <ReloadIcon className="animate-spin" />}
+                完成
+              </Button>
             </div>
           </form>
         </Form>

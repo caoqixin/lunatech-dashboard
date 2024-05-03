@@ -1,13 +1,9 @@
 import XinInfoLabel from "@/components/pages/_components/xin-info-label";
+import { ClientComponent } from "@/lib/definitions";
 import { toEUR, toString } from "@/lib/utils";
-import { Component } from "@prisma/client";
 import React from "react";
 
-const ShowDetail = async ({ id }: { id: number }) => {
-  const res = await fetch(`/api/v1/components/${id}`);
-
-  const component: Component = await res.json();
-
+const ShowDetail = async ({ component }: { component: ClientComponent }) => {
   return (
     <div className="grid gap-4 py-4">
       <XinInfoLabel label="条形码" content={toString(component.code)} />

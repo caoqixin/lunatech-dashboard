@@ -4,10 +4,7 @@ import { toEUR, toString } from "@/lib/utils";
 import dayjs from "dayjs";
 import React from "react";
 
-const ShowDetail = async ({ id }: { id: number }) => {
-  const res = await fetch(`/api/v1/repairs/${id}`);
-  const repair: RepiarWithCustomer = await res.json();
-
+const ShowDetail = async ({ repair }: { repair: RepiarWithCustomer }) => {
   return (
     <div className="grid gap-4 py-4">
       <h3 className="text-lg font-medium border-b-2">客人资料</h3>

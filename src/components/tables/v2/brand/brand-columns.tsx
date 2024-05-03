@@ -18,9 +18,8 @@ export const brandColumns: ColumnDef<Brand>[] = [
     accessorKey: "name",
     header: "名称",
     cell: ({ row }) => {
-      const id = row.getValue("id");
-      const value: string = row.getValue("name");
-      return <Link href={`/dashboard/phones/${id}`}>{value}</Link>;
+      const { id, name } = row.original;
+      return <Link href={`/dashboard/phones/${id}`}>{name}</Link>;
     },
   },
   {

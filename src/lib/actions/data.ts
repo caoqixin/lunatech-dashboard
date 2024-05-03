@@ -57,7 +57,6 @@ async function getMonthly() {
 }
 
 async function getComponentsCountAndAmount() {
-  noStore();
   const count = await prisma.component.aggregate({
     _sum: {
       stock: true,
@@ -85,15 +84,15 @@ async function getComponentsCountAndAmount() {
 export async function fetchData() {
   noStore();
 
-  const totalRepairs = await getTotalRepairs();
-  const monthlyRepairs = await getMonthlyRepairs();
+  const [totalRepairs, monthlyRepairs, annualy, monthly, component] =
+    await Promise.all([
+      getTotalRepairs(),
+      getMonthlyRepairs(),
+      getAnnualy(),
+      getMonthly(),
+      getComponentsCountAndAmount(),
+    ]);
 
-  const annualy = await getAnnualy();
-  const monthly = await getMonthly();
-
-  const component = await getComponentsCountAndAmount();
-
-  revalidatePath("/dashboard", "page");
   return {
     totalRepairs,
     monthlyRepairs,
@@ -128,7 +127,6 @@ export async function fetchTopRepair(take?: number) {
       };
     });
 
-    revalidatePath("/dashboard", "page");
     return data;
   }
 
@@ -152,7 +150,6 @@ export async function fetchTopRepair(take?: number) {
     };
   });
 
-  revalidatePath("/dashboard", "page");
   return data;
 }
 
@@ -250,9 +247,10 @@ async function getRepairsRevenueOverview() {
 export async function fetchOverviewData() {
   noStore();
 
-  const countData = await getRepairsCountOverview();
-  const revenueData = await getRepairsRevenueOverview();
-  revalidatePath("/dashboard", "page");
+  const [countData, revenueData] = await Promise.all([
+    getRepairsCountOverview(),
+    getRepairsRevenueOverview(),
+  ]);
 
   return {
     countData,

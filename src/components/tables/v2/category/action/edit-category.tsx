@@ -18,47 +18,42 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { CategorySchema } from "@/schemas/category-schema";
+import { updateCategory } from "@/lib/actions/server/categories";
+import { CategorySchema, CategorySchemaValue } from "@/schemas/category-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Pencil2Icon } from "@radix-ui/react-icons";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Pencil2Icon, ReloadIcon } from "@radix-ui/react-icons";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export function EditCategory({ name, id }: { name: string; id: number }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const [pending, startTransition] = useTransition();
 
-  const form = useForm<z.infer<typeof CategorySchema>>({
+  const form = useForm<CategorySchemaValue>({
     resolver: zodResolver(CategorySchema),
     defaultValues: {
       name: name,
     },
   });
+  const oldName = name;
 
-  const onSubmit = async (values: z.infer<typeof CategorySchema>) => {
-    const res = await fetch(`/api/v1/categories/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(values),
+  const onSubmit = async (values: CategorySchemaValue) => {
+    startTransition(async () => {
+      const res = await updateCategory(id, values, oldName);
+
+      if (res.status === "success") {
+        toast({
+          title: res.msg,
+        });
+        setOpen(false);
+      } else {
+        toast({
+          title: res.msg,
+          variant: "destructive",
+        });
+      }
     });
-
-    const data = await res.json();
-
-    if (data.status == "success") {
-      toast({
-        title: data.msg,
-      });
-    } else {
-      toast({
-        title: data.msg,
-        variant: "destructive",
-      });
-    }
-
-    setOpen(false);
-    router.refresh();
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -83,14 +78,21 @@ export function EditCategory({ name, id }: { name: string; id: number }) {
                 <FormItem className="grid grid-cols-4 items-center gap-4">
                   <FormLabel className="text-right">名称</FormLabel>
                   <FormControl className="col-span-3">
-                    <Input {...field} />
+                    <Input {...field} disabled={pending} />
                   </FormControl>
                   <FormMessage className="col-span-2 ml-auto" />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button type="submit">修改</Button>
+              <Button
+                type="submit"
+                disabled={pending}
+                className="flex items-center gap-2"
+              >
+                {pending && <ReloadIcon className="animate-spin" />}
+                修改
+              </Button>
             </DialogFooter>
           </form>
         </Form>

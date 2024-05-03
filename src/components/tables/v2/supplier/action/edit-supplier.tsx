@@ -18,52 +18,45 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { SupplierSchema } from "@/schemas/supplier-schema";
+import { updateSupplier } from "@/lib/actions/server/suppliers";
+import { SupplierSchema, supplierSchemaValue } from "@/schemas/supplier-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Supplier } from "@prisma/client";
-import { Pencil2Icon } from "@radix-ui/react-icons";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Pencil2Icon, ReloadIcon } from "@radix-ui/react-icons";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 
-export function EditSupplier(supplier: Supplier) {
-  const router = useRouter();
+export default function EditSupplier(supplier: Supplier) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
 
-  const form = useForm<z.infer<typeof SupplierSchema>>({
+  const form = useForm<supplierSchemaValue>({
     resolver: zodResolver(SupplierSchema),
     defaultValues: {
       name: supplier.name,
-      description: supplier.description || "",
-      site: supplier.site || "",
-      username: supplier.username || "",
-      password: supplier.password || "",
+      description: supplier.description ?? "",
+      site: supplier.site ?? "",
+      username: supplier.username ?? "",
+      password: supplier.password ?? "",
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof SupplierSchema>) => {
-    const res = await fetch(`/api/v1/suppliers/${supplier.id}`, {
-      method: "PUT",
-      body: JSON.stringify(values),
+  const onSubmit = async (values: supplierSchemaValue) => {
+    startTransition(async () => {
+      const data = await updateSupplier(supplier.id, values);
+      if (data.status === "success") {
+        toast({
+          title: data.msg,
+        });
+        setOpen(false);
+      } else {
+        toast({
+          title: data.msg,
+          variant: "destructive",
+        });
+      }
     });
-
-    const data = await res.json();
-
-    if (data.status == "success") {
-      toast({
-        title: data.msg,
-      });
-    } else {
-      toast({
-        title: data.msg,
-        variant: "destructive",
-      });
-    }
-
-    setOpen(false);
-    router.refresh();
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -88,7 +81,7 @@ export function EditSupplier(supplier: Supplier) {
                 <FormItem className="grid grid-cols-4 items-center gap-4">
                   <FormLabel className="text-right">名称</FormLabel>
                   <FormControl className="col-span-3">
-                    <Input {...field} />
+                    <Input {...field} disabled={isPending} />
                   </FormControl>
                   <FormMessage className="col-span-2 ml-auto" />
                 </FormItem>
@@ -101,7 +94,7 @@ export function EditSupplier(supplier: Supplier) {
                 <FormItem className="grid grid-cols-4 items-center gap-4">
                   <FormLabel className="text-right">描述</FormLabel>
                   <FormControl className="col-span-3">
-                    <Input {...field} />
+                    <Input {...field} disabled={isPending} />
                   </FormControl>
                   <FormMessage className="col-span-2 ml-auto" />
                 </FormItem>
@@ -114,7 +107,7 @@ export function EditSupplier(supplier: Supplier) {
                 <FormItem className="grid grid-cols-4 items-center gap-4">
                   <FormLabel className="text-right">网址</FormLabel>
                   <FormControl className="col-span-3">
-                    <Input {...field} />
+                    <Input {...field} disabled={isPending} />
                   </FormControl>
                   <FormMessage className="col-span-2 ml-auto" />
                 </FormItem>
@@ -127,7 +120,7 @@ export function EditSupplier(supplier: Supplier) {
                 <FormItem className="grid grid-cols-4 items-center gap-4">
                   <FormLabel className="text-right">用户名</FormLabel>
                   <FormControl className="col-span-3">
-                    <Input {...field} />
+                    <Input {...field} disabled={isPending} />
                   </FormControl>
                   <FormMessage className="col-span-2 ml-auto" />
                 </FormItem>
@@ -140,14 +133,21 @@ export function EditSupplier(supplier: Supplier) {
                 <FormItem className="grid grid-cols-4 items-center gap-4">
                   <FormLabel className="text-right">密码</FormLabel>
                   <FormControl className="col-span-3">
-                    <Input {...field} />
+                    <Input {...field} disabled={isPending} />
                   </FormControl>
                   <FormMessage className="col-span-2 ml-auto" />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button type="submit">修改</Button>
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="flex gap-2 items-center"
+              >
+                {isPending && <ReloadIcon className="animate-spin" />}
+                修改
+              </Button>
             </DialogFooter>
           </form>
         </Form>

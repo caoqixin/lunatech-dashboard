@@ -22,10 +22,11 @@ export interface Option {
 }
 
 interface MultiSelectProps {
-  options: Option[] | null;
+  options: Option[] | null | undefined;
   placeholder: string;
   fieldName: string;
   defaultValues: string[];
+  disabled?: boolean;
   setField: (field: string, data: string[]) => void;
 }
 
@@ -34,6 +35,7 @@ export default function MultiSelect({
   placeholder,
   fieldName,
   defaultValues,
+  disabled,
   setField,
 }: MultiSelectProps) {
   const values = !Array.isArray(defaultValues)
@@ -50,7 +52,12 @@ export default function MultiSelect({
     <Popover>
       <PopoverTrigger asChild>
         <FormControl>
-          <Button variant="outline" role="combobox" className="h-8">
+          <Button
+            variant="outline"
+            role="combobox"
+            className="h-8"
+            disabled={disabled}
+          >
             {selectedValues.length <= 0
               ? placeholder
               : selectedValues.map((selectedValue, index) => (

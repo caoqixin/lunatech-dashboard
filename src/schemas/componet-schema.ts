@@ -20,3 +20,5 @@ export const ComponentSchema = z.object({
   purchase_price: z.string(),
   public_price: z.string().optional(),
 });
+
+export type ComponentFormValue = z.infer<typeof ComponentSchema>;

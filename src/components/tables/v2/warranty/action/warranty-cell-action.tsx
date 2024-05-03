@@ -1,21 +1,23 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { WarrantyWithRepair } from "@/lib/definitions";
+import { reworkWarranty } from "@/lib/actions/server/warranties";
 import { CountdownTimerIcon } from "@radix-ui/react-icons";
-import { useRouter } from "next/navigation";
 
-export function WarrantyCellAction({ data }: { data: WarrantyWithRepair }) {
+export function WarrantyCellAction({
+  id,
+  phone,
+  cutomer,
+}: {
+  id: string;
+  phone: string;
+  cutomer: string;
+}) {
   const { toast } = useToast();
-  const router = useRouter();
   const rework = async () => {
-    const res = await fetch(`/api/v1/warranties/rework/${data.id}`, {
-      method: "PUT",
-    });
+    const resData = await reworkWarranty(id, cutomer, phone);
 
-    const resData = await res.json();
-
-    if (resData.status == "success") {
+    if (resData.status === "success") {
       toast({
         title: resData.msg,
       });
@@ -25,7 +27,6 @@ export function WarrantyCellAction({ data }: { data: WarrantyWithRepair }) {
         variant: "destructive",
       });
     }
-    router.refresh();
   };
   return (
     <div className="flex items-center gap-3 justify-end">

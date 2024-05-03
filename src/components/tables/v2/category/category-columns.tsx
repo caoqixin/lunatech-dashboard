@@ -17,17 +17,16 @@ export const categoryColumns: ColumnDef<Category>[] = [
     accessorKey: "name",
     header: "名称",
     cell: ({ row }) => {
-      const id = row.getValue("id");
-      const value: string = row.getValue("name");
-      return <Link href={`/dashboard/categories/${id}`}>{value}</Link>;
+      const { id, name } = row.original;
+      return <Link href={`/dashboard/categories/${id}`}>{name}</Link>;
     },
   },
   {
     id: "actions",
     cell: ({ row }) => {
-      const category = row.original;
+      const { id, name } = row.original;
 
-      return <CategoryCellAction key={category.id} {...category} />;
+      return <CategoryCellAction key={id} id={id} name={name} />;
     },
   },
 ];

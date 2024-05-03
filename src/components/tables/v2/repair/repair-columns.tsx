@@ -4,34 +4,23 @@ import { Badge } from "@/components/ui/badge";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import RepairCellAction from "./action/repair-cell-action";
-import MoreProblem from "./action/more-problem";
 import SelectStatus from "./action/select-status";
-import { useEffect, useState } from "react";
-import { Customer, Repair } from "@prisma/client";
 import { toEUR } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
+import CustomerInfo from "./action/customer-info";
+import dynamic from "next/dynamic";
+import { ClientRepiar } from "@/lib/definitions";
 
-export const repairColumns: ColumnDef<Repair>[] = [
+const MoreProblem = dynamic(
+  () => import("@/components/tables/v2/repair/action/more-problem")
+);
+
+export const repairColumns: ColumnDef<ClientRepiar>[] = [
   {
     header: "联系方式",
     cell: ({ row }) => {
       const customerId = row.original.customerId;
-      const [customer, setCustomer] = useState<Customer | null>(null);
-      const getCustomer = async () => {
-        const res = await fetch(`/api/v1/customers/${customerId}`);
-        const data = await res.json();
 
-        setCustomer(data);
-      };
-      useEffect(() => {
-        getCustomer();
-      }, []);
-
-      return (
-        <>
-          {customer == null ? <Skeleton className="h-6 w-32" /> : customer?.tel}
-        </>
-      );
+      return <CustomerInfo customerId={customerId} />;
     },
   },
   {

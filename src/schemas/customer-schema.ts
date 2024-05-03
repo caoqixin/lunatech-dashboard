@@ -9,3 +9,5 @@ export const CustomerSchema = z.object({
   }),
   email: z.string().optional(),
 });
+
+export type customerSchemaValue = z.infer<typeof CustomerSchema>;

@@ -18,47 +18,40 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { BrandSchema } from "@/schemas/brand-schema";
+import { updateBrand } from "@/lib/actions/server/brands";
+import { BrandSchema, brandSchamaValue } from "@/schemas/brand-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Pencil2Icon } from "@radix-ui/react-icons";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Pencil2Icon, ReloadIcon } from "@radix-ui/react-icons";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export function EditBrand({ name, id }: { name: string; id: number }) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
-  const form = useForm<z.infer<typeof BrandSchema>>({
+  const form = useForm<brandSchamaValue>({
     resolver: zodResolver(BrandSchema),
     defaultValues: {
       name: name,
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof BrandSchema>) => {
-    const res = await fetch(`/api/v1/brands/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(values),
+  const onSubmit = async (values: brandSchamaValue) => {
+    startTransition(async () => {
+      const data = await updateBrand(id, values);
+      if (data.status === "success") {
+        toast({
+          title: data.msg,
+        });
+        setOpen(false);
+      } else {
+        toast({
+          title: data.msg,
+          variant: "destructive",
+        });
+      }
     });
-
-    const data = await res.json();
-
-    if (data.status == "success") {
-      toast({
-        title: data.msg,
-      });
-    } else {
-      toast({
-        title: data.msg,
-        variant: "destructive",
-      });
-    }
-
-    setOpen(false);
-    router.refresh();
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -83,14 +76,20 @@ export function EditBrand({ name, id }: { name: string; id: number }) {
                 <FormItem className="grid grid-cols-4 items-center gap-4">
                   <FormLabel className="text-right">名称</FormLabel>
                   <FormControl className="col-span-3">
-                    <Input {...field} />
+                    <Input {...field} disabled={isPending} />
                   </FormControl>
                   <FormMessage className="col-span-2 ml-auto" />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button type="submit">修改</Button>
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="flex gap-2 items-center"
+              >
+                {isPending && <ReloadIcon className="animate-spin" />}修改
+              </Button>
             </DialogFooter>
           </form>
         </Form>

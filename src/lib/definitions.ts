@@ -1,12 +1,66 @@
 import { Prisma, Repair } from "@prisma/client";
 
 export type RepiarWithCustomer = Prisma.RepairGetPayload<{
-  include: { customer: true };
-}>;
+  select: {
+    id: true;
+    phone: true;
+    problem: true;
+    status: true;
+    createdAt: true;
+    updatedAt: true;
+    isRework: true;
+    customer: true;
+  };
+}> & { deposit: string; price: string };
+
+export type ClientComponent = {
+  model: string[];
+  category: string;
+  supplier: string;
+  brand: string;
+  id: number;
+  code: string | null;
+  name: string;
+  alias: string | null;
+  quality: string;
+  stock: number;
+  purchase_price: string;
+  public_price: string;
+};
 
 export type WarrantyWithRepair = Prisma.WarrantyGetPayload<{
-  include: { repair: { include: { customer: true } } };
+  include: {
+    repair: {
+      select: {
+        id: true;
+        phone: true;
+        problem: true;
+        createdAt: true;
+        customer: {
+          select: {
+            name: true;
+            tel: true;
+          };
+        };
+      };
+    };
+  };
 }>;
+
+export type ClientRepiar = {
+  id: number;
+  phone: string;
+  customerId: number;
+  problem: string[];
+  status: string;
+  deposit: string;
+  price: string;
+  createdAt: Date;
+  updatedAt: Date;
+  isRework: boolean;
+};
+
+export type ViewType = "customers" | "repairs" | "components";
 
 export type PublicPhone = Prisma.PhoneGetPayload<{
   select: { id: true; name: true };

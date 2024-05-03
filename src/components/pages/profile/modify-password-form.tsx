@@ -18,7 +18,6 @@ import {
   ModifyPasswordSchemaValue,
 } from "@/schemas/user-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
@@ -35,7 +34,6 @@ export default function ModifyPassword() {
   const [isPending, startTransition] = useTransition();
   const { password, confirmation_password } = form.watch();
   const { toast } = useToast();
-  const router = useRouter();
 
   useEffect(() => {
     if (password !== "" && confirmation_password !== "") {
@@ -57,7 +55,7 @@ export default function ModifyPassword() {
   function onSubmit(data: ModifyPasswordSchemaValue) {
     startTransition(async () => {
       const { msg, status } = await updateUserPassword(data.password);
-      if (status == "error") {
+      if (status === "error") {
         toast({
           title: msg,
           variant: "destructive",
@@ -67,10 +65,9 @@ export default function ModifyPassword() {
         toast({
           title: msg,
         });
+        setPending(true);
       }
     });
-
-    router.refresh();
   }
 
   return (

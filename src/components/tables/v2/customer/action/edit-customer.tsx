@@ -18,53 +18,45 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { CustomerSchema } from "@/schemas/customer-schema";
+import { updateCustomer } from "@/lib/actions/server/customers";
+import { CustomerSchema, customerSchemaValue } from "@/schemas/customer-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Customer } from "@prisma/client";
-import { Pencil2Icon } from "@radix-ui/react-icons";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Pencil2Icon, ReloadIcon } from "@radix-ui/react-icons";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export function EditCustomer(customer: Customer) {
-  const router = useRouter();
+  const { name, tel, email, id } = customer;
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
 
-  const form = useForm<z.infer<typeof CustomerSchema>>({
+  const form = useForm<customerSchemaValue>({
     resolver: zodResolver(CustomerSchema),
     defaultValues: {
-      name: customer.name,
-      tel: customer.tel,
-      email: customer.email ?? "",
+      name: name,
+      tel: tel,
+      email: email ?? "",
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof CustomerSchema>) => {
-    const res = await fetch(
-      `http://localhost:3000/api/v1/customers/${customer.id}`,
-      {
-        method: "PUT",
-        body: JSON.stringify(values),
+  const onSubmit = async (values: customerSchemaValue) => {
+    startTransition(async () => {
+      const data = await updateCustomer(id, values);
+
+      if (data.status === "success") {
+        toast({
+          title: data.msg,
+        });
+        setOpen(false);
+      } else {
+        toast({
+          title: data.msg,
+          variant: "destructive",
+        });
       }
-    );
-
-    const data = await res.json();
-
-    if (data.status == "success") {
-      toast({
-        title: data.msg,
-      });
-    } else {
-      toast({
-        title: data.msg,
-        variant: "destructive",
-      });
-    }
-
-    setOpen(false);
-    router.refresh();
+    });
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -89,7 +81,7 @@ export function EditCustomer(customer: Customer) {
                 <FormItem className="grid grid-cols-4 items-center gap-4">
                   <FormLabel className="text-right">用户姓名</FormLabel>
                   <FormControl className="col-span-3">
-                    <Input {...field} />
+                    <Input {...field} disabled={pending} />
                   </FormControl>
                   <FormMessage className="col-span-2 ml-auto" />
                 </FormItem>
@@ -102,7 +94,7 @@ export function EditCustomer(customer: Customer) {
                 <FormItem className="grid grid-cols-4 items-center gap-4">
                   <FormLabel className="text-right">联系号码</FormLabel>
                   <FormControl className="col-span-3">
-                    <Input {...field} />
+                    <Input {...field} disabled={pending} />
                   </FormControl>
                   <FormMessage className="col-span-2 ml-auto" />
                 </FormItem>
@@ -115,14 +107,21 @@ export function EditCustomer(customer: Customer) {
                 <FormItem className="grid grid-cols-4 items-center gap-4">
                   <FormLabel className="text-right">邮箱</FormLabel>
                   <FormControl className="col-span-3">
-                    <Input {...field} />
+                    <Input {...field} disabled={pending} />
                   </FormControl>
                   <FormMessage className="col-span-2 ml-auto" />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button type="submit">修改</Button>
+              <Button
+                type="submit"
+                disabled={pending}
+                className="flex gap-2 items-center"
+              >
+                {pending && <ReloadIcon className="animate-spin" />}
+                修改
+              </Button>
             </DialogFooter>
           </form>
         </Form>

@@ -8,18 +8,20 @@ import { searchOrderParamsValue } from "@/schemas/search-params-schema";
 import { getDataList } from "@/lib/actions/orders";
 import { getAllProduct } from "@/lib/actions/product";
 
+const breadcrumbItems: BreadCrumbType[] = [
+  { title: "出入库管理", link: "/dashboard/orders" },
+];
+
 export default async function OrderPage({
   search,
 }: {
   search: searchOrderParamsValue;
 }) {
-  const breadcrumbItems: BreadCrumbType[] = [
-    { title: "出入库管理", link: "/dashboard/orders" },
-  ];
-
   // get data
-  const orders = await getDataList();
-  const products = await getAllProduct();
+  const [orders, products] = await Promise.all([
+    getDataList(),
+    getAllProduct(),
+  ]);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">

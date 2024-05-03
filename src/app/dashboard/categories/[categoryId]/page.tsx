@@ -1,7 +1,10 @@
 import DashboardDataSkeleton from "@/components/pages/_components/skeleton/dashboard-data-skeleton";
-import CategoryItemPage from "@/components/pages/categories/category-items-page";
+import CategoryItemPage from "@/components/pages/category_items/category-items-page";
 import { SearchParams } from "@/components/tables/v2/types";
-import prisma from "@/lib/prisma";
+import {
+  generateCategoryIdParams,
+  getCategoryById,
+} from "@/lib/actions/server/categories";
 import { auth } from "@/lib/user";
 import { searchParamsSchema } from "@/schemas/search-params-schema";
 import { Metadata, ResolvingMetadata } from "next";
@@ -29,19 +32,22 @@ export default async function Page({
   );
 }
 
+// 生成静态参数
+export async function generateStaticParams() {
+  const categories = await generateCategoryIdParams();
+
+  return categories.map((category) => ({
+    categoryId: category.id.toString(),
+  }));
+}
+
 export async function generateMetadata(
   { params, searchParams }: CategoryItemPageProps,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  // read route params
-  const id = params.categoryId;
+  const { categoryId } = params;
 
-  // fetch data
-  const category = await prisma.category.findFirst({
-    where: {
-      id: parseInt(id),
-    },
-  });
+  const category = await getCategoryById(parseInt(categoryId));
 
   if (category === null) {
     return {
@@ -49,6 +55,6 @@ export async function generateMetadata(
     };
   }
   return {
-    title: `${category.name} 的分类`,
+    title: `分类 - ${category.name}`,
   };
 }

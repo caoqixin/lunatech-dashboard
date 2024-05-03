@@ -11,7 +11,7 @@ const breadcrumbItems: BreadCrumbType[] = [
   { title: "添加维修", link: "/dashboard/repairs/create" },
 ];
 
-const CreateRepairPage = () => {
+export default function CreateRepairPage() {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <BreadCrumb items={breadcrumbItems} />
@@ -28,6 +28,4 @@ const CreateRepairPage = () => {
       </>
     </div>
   );
-};
-
-export default CreateRepairPage;
+}

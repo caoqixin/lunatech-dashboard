@@ -6,18 +6,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Repair } from "@prisma/client";
+import { ClientRepiar } from "@/lib/definitions";
+import { toEUR } from "@/lib/utils";
 import dayjs from "dayjs";
 
 export default async function ShowRepairData({
-  customerId,
+  data,
 }: {
-  customerId: number;
+  data: ClientRepiar[];
 }) {
-  const res = await fetch(`/api/v1/customers/${customerId}`);
-
-  const data = await res.json();
-
   return (
     <Table>
       <TableHeader>
@@ -29,8 +26,8 @@ export default async function ShowRepairData({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {data.repairs.length !== 0 ? (
-          data.repairs.map((repair: Repair) => (
+        {data.length !== 0 ? (
+          data.map((repair) => (
             <TableRow key={repair.id}>
               <TableCell className="font-medium">{repair.phone}</TableCell>
               <TableCell>{repair.problem.toString()}</TableCell>
@@ -38,7 +35,7 @@ export default async function ShowRepairData({
                 {dayjs(repair.updatedAt).format("DD/MM/YYYY")}
               </TableCell>
               <TableCell className="text-right">
-                {repair.price.toString()}
+                {toEUR(repair.price)}
               </TableCell>
             </TableRow>
           ))

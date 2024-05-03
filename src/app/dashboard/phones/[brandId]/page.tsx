@@ -1,7 +1,10 @@
 import DashboardDataSkeleton from "@/components/pages/_components/skeleton/dashboard-data-skeleton";
 import PhonePage from "@/components/pages/phone/phone-page";
 import { SearchParams } from "@/components/tables/v2/types";
-import prisma from "@/lib/prisma";
+import {
+  generateBrandIdParams,
+  getBrandById,
+} from "@/lib/actions/server/brands";
 import { auth } from "@/lib/user";
 import { searchPhoneParamsSchema } from "@/schemas/search-params-schema";
 import { Metadata, ResolvingMetadata } from "next";
@@ -27,6 +30,15 @@ export default async function Page({ params, searchParams }: PhonePageProps) {
   );
 }
 
+// 生成静态参数
+export async function generateStaticParams() {
+  const brands = await generateBrandIdParams();
+
+  return brands.map((brand) => ({
+    brandId: brand.id.toString(),
+  }));
+}
+
 export async function generateMetadata(
   { params, searchParams }: PhonePageProps,
   parent: ResolvingMetadata
@@ -35,11 +47,7 @@ export async function generateMetadata(
   const id = params.brandId;
 
   // fetch data
-  const brand = await prisma.brand.findUnique({
-    where: {
-      id: parseInt(id),
-    },
-  });
+  const brand = await getBrandById(parseInt(id));
 
   if (brand === null) {
     return {

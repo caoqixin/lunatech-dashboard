@@ -160,6 +160,37 @@ export async function saveOutData(
   }
 }
 
+export async function changeOrderPrice(
+  key: string,
+  fields: OrderComponent & {
+    stock: number;
+  }
+) {
+  if (parseInt(fields.public_price) < 0) {
+    return {
+      msg: "单价修改失败, 不能小于0",
+      status: "error",
+    };
+  }
+
+  try {
+    await redis.hset("orders", {
+      [key]: fields,
+    });
+
+    revalidatePath("/dashboard/orders");
+    return {
+      msg: `单价修改成功`,
+      status: "success",
+    };
+  } catch (error) {
+    return {
+      msg: "单价修改失败",
+      status: "error",
+    };
+  }
+}
+
 export async function addStock(
   key: string,
   fields: OrderComponent & {

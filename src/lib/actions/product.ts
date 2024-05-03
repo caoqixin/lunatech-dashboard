@@ -6,6 +6,7 @@ import redis from "../redis";
 import { toEUR } from "../utils";
 import prisma from "../prisma";
 import { OrderItem } from "@prisma/client";
+import { Decimal } from "@prisma/client/runtime/library";
 
 // 入库操作
 
@@ -27,6 +28,44 @@ export async function addToProductList(component: ProductComponent) {
     return true;
   } catch (error) {
     return false;
+  }
+}
+
+export async function changeProductPrice(
+  key: string,
+  fields: ProductComponent
+) {
+  if (fields.purchase_price < 0) {
+    return {
+      msg: "单价修改失败, 不能小于0",
+      status: "error",
+    };
+  }
+
+  try {
+    await redis.hset("products", {
+      [key]: fields,
+    });
+
+    await prisma.component.update({
+      where: {
+        id: fields.id,
+      },
+      data: {
+        purchase_price: new Decimal(fields.purchase_price),
+      },
+    });
+
+    revalidatePath("/dashboard/orders");
+    return {
+      msg: `单价修改成功`,
+      status: "success",
+    };
+  } catch (error) {
+    return {
+      msg: "单价修改失败",
+      status: "error",
+    };
   }
 }
 

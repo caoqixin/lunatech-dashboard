@@ -27,6 +27,7 @@ import Tips from "../_components/tips";
 import { useToast } from "@/components/ui/use-toast";
 import {
   addToProductList,
+  changeProductPrice,
   getAllProduct,
   modifyProductStock,
   removeAllProduct,
@@ -184,6 +185,32 @@ export default function RecoverProduct({
     }
   };
 
+  const changePrice = async (
+    e: ChangeEvent<HTMLInputElement>,
+    data: [string, ProductComponent]
+  ) => {
+    const price = e.target.value;
+    const key = data[0];
+    const value = data[1];
+
+    if (parseInt(price) < 0) {
+      value.purchase_price = 0;
+    }
+    value.purchase_price = parseFloat(price);
+    const res = await changeProductPrice(key, value);
+    if (res?.status == "success") {
+      toast({
+        title: res.msg,
+      });
+      e.target.value = toEUR(e.target.value);
+    } else {
+      toast({
+        title: res?.msg,
+        variant: "destructive",
+      });
+    }
+  };
+
   // 入库操作
   const store = async () => {
     if (dataList) {
@@ -313,7 +340,13 @@ export default function RecoverProduct({
                 <TableRow key={data[1].id}>
                   <TableCell>{data[1].code}</TableCell>
                   <TableCell>{data[1].name}</TableCell>
-                  <TableCell>{toEUR(data[1].purchase_price)}</TableCell>
+                  <TableCell>
+                    <Input
+                      defaultValue={toEUR(data[1].purchase_price)}
+                      onBlur={(e) => changePrice(e, data)}
+                      className="w-24"
+                    />
+                  </TableCell>
                   <TableCell className="flex items-center gap-2">
                     {data[1].count > 0 ? (
                       <Tips

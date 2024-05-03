@@ -6,61 +6,25 @@ import { PlusIcon } from "@radix-ui/react-icons";
 import Link from "next/link";
 import { searchComponentParamsValue } from "@/schemas/search-params-schema";
 import { ComponentTable } from "@/components/tables/v2/repair_component/component-table";
+import { DataTableFilterableColumn } from "@/components/tables/v2/types";
 import {
-  DataTableFilterableColumn,
-  Option,
-} from "@/components/tables/v2/types";
-import { CategoryItem, Component, Setting } from "@prisma/client";
+  getAllComponents,
+  getCategoryForComponent,
+} from "@/lib/actions/server/repair_components";
+import { ClientComponent } from "@/lib/definitions";
 
 interface ComponentPageProps {
   search: searchComponentParamsValue;
 }
 
-const getCategoriesApi = async () => {
-  const res = await fetch(
-    `${process.env.BASE_URL}/api/v1/settings/repair_category`
-  );
-  if (res.ok) {
-    const data: Setting = await res.json();
-    if (data) {
-      return data.setting_value;
-    }
-    return null;
-  }
+const breadcrumbItems: BreadCrumbType[] = [
+  { title: "配件管理", link: "/dashboard/components" },
+];
 
-  return null;
-};
+export default async function ComponentPage({ search }: ComponentPageProps) {
+  const categories = await getCategoryForComponent("repair_category");
+  const data = await getAllComponents(search);
 
-const getAllCategoires = async () => {
-  const categoryApi = await getCategoriesApi();
-  try {
-    const res = await fetch(`${process.env.BASE_URL}${categoryApi}`);
-    const data: CategoryItem[] = await res.json();
-
-    const options = data.map((item: CategoryItem) => ({
-      label: item.name,
-      value: item.name,
-    }));
-
-    return options;
-  } catch (error) {
-    return null;
-  }
-};
-
-const ComponentPage = async ({ search }: ComponentPageProps) => {
-  const breadcrumbItems: BreadCrumbType[] = [
-    { title: "配件管理", link: "/dashboard/components" },
-  ];
-
-  const stringSeatch = search as unknown as Record<string, string>;
-  const searchParams = new URLSearchParams(stringSeatch).toString();
-  const categories = await getAllCategoires();
-
-  const res = await fetch(
-    `${process.env.BASE_URL}/api/v1/components?${searchParams}`
-  );
-  const data = await res.json();
   if (!categories) {
     return (
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -80,7 +44,7 @@ const ComponentPage = async ({ search }: ComponentPageProps) => {
     );
   }
 
-  const filterableColumns: DataTableFilterableColumn<Component>[] = [
+  const filterableColumns: DataTableFilterableColumn<ClientComponent>[] = [
     {
       id: "category",
       title: "分类",
@@ -104,6 +68,4 @@ const ComponentPage = async ({ search }: ComponentPageProps) => {
       </>
     </div>
   );
-};
-
-export default ComponentPage;
+}

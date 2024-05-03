@@ -13,10 +13,10 @@ const XinCardWrapper = async () => {
   return (
     <>
       <Suspense fallback={<CardSkeleton />}>
-        <XinCard title="年收入" value={toEUR(annualy)} />
+        <XinCard title="年收入" value={toEUR(annualy ?? 0)} />
       </Suspense>
       <Suspense fallback={<CardSkeleton />}>
-        <XinCard title="月收入" value={toEUR(monthly)} />
+        <XinCard title="月收入" value={toEUR(monthly ?? 0)} />
       </Suspense>
       <Suspense fallback={<CardSkeleton />}>
         <XinCard title="总维修数" value={totalRepairs} />

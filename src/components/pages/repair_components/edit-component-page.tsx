@@ -5,15 +5,15 @@ import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { ResetIcon } from "@radix-ui/react-icons";
 import ComponentForm from "./component-form";
-import { unstable_noStore } from "next/cache";
+import { getComponentById } from "@/lib/actions/server/repair_components";
+import { notFound } from "next/navigation";
 
-const EditComponentPage = async ({ id }: { id: number }) => {
-  unstable_noStore();
+export default async function EditComponentPage({ id }: { id: number }) {
+  const component = await getComponentById(id);
 
-  const res = await fetch(
-    `${process.env.BASE_URL}/api/v1/components/${id}/edit`
-  );
-  const component = await res.json();
+  if (component === null) {
+    return notFound();
+  }
 
   const breadcrumbItems: BreadCrumbType[] = [
     { title: "配件管理", link: "/dashboard/components" },
@@ -38,6 +38,4 @@ const EditComponentPage = async ({ id }: { id: number }) => {
       </>
     </div>
   );
-};
-
-export default EditComponentPage;
+}

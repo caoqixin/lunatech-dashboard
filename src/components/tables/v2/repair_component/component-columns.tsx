@@ -5,8 +5,9 @@ import ComponentCellAction from "./action/component-cell-action";
 import { toEUR } from "@/lib/utils";
 import { Component } from "@prisma/client";
 import { DataTableSearchableColumn } from "../types";
+import { ClientComponent } from "@/lib/definitions";
 
-export const componentColumns: ColumnDef<Component>[] = [
+export const componentColumns: ColumnDef<ClientComponent>[] = [
   {
     accessorKey: "code",
     header: "编号",
@@ -49,7 +50,7 @@ export const componentColumns: ColumnDef<Component>[] = [
   },
 ];
 
-export const searchableColumns: DataTableSearchableColumn<Component>[] = [
+export const searchableColumns: DataTableSearchableColumn<ClientComponent>[] = [
   {
     id: "name",
     placeholder: "输入配件名称",

@@ -6,23 +6,17 @@ import { PlusIcon } from "@radix-ui/react-icons";
 import { Separator } from "@/components/ui/separator";
 import { searchParamsValue } from "@/schemas/search-params-schema";
 import { RepairTable } from "@/components/tables/v2/repair/repair-table";
+import { getAllRepairs } from "@/lib/actions/server/repairs";
 
 interface RepairPageProps {
   search: searchParamsValue;
 }
+const breadcrumbItems: BreadCrumbType[] = [
+  { title: "维修管理", link: "/dashboard/repairs" },
+];
 
-const RepairPage = async ({ search }: RepairPageProps) => {
-  const stringSeatch = search as unknown as Record<string, string>;
-  const searchParams = new URLSearchParams(stringSeatch).toString();
-
-  const breadcrumbItems: BreadCrumbType[] = [
-    { title: "维修管理", link: "/dashboard/repairs" },
-  ];
-  const res = await fetch(
-    `${process.env.BASE_URL}/api/v1/repairs?${searchParams}`
-  );
-
-  const data = await res.json();
+export default async function RepairPage({ search }: RepairPageProps) {
+  const data = await getAllRepairs(search);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -41,6 +35,4 @@ const RepairPage = async ({ search }: RepairPageProps) => {
       </>
     </div>
   );
-};
-
-export default RepairPage;
+}

@@ -8,20 +8,22 @@ export const SupplierSchema = z.object({
     .string({
       invalid_type_error: "必须是字符串",
     })
-    .default(""),
+    .optional(),
   site: z
     .string({
       invalid_type_error: "必须是字符串",
     })
-    .default(""),
+    .optional(),
   username: z
     .string({
       invalid_type_error: "必须是字符串",
     })
-    .default(""),
+    .optional(),
   password: z
     .string({
       invalid_type_error: "必须是字符串",
     })
-    .default(""),
+    .optional(),
 });
+
+export type supplierSchemaValue = z.infer<typeof SupplierSchema>;

@@ -15,7 +15,7 @@ import { updateUserName } from "@/lib/user";
 import { UserSchema, UserSchemaValue } from "@/schemas/user-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useMemo, useState, useTransition } from "react";
+import { FormEvent, useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
 interface UserInfoFormProps {
@@ -50,7 +50,7 @@ export default function UserInfoForm({ initialData }: UserInfoFormProps) {
     } else {
       setPending(true);
     }
-  }, [name, initialData]);
+  }, [name]);
 
   function onSubmit(data: UserSchemaValue) {
     startTransition(async () => {
@@ -65,9 +65,8 @@ export default function UserInfoForm({ initialData }: UserInfoFormProps) {
         toast({
           title: msg,
         });
+        setPending(true);
       }
-
-      router.refresh();
     });
   }
 

@@ -5,3 +5,5 @@ export const CategorySchema = z.object({
     message: "名称不能为空",
   }),
 });
+
+export type CategorySchemaValue = z.infer<typeof CategorySchema>;

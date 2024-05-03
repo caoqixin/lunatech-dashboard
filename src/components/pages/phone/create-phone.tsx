@@ -19,48 +19,44 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { PhoneSchema } from "@/schemas/brand-schema";
+import { createPhone } from "@/lib/actions/server/phones";
+import { PhoneSchema, phoneSchamaValue } from "@/schemas/brand-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PlusIcon } from "@radix-ui/react-icons";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { PlusIcon, ReloadIcon } from "@radix-ui/react-icons";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 const CreatePhone = ({ brandId }: { brandId: number }) => {
   const { toast } = useToast();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
-  const form = useForm<z.infer<typeof PhoneSchema>>({
+  const form = useForm<phoneSchamaValue>({
     resolver: zodResolver(PhoneSchema),
     defaultValues: {
       name: "",
+      code: "",
       isTablet: false,
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof PhoneSchema>) => {
-    const res = await fetch(`/api/v1/brands/${brandId}`, {
-      method: "POST",
-      body: JSON.stringify(values),
+  const onSubmit = async (values: phoneSchamaValue) => {
+    startTransition(async () => {
+      const data = await createPhone(brandId, values);
+      if (data.status === "success") {
+        toast({
+          title: data.msg,
+        });
+
+        setOpen(false);
+        form.reset();
+      } else {
+        toast({
+          title: data.msg,
+          variant: "destructive",
+        });
+      }
     });
-    const data = await res.json();
-
-    if (data.status == "success") {
-      toast({
-        title: data.msg,
-      });
-    } else {
-      toast({
-        title: data.msg,
-        variant: "destructive",
-      });
-    }
-
-    setOpen(false);
-    router.refresh();
-    form.reset();
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -85,7 +81,7 @@ const CreatePhone = ({ brandId }: { brandId: number }) => {
                 <FormItem className="grid grid-cols-4 items-center gap-4">
                   <FormLabel className="text-right">名称</FormLabel>
                   <FormControl className="col-span-3">
-                    <Input {...field} />
+                    <Input {...field} disabled={isPending} />
                   </FormControl>
                   <FormMessage className="col-span-2 ml-auto" />
                 </FormItem>
@@ -98,7 +94,7 @@ const CreatePhone = ({ brandId }: { brandId: number }) => {
                 <FormItem className="grid grid-cols-4 items-center gap-4">
                   <FormLabel className="text-right">型号</FormLabel>
                   <FormControl className="col-span-3">
-                    <Input {...field} />
+                    <Input {...field} disabled={isPending} />
                   </FormControl>
                   <FormMessage className="col-span-2 ml-auto" />
                 </FormItem>
@@ -114,6 +110,7 @@ const CreatePhone = ({ brandId }: { brandId: number }) => {
                     <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
+                      disabled={isPending}
                     />
                   </FormControl>
                   <FormMessage className="col-span-2 ml-auto" />
@@ -122,7 +119,14 @@ const CreatePhone = ({ brandId }: { brandId: number }) => {
             />
 
             <DialogFooter>
-              <Button type="submit">添加</Button>
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="flex gap-2 items-center"
+              >
+                {isPending && <ReloadIcon className="animate-spin" />}
+                添加
+              </Button>
             </DialogFooter>
           </form>
         </Form>

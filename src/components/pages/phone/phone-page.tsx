@@ -3,9 +3,10 @@ import { notFound } from "next/navigation";
 import XinHeader from "../_components/xin-header";
 import { Separator } from "@/components/ui/separator";
 import CreatePhone from "./create-phone";
-import prisma from "@/lib/prisma";
 import { searchPhoneParamsValue } from "@/schemas/search-params-schema";
 import { PhoneTable } from "@/components/tables/v2/phone/phone-table";
+import { getBrandById } from "@/lib/actions/server/brands";
+import { getPhonesById } from "@/lib/actions/server/phones";
 
 interface PhonePageProps {
   brandId: number;
@@ -16,11 +17,7 @@ const PhonePage = async ({ brandId, search }: PhonePageProps) => {
   const stringSearch = search as unknown as Record<string, string>;
   const searchParams = new URLSearchParams(stringSearch).toString();
 
-  const brand = await prisma.brand.findFirst({
-    where: {
-      id: brandId,
-    },
-  });
+  const brand = await getBrandById(brandId);
 
   if (brand === null) {
     return notFound();
@@ -31,11 +28,7 @@ const PhonePage = async ({ brandId, search }: PhonePageProps) => {
     { title: brand.name, link: `/dashboard/phones/${brandId}` },
   ];
 
-  const res = await fetch(
-    `${process.env.BASE_URL}/api/v1/brands/${brandId}?${searchParams}`
-  );
-
-  const data = await res.json();
+  const data = await getPhonesById(brand.id, search);
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <BreadCrumb items={breadcrumbItems} />

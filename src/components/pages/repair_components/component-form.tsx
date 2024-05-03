@@ -20,19 +20,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { ComponentSchema } from "@/schemas/componet-schema";
+import { getPhoneByBrandName } from "@/lib/actions/server/get";
+import {
+  createComponent,
+  updateComponent,
+} from "@/lib/actions/server/repair_components";
+import useBrand from "@/lib/fetcher/use-brand";
+import { useComponentCategory } from "@/lib/fetcher/use-component-category";
+import useSupplier from "@/lib/fetcher/use-supplier";
+import { ComponentFormValue, ComponentSchema } from "@/schemas/componet-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Brand, Category, Setting, Supplier } from "@prisma/client";
+import { ReloadIcon } from "@radix-ui/react-icons";
+
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 interface ComponentFormProps {
   initialData: any | null;
 }
-
-type ComponentFormValue = z.infer<typeof ComponentSchema>;
 
 const qualities = [
   "compatibile",
@@ -44,11 +50,7 @@ const qualities = [
   "rigenerato",
 ];
 
-const ComponentForm = ({ initialData }: ComponentFormProps) => {
-  const action = initialData ? "修改" : "创建";
-  const router = useRouter();
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+export default function ComponentForm({ initialData }: ComponentFormProps) {
   if (initialData != null) {
     initialData.stock = initialData.stock.toString();
   }
@@ -69,98 +71,28 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
         public_price: "0",
       };
 
+  const action = initialData ? "修改" : "创建";
+  const router = useRouter();
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+
   const form = useForm<ComponentFormValue>({
     resolver: zodResolver(ComponentSchema),
     defaultValues,
   });
 
-  const [categories, setCategories] = useState<Category[] | null>(null);
-  const [brands, setBrands] = useState<Brand[] | null>(null);
-  const [supplier, setSupplier] = useState<Supplier[] | null>(null);
-  const [categoryApi, setCategoryApi] = useState<string | null>(null);
-
-  const getCategoryApi = async () => {
-    try {
-      const res = await fetch(`/api/v1/settings/repair_category`);
-
-      if (res.ok) {
-        const data: Setting = await res.json();
-        setCategoryApi(data.setting_value);
-      }
-    } catch (error) {
-      setCategoryApi(null);
-    }
-  };
-  const getAllBrands = async () => {
-    try {
-      const response = await fetch("/api/v1/form/options/brand");
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data) {
-          setBrands(data);
-        }
-      }
-    } catch (error) {
-      setBrands(null);
-    }
-  };
-
-  const getAllCategories = async (api: string) => {
-    try {
-      const response = await fetch(api);
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data) {
-          setCategories(data);
-        }
-      }
-    } catch (error) {
-      setCategories(null);
-    }
-  };
-
-  const getAllSuppliers = async () => {
-    try {
-      const response = await fetch("/api/v1/form/options/supplier");
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data) {
-          setSupplier(data);
-        }
-      }
-    } catch (error) {
-      setSupplier(null);
-    }
-  };
-
-  useEffect(() => {
-    getCategoryApi();
-    if (categoryApi != null) {
-      getAllCategories(categoryApi);
-    }
-    getAllBrands();
-    getAllSuppliers();
-    if (defaultValues.brand) {
-      getPhonesByName(defaultValues.brand);
-    }
-  }, [categoryApi]);
+  const { brands } = useBrand();
+  const { suppliers } = useSupplier();
+  const { categories } = useComponentCategory("repair_category");
 
   const [phones, setPhones] = useState<Option[] | null>(null);
 
   const getPhonesByName = async (name: string) => {
-    try {
-      const response = await fetch(`/api/v1/brands/phones/${name}`);
+    const data = await getPhoneByBrandName(name);
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data) {
-          setPhones(data);
-        }
-      }
-    } catch (error) {
+    if (data.length !== 0) {
+      setPhones(data);
+    } else {
       setPhones(null);
     }
   };
@@ -174,50 +106,39 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
   };
 
   const onSubmit = async (values: ComponentFormValue) => {
-    setLoading(true);
-    if (initialData == null) {
-      const res = await fetch("/api/v1/components/", {
-        method: "POST",
-        body: JSON.stringify(values),
-      });
+    startTransition(async () => {
+      if (initialData === null) {
+        const data = await createComponent(values);
 
-      const data = await res.json();
-
-      if (data.status == "success") {
-        toast({
-          title: data.msg,
-        });
-        form.reset();
-        router.push("/dashboard/components");
+        if (data.status === "success") {
+          toast({
+            title: data.msg,
+          });
+          router.push("/dashboard/components");
+          form.reset();
+        } else {
+          toast({
+            title: data.msg,
+            variant: "destructive",
+          });
+        }
       } else {
-        toast({
-          title: data.msg,
-          variant: "destructive",
-        });
+        const data = await updateComponent(initialData.id, values);
+
+        if (data.status === "success") {
+          toast({
+            title: data.msg,
+          });
+          router.push("/dashboard/components");
+          form.reset();
+        } else {
+          toast({
+            title: data.msg,
+            variant: "destructive",
+          });
+        }
       }
-    } else {
-      const res = await fetch(`/api/v1/components/${initialData.id}`, {
-        method: "PUT",
-        body: JSON.stringify(values),
-      });
-
-      const data = await res.json();
-
-      if (data.status == "success") {
-        toast({
-          title: data.msg,
-        });
-        router.push("/dashboard/components");
-      } else {
-        toast({
-          title: data.msg,
-          variant: "destructive",
-        });
-      }
-    }
-
-    setLoading(false);
-    router.refresh();
+    });
   };
 
   return (
@@ -236,7 +157,7 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
                   <FormLabel>商品条形码</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={loading}
+                      disabled={isPending}
                       placeholder="商品条形码"
                       {...field}
                     />
@@ -253,7 +174,7 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
                   <FormLabel>配件名称</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={loading}
+                      disabled={isPending}
                       placeholder="配件名称"
                       {...field}
                     />
@@ -270,7 +191,7 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
                   <FormLabel>配件通用名称</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={loading}
+                      disabled={isPending}
                       placeholder="配件通用名称"
                       {...field}
                     />
@@ -288,6 +209,7 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
                   <Select
                     onValueChange={onBrandChange}
                     defaultValue={field.value}
+                    disabled={isPending}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -310,23 +232,26 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="model"
-              render={({ field }) => (
-                <FormItem className="flex flex-col gap-1">
-                  <FormLabel>适配型号</FormLabel>
-                  <MultiSelect
-                    defaultValues={field.value}
-                    placeholder="选择手机型号"
-                    fieldName="model"
-                    options={phones}
-                    setField={onModelChange}
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {phones && (
+              <FormField
+                control={form.control}
+                name="model"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col gap-1">
+                    <FormLabel>适配型号</FormLabel>
+                    <MultiSelect
+                      defaultValues={field.value}
+                      placeholder="选择手机型号"
+                      fieldName="model"
+                      options={phones}
+                      setField={onModelChange}
+                      disabled={isPending}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
               name="category"
@@ -336,6 +261,7 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    disabled={isPending}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -366,6 +292,7 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    disabled={isPending}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -373,8 +300,8 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {supplier &&
-                        supplier.map((item) => (
+                      {suppliers &&
+                        suppliers.map((item) => (
                           <SelectItem key={item.id} value={item.name}>
                             {item.name}
                           </SelectItem>
@@ -394,6 +321,7 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    disabled={isPending}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -420,7 +348,7 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
                   <FormLabel>库存数量</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={loading}
+                      disabled={isPending}
                       type="number"
                       placeholder="库存数量"
                       {...field}
@@ -437,7 +365,7 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
                 <FormItem>
                   <FormLabel>进价</FormLabel>
                   <FormControl>
-                    <Input disabled={loading} placeholder="进价" {...field} />
+                    <Input disabled={isPending} placeholder="进价" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -450,20 +378,23 @@ const ComponentForm = ({ initialData }: ComponentFormProps) => {
                 <FormItem>
                   <FormLabel>报价</FormLabel>
                   <FormControl>
-                    <Input disabled={loading} placeholder="报价" {...field} />
+                    <Input disabled={isPending} placeholder="报价" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
-          <Button disabled={loading} className="ml-auto" type="submit">
+          <Button
+            disabled={isPending}
+            className="ml-auto flex gap-2 items-center"
+            type="submit"
+          >
+            {isPending && <ReloadIcon className="animate-spin" />}
             {action}
           </Button>
         </form>
       </Form>
     </ScrollArea>
   );
-};
-
-export default ComponentForm;
+}

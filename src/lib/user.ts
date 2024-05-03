@@ -1,7 +1,8 @@
 "use server";
 import { createClient } from "./supabase/server";
 import { redirect } from "next/navigation";
-import { unstable_noStore as noStore } from "next/cache";
+import { unstable_noStore as noStore, revalidatePath } from "next/cache";
+import { DataReturnType } from "./definitions";
 
 export async function getUser() {
   noStore();
@@ -39,7 +40,7 @@ export async function isLoggedIn() {
   }
 }
 
-export async function updateUserName(name: string) {
+export async function updateUserName(name: string): Promise<DataReturnType> {
   const supabase = createClient();
 
   const {
@@ -49,6 +50,7 @@ export async function updateUserName(name: string) {
     data: { name },
   });
 
+  revalidatePath("/dashboard/profile");
   if (!error) {
     return {
       status: "success",
@@ -62,13 +64,16 @@ export async function updateUserName(name: string) {
   };
 }
 
-export async function updateUserPassword(password: string) {
+export async function updateUserPassword(
+  password: string
+): Promise<DataReturnType> {
   const supabase = createClient();
 
   const { error } = await supabase.auth.updateUser({
     password,
   });
 
+  revalidatePath("/dashboard/profile");
   if (!error) {
     return {
       status: "success",
