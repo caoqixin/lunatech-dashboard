@@ -2,6 +2,7 @@
 import { ColumnDef, Row } from "@tanstack/react-table";
 import { WarrantyCellAction } from "./action/warranty-cell-action";
 import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
 import { WarrantyWithRepair } from "@/lib/definitions";
 import {
   Tooltip,
@@ -10,6 +11,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { DataTableSearchableColumn } from "../types";
+
+dayjs.extend(customParseFormat);
 
 export const warrantyColumns: ColumnDef<WarrantyWithRepair>[] = [
   {
@@ -74,7 +77,7 @@ export const warrantyColumns: ColumnDef<WarrantyWithRepair>[] = [
       const startDay = row.original.createdAt;
       const expireDay = dayjs(startDay).add(90, "days").format("DD/MM/YYYY");
 
-      const isExpired = dayjs().isAfter(expireDay);
+      const isExpired = dayjs().isAfter(dayjs(expireDay, "DD/MM/YYYY"));
 
       return (
         <TooltipProvider delayDuration={300}>
