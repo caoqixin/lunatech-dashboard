@@ -87,6 +87,16 @@ export async function changeStatus(
   isRework: boolean
 ): Promise<DataReturnType> {
   try {
+    // 更新状态
+    await prisma.repair.update({
+      where: {
+        id,
+      },
+      data: {
+        status,
+      },
+    });
+
     // 是否是保修
     if (isRework && status == "已取件") {
       try {
@@ -140,15 +150,6 @@ export async function changeStatus(
         return { msg: "取机失败, 请重试", status: "error" };
       }
     }
-    // 更新状态
-    await prisma.repair.update({
-      where: {
-        id,
-      },
-      data: {
-        status,
-      },
-    });
 
     revalidatePath("/dashboard/repairs");
     return { msg: `更新成功, 当前的维修状态为${status}`, status: "success" };
@@ -209,6 +210,28 @@ export async function updateRepair(
     data;
 
   try {
+    await prisma.repair.update({
+      where: {
+        id,
+      },
+      data: {
+        phone: phone,
+        problem: problem,
+        status: status,
+        deposit: deposit,
+        price: price,
+        customer: {
+          update: {
+            data: {
+              name: name,
+              tel: tel,
+              email: email,
+            },
+          },
+        },
+      },
+    });
+
     // 是否是保修
     if (isRework && status == "已取件") {
       try {
@@ -263,27 +286,6 @@ export async function updateRepair(
       }
     }
 
-    await prisma.repair.update({
-      where: {
-        id,
-      },
-      data: {
-        phone: phone,
-        problem: problem,
-        status: status,
-        deposit: deposit,
-        price: price,
-        customer: {
-          update: {
-            data: {
-              name: name,
-              tel: tel,
-              email: email,
-            },
-          },
-        },
-      },
-    });
     revalidatePath("/dashboard/repairs");
     revalidatePath("/dashboard/customers");
     return { msg: "更新成功", status: "success" };
