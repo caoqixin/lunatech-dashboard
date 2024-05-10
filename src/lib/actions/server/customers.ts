@@ -13,19 +13,28 @@ export async function getAllCustomers(
   const { per_page, page, tel } = searchParams;
   const skip = (page - 1) * per_page;
 
-  const customers: Customer[] = await prisma.customer.findMany({
-    orderBy: {
-      id: "asc",
-    },
-    where: {
-      tel: {
-        contains: tel ?? "",
+  const [customers, total] = await prisma.$transaction([
+    prisma.customer.findMany({
+      orderBy: {
+        id: "asc",
       },
-    },
-    take: per_page,
-    skip: skip,
-  });
-  const total = await prisma.customer.count();
+      where: {
+        tel: {
+          contains: tel ?? "",
+        },
+      },
+      take: per_page,
+      skip: skip,
+    }),
+    prisma.customer.count({
+      where: {
+        tel: {
+          contains: tel ?? "",
+        },
+      },
+    }),
+  ]);
+
   const pageCount = Math.ceil(total / per_page);
 
   return { customers, pageCount };

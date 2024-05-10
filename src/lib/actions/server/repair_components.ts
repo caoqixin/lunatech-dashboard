@@ -18,54 +18,56 @@ export async function getAllComponents(
   const name = searchParams.name ?? "";
 
   if (categoryList.length !== 0) {
-    const components = await prisma.component.findMany({
-      orderBy: {
-        id: "asc",
-      },
-      where: {
-        category: {
-          in: categoryList,
+    const [components, total] = await prisma.$transaction([
+      prisma.component.findMany({
+        orderBy: {
+          id: "asc",
         },
-        OR: [
-          {
-            name: {
-              contains: name,
-              mode: "insensitive",
-            },
+        where: {
+          category: {
+            in: categoryList,
           },
-          {
-            code: {
-              contains: name,
-              mode: "insensitive",
+          OR: [
+            {
+              name: {
+                contains: name,
+                mode: "insensitive",
+              },
             },
+            {
+              code: {
+                contains: name,
+                mode: "insensitive",
+              },
+            },
+          ],
+        },
+        skip,
+        take: per_page,
+      }),
+      prisma.component.count({
+        where: {
+          category: {
+            in: categoryList,
           },
-        ],
-      },
-      skip,
-      take: per_page,
-    });
+          OR: [
+            {
+              name: {
+                contains: name,
+                mode: "insensitive",
+              },
+            },
+            {
+              code: {
+                contains: name,
+                mode: "insensitive",
+              },
+            },
+          ],
+        },
+      }),
+    ]);
 
-    const total = await prisma.component.count({
-      where: {
-        category: {
-          in: categoryList,
-        },
-        OR: [
-          {
-            name: {
-              contains: name,
-              mode: "insensitive",
-            },
-          },
-          {
-            code: {
-              contains: name,
-              mode: "insensitive",
-            },
-          },
-        ],
-      },
-    });
     const pageCount = Math.ceil(total / per_page);
 
     return {
@@ -77,48 +79,50 @@ export async function getAllComponents(
       pageCount,
     };
   } else {
-    const components = await prisma.component.findMany({
-      orderBy: {
-        id: "asc",
-      },
-      where: {
-        OR: [
-          {
-            name: {
-              contains: name,
-              mode: "insensitive",
+    const [components, total] = await prisma.$transaction([
+      prisma.component.findMany({
+        orderBy: {
+          id: "asc",
+        },
+        where: {
+          OR: [
+            {
+              name: {
+                contains: name,
+                mode: "insensitive",
+              },
             },
-          },
-          {
-            code: {
-              contains: name,
-              mode: "insensitive",
+            {
+              code: {
+                contains: name,
+                mode: "insensitive",
+              },
             },
-          },
-        ],
-      },
-      skip,
-      take: per_page,
-    });
+          ],
+        },
+        skip,
+        take: per_page,
+      }),
+      prisma.component.count({
+        where: {
+          OR: [
+            {
+              name: {
+                contains: name,
+                mode: "insensitive",
+              },
+            },
+            {
+              code: {
+                contains: name,
+                mode: "insensitive",
+              },
+            },
+          ],
+        },
+      }),
+    ]);
 
-    const total = await prisma.component.count({
-      where: {
-        OR: [
-          {
-            name: {
-              contains: name,
-              mode: "insensitive",
-            },
-          },
-          {
-            code: {
-              contains: name,
-              mode: "insensitive",
-            },
-          },
-        ],
-      },
-    });
     const pageCount = Math.ceil(total / per_page);
 
     return {

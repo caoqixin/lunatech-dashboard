@@ -29,21 +29,29 @@ export async function getAllBrands(
   const { page, per_page, name } = searchParams;
   const skip = (page - 1) * per_page;
 
-  const brands: Brand[] = await prisma.brand.findMany({
-    orderBy: {
-      id: "asc",
-    },
-    where: {
-      name: {
-        contains: name,
-        mode: "insensitive",
+  const [brands, total] = await prisma.$transaction([
+    prisma.brand.findMany({
+      orderBy: {
+        id: "asc",
       },
-    },
-    take: per_page,
-    skip: skip,
-  });
-
-  const total = await prisma.brand.count();
+      where: {
+        name: {
+          contains: name,
+          mode: "insensitive",
+        },
+      },
+      take: per_page,
+      skip: skip,
+    }),
+    prisma.brand.count({
+      where: {
+        name: {
+          contains: name,
+          mode: "insensitive",
+        },
+      },
+    }),
+  ]);
 
   const pageCount = Math.ceil(total / per_page);
 

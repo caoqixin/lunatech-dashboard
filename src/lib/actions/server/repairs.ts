@@ -7,7 +7,6 @@ import {
 } from "@/lib/definitions";
 import prisma from "@/lib/prisma";
 import { searchParamsValue } from "@/schemas/search-params-schema";
-import { Repair } from "@prisma/client";
 import { RepairFormValue } from "@/schemas/repair-schema";
 
 export async function getAllRepairs(
@@ -16,18 +15,24 @@ export async function getAllRepairs(
   const { per_page, page } = searchParams;
   const skip = (page - 1) * per_page;
 
-  const repairs = await prisma.repair.findMany({
-    orderBy: {
-      id: "desc",
-    },
-    where: {
-      status: { not: "已取件" },
-    },
-    take: per_page,
-    skip,
-  });
+  const [repairs, total] = await prisma.$transaction([
+    prisma.repair.findMany({
+      orderBy: {
+        id: "desc",
+      },
+      where: {
+        status: { not: "已取件" },
+      },
+      take: per_page,
+      skip,
+    }),
+    prisma.repair.count({
+      where: {
+        status: { not: "已取件" },
+      },
+    }),
+  ]);
 
-  const total = await prisma.customer.count();
   const pageCount = Math.ceil(total / per_page);
 
   return {
@@ -87,20 +92,20 @@ export async function changeStatus(
   isRework: boolean
 ): Promise<DataReturnType> {
   try {
-    // 更新状态
-    await prisma.repair.update({
-      where: {
-        id,
-      },
-      data: {
-        status,
-      },
-    });
+    return await prisma.$transaction(async (db) => {
+      // 更新状态
+      await db.repair.update({
+        where: {
+          id,
+        },
+        data: {
+          status,
+        },
+      });
 
-    // 是否是保修
-    if (isRework && status == "已取件") {
-      try {
-        await prisma.repair.update({
+      // 是否是保修
+      if (isRework && status == "已取件") {
+        await db.repair.update({
           where: {
             id,
           },
@@ -123,14 +128,10 @@ export async function changeStatus(
           msg: `成功取机, 当前手机已完成保修, 当前的维修状态为${status}`,
           status: "success",
         };
-      } catch (error) {
-        return { msg: "取机失败, 请重试", status: "error" };
       }
-    }
 
-    // 是否是取件
-    if (status == "已取件") {
-      try {
+      // 是否是取件
+      if (status == "已取件") {
         await prisma.warranty.create({
           data: {
             days: 90,
@@ -146,13 +147,11 @@ export async function changeStatus(
           msg: `成功取机, 可前往保修页面查看保修状态`,
           status: "success",
         };
-      } catch (error) {
-        return { msg: "取机失败, 请重试", status: "error" };
       }
-    }
 
-    revalidatePath("/dashboard/repairs");
-    return { msg: `更新成功, 当前的维修状态为${status}`, status: "success" };
+      revalidatePath("/dashboard/repairs");
+      return { msg: `更新成功, 当前的维修状态为${status}`, status: "success" };
+    });
   } catch (error) {
     return { msg: `维修状态修改失败, 请重试`, status: "error" };
   }
@@ -210,32 +209,32 @@ export async function updateRepair(
     data;
 
   try {
-    await prisma.repair.update({
-      where: {
-        id,
-      },
-      data: {
-        phone: phone,
-        problem: problem,
-        status: status,
-        deposit: deposit,
-        price: price,
-        customer: {
-          update: {
-            data: {
-              name: name,
-              tel: tel,
-              email: email,
+    return await prisma.$transaction(async (db) => {
+      // 更新 repair 表
+      await db.repair.update({
+        where: {
+          id,
+        },
+        data: {
+          phone: phone,
+          problem: problem,
+          status: status,
+          deposit: deposit,
+          price: price,
+          customer: {
+            update: {
+              data: {
+                name: name,
+                tel: tel,
+                email: email,
+              },
             },
           },
         },
-      },
-    });
-
-    // 是否是保修
-    if (isRework && status == "已取件") {
-      try {
-        await prisma.repair.update({
+      });
+      // 是否是保修
+      if (isRework && status == "已取件") {
+        await db.repair.update({
           where: {
             id,
           },
@@ -259,12 +258,8 @@ export async function updateRepair(
           msg: `成功取机, 当前手机已完成保修, 当前的维修状态为${status}`,
           status: "success",
         };
-      } catch (error) {
-        return { msg: "取机失败, 请重试", status: "error" };
       }
-    }
-    if (status == "已取件") {
-      try {
+      if (status == "已取件") {
         await prisma.warranty.create({
           data: {
             days: 90,
@@ -281,14 +276,12 @@ export async function updateRepair(
           msg: `成功取机, 可前往保修页面查看保修状态`,
           status: "success",
         };
-      } catch (error) {
-        return { msg: "取机失败, 请重试", status: "error" };
       }
-    }
 
-    revalidatePath("/dashboard/repairs");
-    revalidatePath("/dashboard/customers");
-    return { msg: "更新成功", status: "success" };
+      revalidatePath("/dashboard/repairs");
+      revalidatePath("/dashboard/customers");
+      return { msg: "更新成功", status: "success" };
+    });
   } catch (error) {
     return { msg: "更新失败", status: "error" };
   }

@@ -2,10 +2,7 @@
 import { unstable_noStore as noStore, revalidatePath } from "next/cache";
 import { DataReturnType } from "@/lib/definitions";
 import prisma from "@/lib/prisma";
-import {
-  searchParamsValue,
-  searchPhoneParamsValue,
-} from "@/schemas/search-params-schema";
+import { searchPhoneParamsValue } from "@/schemas/search-params-schema";
 import { Phone } from "@prisma/client";
 import { phoneSchamaValue } from "@/schemas/brand-schema";
 
@@ -18,26 +15,32 @@ export async function getPhonesById(
   const { per_page, page, name } = searchParams;
   const skip = (page - 1) * per_page;
 
-  const items = await prisma.phone.findMany({
-    where: {
-      brandId,
-      name: {
-        contains: name,
-        mode: "insensitive",
+  const [items, total] = await prisma.$transaction([
+    prisma.phone.findMany({
+      where: {
+        brandId,
+        name: {
+          contains: name,
+          mode: "insensitive",
+        },
       },
-    },
-    orderBy: {
-      id: "asc",
-    },
-    take: per_page,
-    skip: skip,
-  });
+      orderBy: {
+        id: "asc",
+      },
+      take: per_page,
+      skip: skip,
+    }),
+    prisma.phone.count({
+      where: {
+        brandId,
+        name: {
+          contains: name,
+          mode: "insensitive",
+        },
+      },
+    }),
+  ]);
 
-  const total = await prisma.phone.count({
-    where: {
-      brandId,
-    },
-  });
   const pageCount = Math.ceil(total / per_page);
 
   return { items, pageCount };

@@ -15,22 +15,25 @@ export async function getCategoryItemsById(
 
   const { per_page, page } = searchParams;
   const skip = (page - 1) * per_page;
-  const items = await prisma.categoryItem.findMany({
-    where: {
-      categoryId,
-    },
-    orderBy: {
-      id: "asc",
-    },
-    take: per_page,
-    skip: skip,
-  });
 
-  const total = await prisma.categoryItem.count({
-    where: {
-      categoryId,
-    },
-  });
+  const [items, total] = await prisma.$transaction([
+    prisma.categoryItem.findMany({
+      where: {
+        categoryId,
+      },
+      orderBy: {
+        id: "asc",
+      },
+      take: per_page,
+      skip: skip,
+    }),
+    prisma.categoryItem.count({
+      where: {
+        categoryId,
+      },
+    }),
+  ]);
+
   const pageCount = Math.ceil(total / per_page);
 
   return { items, pageCount };

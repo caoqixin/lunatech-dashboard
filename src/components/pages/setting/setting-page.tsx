@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CallbackUrlTab from "./callback-url-tab";
+import AllBackupButton from "./db_backup/all_backup";
 
 const breadcrumbItems: BreadCrumbType[] = [
   { title: "设置", link: "/dashboard/setting" },
@@ -20,13 +21,15 @@ const SettingPage = () => {
             <Tabs defaultValue="callbackUrl" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="callbackUrl">回调地址</TabsTrigger>
-                <TabsTrigger value="other">其他设置 </TabsTrigger>
+                <TabsTrigger value="other">数据库备份 </TabsTrigger>
               </TabsList>
               <TabsContent value="callbackUrl" className="space-y-4">
                 <CallbackUrlTab />
               </TabsContent>
               <TabsContent value="other" className="space-y-4">
-                olther
+                <div className="flex gap-4">
+                  <AllBackupButton />
+                </div>
               </TabsContent>
             </Tabs>
           </div>

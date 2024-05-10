@@ -39,6 +39,7 @@ export async function importBrandAndPhone(data: CrawlBrandData[]) {
             phones: {
               createMany: {
                 data: finalPhones,
+                skipDuplicates: true,
               },
             },
           },
@@ -58,6 +59,7 @@ export async function importBrandAndPhone(data: CrawlBrandData[]) {
             phones: {
               createMany: {
                 data: filteredPhones,
+                skipDuplicates: true,
               },
             },
           },

@@ -25,41 +25,43 @@ export async function getAllWarranties(
   const { contact_tel, per_page, page } = searchParams;
   const skip = (page - 1) * per_page;
 
-  const warranties = await prisma.warranty.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-    where: {
-      isRework: { not: true },
-      repair: {
-        customer: {
-          tel: {
-            contains: contact_tel,
+  const [warranties, total] = await prisma.$transaction([
+    prisma.warranty.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      where: {
+        isRework: { not: true },
+        repair: {
+          customer: {
+            tel: {
+              contains: contact_tel,
+            },
           },
         },
       },
-    },
-    include: {
-      repair: {
-        select,
+      include: {
+        repair: {
+          select,
+        },
       },
-    },
-    take: per_page,
-    skip: skip,
-  });
+      take: per_page,
+      skip: skip,
+    }),
+    prisma.warranty.count({
+      where: {
+        isRework: { not: true },
+        repair: {
+          customer: {
+            tel: {
+              contains: contact_tel,
+            },
+          },
+        },
+      },
+    }),
+  ]);
 
-  const total = await prisma.warranty.count({
-    where: {
-      isRework: { not: true },
-      repair: {
-        customer: {
-          tel: {
-            contains: contact_tel,
-          },
-        },
-      },
-    },
-  });
   const pageCount = Math.ceil(total / per_page);
 
   return { warranties, pageCount };

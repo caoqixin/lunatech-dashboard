@@ -12,15 +12,18 @@ export async function getAllSuppliers(
   noStore();
   const { page, per_page } = searchParams;
   const skip = (page - 1) * per_page;
-  const suppliers: Supplier[] = await prisma.supplier.findMany({
-    orderBy: {
-      id: "asc",
-    },
-    take: per_page,
-    skip: skip,
-  });
 
-  const total = await prisma.supplier.count();
+  const [suppliers, total] = await prisma.$transaction([
+    prisma.supplier.findMany({
+      orderBy: {
+        id: "asc",
+      },
+      take: per_page,
+      skip: skip,
+    }),
+    prisma.supplier.count(),
+  ]);
+
   const pageCount = Math.ceil(total / per_page);
 
   return { suppliers, pageCount };

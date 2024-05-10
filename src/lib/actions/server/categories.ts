@@ -14,14 +14,17 @@ export async function getAllCategories(
   const { per_page, page } = searchParams;
   const skip = (page - 1) * per_page;
 
-  const categories: Category[] = await prisma.category.findMany({
-    orderBy: {
-      id: "asc",
-    },
-    take: per_page,
-    skip,
-  });
-  const total = await prisma.category.count();
+  const [categories, total] = await prisma.$transaction([
+    prisma.category.findMany({
+      orderBy: {
+        id: "asc",
+      },
+      take: per_page,
+      skip,
+    }),
+    prisma.category.count(),
+  ]);
+
   const pageCount = Math.ceil(total / per_page);
 
   return { pageCount, categories };
