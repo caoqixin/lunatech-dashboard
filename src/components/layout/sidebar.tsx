@@ -1,20 +1,15 @@
-import React from "react";
-import DashboardNav from "../dashboard-nav";
-import { routes } from "@/route/routes";
+import { Separator } from "@/components/ui/separator";
+import Link from "next/link";
+import { Navigation } from "./navigation";
 
-const Sidebar = () => {
+export const Sidebar = () => {
   return (
-    <aside className="sticky z-10 top-0 hidden h-screen pt-16 lg:block overflow-auto col-span-2">
-      <div className="space-y-4 px-4">
-        <div className="space-y-1">
-          <h2 className="mb-2 px-4 text-xl font-semibold text-center tracking-tight">
-            Luna Tech
-          </h2>
-          <DashboardNav routes={routes} />
-        </div>
-      </div>
+    <aside className="h-full bg-background p-4 w-full border-r border-black">
+      <Link href="/">
+        <p className="text-2xl font-bold">Luna Tech</p>
+      </Link>
+      <Separator className="my-4" />
+      <Navigation />
     </aside>
   );
 };
-
-export default Sidebar;

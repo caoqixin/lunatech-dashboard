@@ -1,27 +1,26 @@
-import DashboardDataSkeleton from "@/components/pages/_components/skeleton/dashboard-data-skeleton";
-import BrandPage from "@/components/pages/brand/brand-page";
-import { SearchParams } from "@/components/tables/v2/types";
-import { auth } from "@/lib/user";
-import { searchPhoneParamsSchema } from "@/schemas/search-params-schema";
+import { isLoggedIn } from "@/server/user";
+import { BrandPage } from "@/views/brand/components/brand-page";
+import {
+  BrandSearch,
+  BrandSearchSchema,
+} from "@/views/brand/schema/brand.schema";
 import { Metadata } from "next";
-import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "机型管理",
 };
 
-export interface BrandPageProps {
-  searchParams: SearchParams;
+interface PageProps {
+  searchParams: BrandSearch;
 }
 
-export default async function Page({ searchParams }: BrandPageProps) {
-  await auth();
+export default async function Page({ searchParams }: PageProps) {
+  if (!(await isLoggedIn())) {
+    redirect("/login");
+  }
 
-  const search = searchPhoneParamsSchema.parse(searchParams);
+  const searchKey = BrandSearchSchema.parse(searchParams);
 
-  return (
-    <Suspense fallback={<DashboardDataSkeleton searchaBle />}>
-      <BrandPage search={search} />
-    </Suspense>
-  );
+  return <BrandPage searchKey={searchKey} />;
 }

@@ -1,21 +1,24 @@
-import OrderPage from "@/components/pages/order/order-page";
-import { SearchParams } from "@/components/tables/v2/types";
-import { auth } from "@/lib/user";
-import { searchOrderParamsSchema } from "@/schemas/search-params-schema";
+import { SearchParams } from "@/components/data-table/type";
+import { isLoggedIn } from "@/server/user";
+import { OrderPage } from "@/views/order/components/order-page";
+import { orderSearchParams } from "@/views/order/schema/order.schema";
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "出入库管理",
+  title: "出库管理",
 };
 
-export default async function Page({
-  searchParams,
-}: {
+export interface OrderPageProps {
   searchParams: SearchParams;
-}) {
-  await auth();
+}
 
-  const search = searchOrderParamsSchema.parse(searchParams);
+export default async function Page({ searchParams }: OrderPageProps) {
+  if (!(await isLoggedIn())) {
+    redirect("/login");
+  }
 
-  return <OrderPage search={search} />;
+  const params = orderSearchParams.parse(searchParams);
+
+  return <OrderPage params={params} />;
 }

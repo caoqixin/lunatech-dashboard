@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -8,39 +8,37 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "../ui/sheet";
-import { HamburgerMenuIcon } from "@radix-ui/react-icons";
-import DashboardNav from "../dashboard-nav";
-import { routes } from "@/route/routes";
-interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
+} from "@/components/ui/sheet";
+import { MenuIcon } from "lucide-react";
+import { Sidebar } from "./sidebar";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import VisuallyHidden from "../custom/visually-hidden";
 
-const MobileSidebar = ({ className }: SidebarProps) => {
-  const [open, setOpen] = useState<boolean>(false);
+export const MobileSidebar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
+
   return (
-    <>
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger asChild>
-          <HamburgerMenuIcon className="cursor-pointer" />
-        </SheetTrigger>
-        <SheetContent
-          side="left"
-          className="!px-0 flex flex-col gap-3 h-dvh overflow-auto"
-        >
-          <SheetHeader className="items-center">
-            <SheetTitle className="font-medium mt-2 mb-2 px-4 text-lg tracking-tight">
-              Luna Tech
-            </SheetTitle>
-            <SheetDescription className="text-gray-400">
-              管理后台
-            </SheetDescription>
+    <Sheet modal={false} open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
+        <Button size="icon" variant="outline" className="lg:hidden">
+          <MenuIcon className="size-5" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="p-0">
+        <VisuallyHidden>
+          <SheetHeader>
+            <SheetTitle>mobile sidebar</SheetTitle>
+            <SheetDescription>mobile sidebar</SheetDescription>
           </SheetHeader>
-          <div className="px-4">
-            <DashboardNav setOpen={setOpen} routes={routes} />
-          </div>
-        </SheetContent>
-      </Sheet>
-    </>
+        </VisuallyHidden>
+        <Sidebar />
+      </SheetContent>
+    </Sheet>
   );
 };
-
-export default MobileSidebar;

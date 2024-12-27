@@ -1,14 +1,14 @@
-import DashboardDataSkeleton from "@/components/pages/_components/skeleton/dashboard-data-skeleton";
-import PhonePage from "@/components/pages/phone/phone-page";
-import { SearchParams } from "@/components/tables/v2/types";
-import {
-  generateBrandIdParams,
-  getBrandById,
-} from "@/lib/actions/server/brands";
-import { auth } from "@/lib/user";
-import { searchPhoneParamsSchema } from "@/schemas/search-params-schema";
+import { SearchParams } from "@/components/data-table/type";
+import { createClient } from "@/lib/supabase/client";
+// import {
+//   generateBrandIdParams,
+//   getBrandById,
+// } from "@/lib/actions/server/brands";
+import { isLoggedIn } from "@/server/user";
+import { PhonePage } from "@/views/phones/components/phone-page";
+import { searchPhoneParamsSchema } from "@/views/phones/schema/phone.schema";
 import { Metadata, ResolvingMetadata } from "next";
-import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
 export interface PhonePageProps {
   searchParams: SearchParams;
@@ -18,21 +18,38 @@ export interface PhonePageProps {
 }
 
 export default async function Page({ params, searchParams }: PhonePageProps) {
-  await auth();
+  if (!(await isLoggedIn())) {
+    redirect("/login");
+  }
 
-  const brandId = parseInt(params.brandId);
   const search = searchPhoneParamsSchema.parse(searchParams);
 
-  return (
-    <Suspense fallback={<DashboardDataSkeleton searchaBle />}>
-      <PhonePage brandId={brandId} search={search} />
-    </Suspense>
-  );
+  return <PhonePage search={search} brandId={params.brandId} />;
+}
+
+async function fetchAllBrandId() {
+  const supabase = createClient();
+
+  const { data } = await supabase.from("brands").select();
+
+  return data ?? [];
+}
+
+async function fetchBrandTitleById(id: number) {
+  const supabase = createClient();
+
+  const { data } = await supabase
+    .from("brands")
+    .select("name")
+    .eq("id", id)
+    .single();
+
+  return data;
 }
 
 // 生成静态参数
 export async function generateStaticParams() {
-  const brands = await generateBrandIdParams();
+  const brands = await fetchAllBrandId();
 
   return brands.map((brand) => ({
     brandId: brand.id.toString(),
@@ -47,7 +64,7 @@ export async function generateMetadata(
   const id = params.brandId;
 
   // fetch data
-  const brand = await getBrandById(parseInt(id));
+  const brand = await fetchBrandTitleById(parseInt(id));
 
   if (brand === null) {
     return {

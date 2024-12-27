@@ -1,10 +1,15 @@
-import HomePage from "@/components/pages/home/home-page";
-import { auth } from "@/lib/user";
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
+
+import { isLoggedIn } from "@/server/user";
+import { InfoPage } from "@/views/info-price/components/info-page";
 
 export default async function Home() {
-  await auth();
-  return <HomePage />;
+  if (!(await isLoggedIn())) {
+    redirect("/login");
+  }
+
+  return <InfoPage />;
 }
 
 export const metadata: Metadata = {

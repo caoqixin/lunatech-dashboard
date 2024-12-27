@@ -1,6 +1,8 @@
-import Header from "@/components/layout/header";
-import Sidebar from "@/components/layout/sidebar";
 import { Metadata } from "next";
+
+import { Separator } from "@/components/ui/separator";
+import { Navbar } from "@/components/layout/navbar";
+import { Sidebar } from "@/components/layout/sidebar";
 
 export const metadata: Metadata = {
   title: {
@@ -16,14 +18,17 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="h-screen w-screen overflow-x-hidden">
-      <Header />
-      <div className="w-screen">
-        <div className="grid grid-cols-12">
+    <div className="min-h-screen">
+      <div className="flex w-full">
+        <div className="fixed lef-0 top-0 hidden lg:block lg:w-[264px] h-screen overflow-y-auto ">
           <Sidebar />
-          <main className="col-span-10 max-lg:col-span-12 pt-16 border-l">
-            {children}
-          </main>
+        </div>
+        <div className="lg:pl-[264px] w-full h-screen">
+          <div className="mx-auto max-w-screen-2xl h-screen">
+            <Navbar />
+            <Separator className="my-2" />
+            <main className="h-full py-2 px-6 flex flex-col">{children}</main>
+          </div>
         </div>
       </div>
     </div>

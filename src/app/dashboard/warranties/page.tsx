@@ -1,10 +1,9 @@
-import DashboardDataSkeleton from "@/components/pages/_components/skeleton/dashboard-data-skeleton";
-import WarrantyPage from "@/components/pages/warranty/warranty-page";
-import { SearchParams } from "@/components/tables/v2/types";
-import { auth } from "@/lib/user";
-import { searchWarrantyParamsSchema } from "@/schemas/search-params-schema";
+import { SearchParams } from "@/components/data-table/type";
+import { isLoggedIn } from "@/server/user";
+import { WarrantyPage } from "@/views/warranty/components/warranty-page";
+import { searchWarrantyParamsSchema } from "@/views/warranty/schema/warranty.schema";
 import { Metadata } from "next";
-import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "保修管理",
@@ -13,12 +12,11 @@ export interface WarrantyPageProps {
   searchParams: SearchParams;
 }
 export default async function Page({ searchParams }: WarrantyPageProps) {
-  await auth();
+  if (!(await isLoggedIn())) {
+    redirect("/login");
+  }
 
   const search = searchWarrantyParamsSchema.parse(searchParams);
-  return (
-    <Suspense fallback={<DashboardDataSkeleton searchaBle />}>
-      <WarrantyPage search={search} />
-    </Suspense>
-  );
+
+  return <WarrantyPage params={search} />;
 }

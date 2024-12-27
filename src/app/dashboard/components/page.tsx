@@ -1,10 +1,9 @@
-import DashboardDataSkeleton from "@/components/pages/_components/skeleton/dashboard-data-skeleton";
-import ComponentPage from "@/components/pages/repair_components/components-page";
-import { SearchParams } from "@/components/tables/v2/types";
-import { auth } from "@/lib/user";
-import { searchComponentParamsSchema } from "@/schemas/search-params-schema";
+import { SearchParams } from "@/components/data-table/type";
+import { isLoggedIn } from "@/server/user";
+import { ComponentPage } from "@/views/component/components/component-page";
+import { searchComponentParamsSchema } from "@/views/component/schema/component.schema";
 import { Metadata } from "next";
-import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "配件管理",
@@ -15,12 +14,11 @@ export interface ComponentPageProps {
 }
 
 export default async function Page({ searchParams }: ComponentPageProps) {
-  await auth();
+  if (!isLoggedIn) {
+    redirect("/login");
+  }
 
-  const search = searchComponentParamsSchema.parse(searchParams);
-  return (
-    <Suspense fallback={<DashboardDataSkeleton searchaBle />}>
-      <ComponentPage search={search} />
-    </Suspense>
-  );
+  const params = searchComponentParamsSchema.parse(searchParams);
+
+  return <ComponentPage search={params} />;
 }

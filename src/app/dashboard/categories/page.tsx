@@ -1,25 +1,30 @@
-import DashboardDataSkeleton from "@/components/pages/_components/skeleton/dashboard-data-skeleton";
-import CategoryPage from "@/components/pages/categories/category-page";
-import { SearchParams } from "@/components/tables/v2/types";
-import { auth } from "@/lib/user";
-import { searchParamsSchema } from "@/schemas/search-params-schema";
+import { isLoggedIn } from "@/server/user";
+import { CategoryPage } from "@/views/category/components/category-page";
+import {
+  CategorySearchParams,
+  CategorySearchParamsSchema,
+} from "@/views/category/schema/category.schema";
 import { Metadata } from "next";
-import { Suspense } from "react";
+import { notFound, redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "分类管理",
 };
 
 export interface CategoryPageProps {
-  searchParams: SearchParams;
+  searchParams: CategorySearchParams;
 }
 
 export default async function Page({ searchParams }: CategoryPageProps) {
-  await auth();
-  const search = searchParamsSchema.parse(searchParams);
-  return (
-    <Suspense fallback={<DashboardDataSkeleton />}>
-      <CategoryPage search={search} />
-    </Suspense>
-  );
+  if (!(await isLoggedIn())) {
+    redirect("/login");
+  }
+
+  const search = CategorySearchParamsSchema.safeParse(searchParams);
+
+  if (!search.success) {
+    return notFound();
+  }
+
+  return <CategoryPage search={search.data} />;
 }

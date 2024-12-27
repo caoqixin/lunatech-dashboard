@@ -1,8 +1,13 @@
-import LoginForm from "@/components/auth/login-form";
-import { isLoggedIn } from "@/lib/user";
+import { isLoggedIn } from "@/server/user";
+import LoginForm from "@/views/auth/components/login-form";
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
+
 export default async function Page() {
-  await isLoggedIn();
+  if (await isLoggedIn()) {
+    redirect("/dashboard");
+  }
+
   return (
     <div className="relative h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
       <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">

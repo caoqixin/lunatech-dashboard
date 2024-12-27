@@ -1,13 +1,16 @@
-import SettingPage from "@/components/pages/setting/setting-page";
-import { auth } from "@/lib/user";
+import { isLoggedIn } from "@/server/user";
+import SettingPage from "@/views/setting/components/setting-page";
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "设置",
 };
 
 export default async function Page() {
-  await auth();
+  if (!(await isLoggedIn())) {
+    redirect("/login");
+  }
 
   return <SettingPage />;
 }

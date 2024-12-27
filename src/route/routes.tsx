@@ -19,7 +19,7 @@ export interface Route {
   id: number;
   title: string;
   label: string;
-  href?: string;
+  href: string;
   target?: HTMLAttributeAnchorTarget;
   icon?: React.ReactNode;
 }
@@ -97,16 +97,10 @@ export const routes: Route[] = [
   },
   {
     id: 11,
-    title: "报价",
+    title: "报价中心",
     href: "/",
     label: "preventivo",
     icon: <ZoomInIcon />,
     target: "_blank",
-  },
-  {
-    id: 12,
-    title: "登出",
-    label: "logout",
-    icon: <ExitIcon />,
   },
 ];

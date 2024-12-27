@@ -4,10 +4,12 @@ import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type {
   DataTableFilterableColumn,
+  DataTableHideColumn,
   DataTableSearchableColumn,
-} from "@/components/tables/v2/types";
+} from "@/components/data-table/type";
 import {
   getCoreRowModel,
+  getExpandedRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFilteredRowModel,
@@ -60,6 +62,7 @@ interface UseDataTableProps<TData, TValue> {
    * @example filterableColumns={[{ id: "status", title: "Status", options: ["todo", "in-progress", "done", "canceled"]}]}
    */
   filterableColumns?: DataTableFilterableColumn<TData>[];
+  initialHideColumns?: DataTableHideColumn<TData>[];
 }
 
 const schema = z.object({
@@ -74,6 +77,7 @@ export function useDataTable<TData, TValue>({
   pageCount,
   searchableColumns = [],
   filterableColumns = [],
+  initialHideColumns = [],
 }: UseDataTableProps<TData, TValue>) {
   const router = useRouter();
   const pathname = usePathname();
@@ -132,10 +136,16 @@ export function useDataTable<TData, TValue>({
     );
   }, [filterableColumns, searchableColumns, searchParams]);
 
+  const VisibilityStates = Object.assign(
+    {},
+    ...initialHideColumns.map((item) => ({
+      [item.id]: item.value,
+    }))
+  );
   // Table states
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+    React.useState<VisibilityState>(VisibilityStates);
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(initialColumnFilters);
 
@@ -260,7 +270,7 @@ export function useDataTable<TData, TValue>({
     JSON.stringify(filterableColumnFilters),
   ]);
 
-  const table = useReactTable({
+  const table = useReactTable<TData>({
     data,
     columns,
     pageCount: pageCount ?? -1,
@@ -283,6 +293,7 @@ export function useDataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
+    getExpandedRowModel: getExpandedRowModel(),
     manualPagination: true,
     manualSorting: true,
     manualFiltering: true,
