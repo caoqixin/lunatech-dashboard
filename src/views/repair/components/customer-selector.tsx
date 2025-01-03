@@ -113,12 +113,20 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({
     const { msg, status, data } = await createCustomerForCreateRepair(values);
     if (status == "success" && data) {
       setInitialOptions((prevOptions) => [...prevOptions, data]); // 更新选项列表
+      setValue(fieldName, data.id); // 自动选择新创建的客户
       toast.success(msg);
       setDialogOpen(false);
       form.reset();
     } else {
       toast.error(msg);
     }
+  };
+
+  const stopPropagation = (handler: (event: React.SyntheticEvent) => void) => {
+    return (event: React.SyntheticEvent) => {
+      event.stopPropagation();
+      handler(event);
+    };
   };
 
   return (
@@ -172,7 +180,7 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({
                     </DialogHeader>
                     <Form {...form}>
                       <form
-                        onSubmit={form.handleSubmit(onSubmit)}
+                        onSubmit={stopPropagation(form.handleSubmit(onSubmit))}
                         className="flex flex-col gap-4"
                       >
                         <FormField

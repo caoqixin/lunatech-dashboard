@@ -119,8 +119,8 @@ export async function createNewRepair(
       deposit,
       price,
       customerId,
-      createdAt: new Date().toLocaleDateString(),
-      updatedAt: new Date().toLocaleDateString(),
+      createdAt: new Date().toLocaleString(),
+      updatedAt: new Date().toLocaleString(),
     })
     .select()
     .single();
