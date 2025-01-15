@@ -47,6 +47,25 @@ export async function countCustomers(per_page: number, search: string) {
   return Math.ceil((count ?? 0) / per_page);
 }
 
+// count all customers
+export async function countAllCustomers() {
+  noStore();
+  const supabase = await createClient();
+
+  const { count } = await supabase
+    .from("customers")
+    .select("*", { count: "exact", head: true });
+
+  return count ?? 0;
+}
+
+export async function exportAllCustomers() {
+  const supabase = await createClient();
+  const { data } = await supabase.from("customers").select("*").csv();
+
+  return data ?? "";
+}
+
 export async function fetchRepairInfo(customerId: number) {
   noStore();
   const supabase = await createClient();

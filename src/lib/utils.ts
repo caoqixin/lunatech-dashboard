@@ -28,3 +28,26 @@ export function getCurrentMonth() {
     end,
   };
 }
+
+export function convertCSVtoVCF(csvContent: string) {
+  const lines = csvContent.trim().split("\n"); // 按行分割
+  const rows = lines.slice(1);
+  const vcfEntries = [];
+
+  for (const row of rows) {
+    const [id, name, tel, email] = row.split(","); // 按逗号分割行
+
+    // 创建 VCF 格式内容
+    const vcfEntry = `
+BEGIN:VCARD
+VERSION:3.0
+FN:${name.replace(/"/g, "")}
+TEL;CELL:${tel}
+${email ? `EMAIL:${email}` : ""}
+END:VCARD
+    `.trim();
+    vcfEntries.push(vcfEntry);
+  }
+
+  return vcfEntries.join("\n"); // 用空行分隔多个联系人
+}
