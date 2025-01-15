@@ -61,7 +61,7 @@ export async function fetchComponents(params: SearchComponent) {
   const brands = brand.split(".");
 
   // 动态组合条件
-  if (name) query.ilike("name", `%${name}%`);
+  if (name) query.or(`name.ilike.%${name}%, code.ilike.%${name}%`);
   if (brand && brand.length > 0) query.in("brand", brands);
   if (category) query.in("category", categories);
 
@@ -84,7 +84,7 @@ export async function countComponents(params: SearchComponent) {
     .select("*", { count: "exact", head: true });
 
   // 动态组合条件
-  if (name) query.ilike("name", `%${name}%`);
+  if (name) query.or(`name.ilike.%${name}%, code.ilike.%${name}%`);
   if (brand && brand.length > 0) query.in("brand", brands);
   if (category) query.in("category", categories);
 
