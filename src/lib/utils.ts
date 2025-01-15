@@ -41,9 +41,10 @@ export function convertCSVtoVCF(csvContent: string) {
     const vcfEntry = `
 BEGIN:VCARD
 VERSION:3.0
+N:${name.replace(/"/g, "").replaceAll(" ", ";")}
 FN:${name.replace(/"/g, "")}
-TEL;CELL:${tel}
-${email ? `EMAIL:${email}` : ""}
+TEL;CELL;VOICE:${tel}
+${email ? `EMAIL;TYPE=INTERNET;TYPE=OTHER:${email}` : ""}
 END:VCARD
     `.trim();
     vcfEntries.push(vcfEntry);
