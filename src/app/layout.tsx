@@ -9,6 +9,13 @@ import { Analytics } from "@vercel/analytics/react";
 
 import "./globals.css";
 
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import dayjs from "dayjs";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {

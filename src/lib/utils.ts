@@ -17,18 +17,6 @@ export function toEUR(value: any) {
   }).format(parseFloat(value));
 }
 
-export function getCurrentMonth() {
-  const currentMonth = dayjs().month() + 1;
-  const currentYear = dayjs().year();
-  const start = new Date(`${currentYear}/${currentMonth}/01`).toISOString();
-  const end = new Date(`${currentYear}/${currentMonth}/31`).toISOString();
-
-  return {
-    start,
-    end,
-  };
-}
-
 export function convertCSVtoVCF(csvContent: string) {
   const lines = csvContent.trim().split("\n"); // 按行分割
   const rows = lines.slice(1);

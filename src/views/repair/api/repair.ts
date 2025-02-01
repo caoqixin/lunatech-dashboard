@@ -12,6 +12,7 @@ import {
 import { toEUR } from "@/lib/utils";
 import { RepairWithCustomer } from "@/lib/types";
 import { createWarranty } from "@/views/warranty/api/warranty";
+import dayjs from "dayjs";
 
 export async function fetchRepairs(params: RepairSearch) {
   noStore();
@@ -119,8 +120,8 @@ export async function createNewRepair(
       deposit,
       price,
       customerId,
-      createdAt: new Date().toLocaleString(),
-      updatedAt: new Date().toLocaleString(),
+      createdAt: dayjs().tz("Europe/Rome").toISOString(),
+      updatedAt: dayjs().tz("Europe/Rome").toISOString(),
     })
     .select()
     .single();
@@ -159,7 +160,7 @@ export async function updateRepair(
       deposit,
       price,
       customerId,
-      updatedAt: new Date().toLocaleDateString(),
+      updatedAt: dayjs().tz("Europe/Rome").toISOString(),
     })
     .eq("id", id)
     .select("*, customers(name)")
