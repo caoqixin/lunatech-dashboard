@@ -24,5 +24,13 @@ export const RepairTable = ({ data, count }: RepairTableProps) => {
     pageCount: count,
   });
 
+  if (data.length == 0) {
+    return (
+      <div className="w-full h-20 flex justify-center items-center">
+        数据加载中 <i className="ml-4 animate-ping">...</i>
+      </div>
+    );
+  }
+
   return <DataTable table={table} columns={columns} />;
 };
