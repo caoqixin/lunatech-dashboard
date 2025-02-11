@@ -17,7 +17,7 @@ import { InputField } from "@/components/custom/input-field";
 import { toEUR } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import dayjs from "dayjs";
+import date from "@/lib/date";
 
 interface ViewRepairProps {
   repair: RepairWithCustomer;
@@ -73,7 +73,7 @@ export const ViewRepair = ({ repair }: ViewRepairProps) => {
           <InputField label="订金">{toEUR(repair.deposit)}</InputField>
           <InputField label="价格">{toEUR(repair.price)}</InputField>
           <InputField label="创建日期">
-            {dayjs(repair.createdAt).format("DD/MM/YYYY")}
+            {date(repair.createdAt).format("DD/MM/YYYY")}
           </InputField>
         </div>
       </SheetContent>

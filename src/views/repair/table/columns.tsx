@@ -6,8 +6,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import { ShowMoreProblemButton } from "@/views/repair/components/show-more-problem-button";
 import { TableSelectStatus } from "@/views/repair/components/table-select-status";
 import { RepairActionWrapper } from "@/views/repair/components/repair-action-wrapper";
-import dayjs from "dayjs";
 import { toEUR } from "@/lib/utils";
+import date from "@/lib/date";
 
 export const repairColumn: ColumnDef<RepairWithCustomer>[] = [
   {
@@ -89,8 +89,7 @@ export const repairColumn: ColumnDef<RepairWithCustomer>[] = [
     accessorKey: "updatedAt",
     header: "更新时间",
     cell: ({ getValue }) => {
-      const date = getValue();
-      const formatDate = dayjs(date as string).format("DD/MM/YYYY");
+      const formatDate = date(getValue() as string).format("DD/MM/YYYY");
       return <span className="font-mono text-sm">{formatDate}</span>;
     },
   },

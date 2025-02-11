@@ -5,9 +5,9 @@ import { ColumnDef, Row } from "@tanstack/react-table";
 import { ShowMoreProblemButton } from "@/views/warranty/components/show-more-problem-button";
 import { ReworkButton } from "@/views/warranty/components/rework-button";
 import { Badge } from "@/components/ui/badge";
-import dayjs from "dayjs";
 import { cn } from "@/lib/utils";
 import { DataTableSearchableColumn } from "@/components/data-table/type";
+import date from "@/lib/date";
 
 export const warrantyColumn: ColumnDef<Warranty>[] = [
   {
@@ -90,9 +90,10 @@ export const warrantyColumn: ColumnDef<Warranty>[] = [
       <span className="font-semibold text-nowrap">保修开始日期</span>
     ),
     cell: ({ getValue }) => {
-      const date = getValue() as string;
       return (
-        <span className="font-mono">{dayjs(date).format("DD/MM/YYYY")}</span>
+        <span className="font-mono">
+          {date(getValue() as string).format("DD/MM/YYYY")}
+        </span>
       );
     },
   },
@@ -104,8 +105,8 @@ export const warrantyColumn: ColumnDef<Warranty>[] = [
     cell: ({ row }) => {
       const { days, expiredAt, createdAt } = row.original;
 
-      const date = expiredAt ?? dayjs(createdAt).add(days ?? 0, "day");
-      const isExpired = dayjs().isAfter(date);
+      const time = expiredAt ?? date(createdAt).add(days ?? 0, "day");
+      const isExpired = date().isAfter(time);
 
       return (
         <div className="flex flex-col gap-y-2">
@@ -117,7 +118,7 @@ export const warrantyColumn: ColumnDef<Warranty>[] = [
           >
             {isExpired ? "Scaduta Garanzia" : "In Garanzia"}
           </span>
-          <span className="font-mono">{dayjs(date).format("DD/MM/YYYY")}</span>
+          <span className="font-mono">{date(time).format("DD/MM/YYYY")}</span>
         </div>
       );
     },

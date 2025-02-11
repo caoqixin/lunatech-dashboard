@@ -3,8 +3,8 @@ import { unstable_noStore as noStore } from "next/cache";
 import { DataReturnType } from "@/lib/definitions";
 import { createClient } from "@/lib/supabase/server";
 import { SearchWarranty } from "../schema/warranty.schema";
-import dayjs from "dayjs";
 import { RepairWarrantyStatus } from "@/views/repair/schema/repair.schema";
+import date from "@/lib/date";
 
 export async function fetchWarranties(params: SearchWarranty) {
   noStore();
@@ -67,8 +67,8 @@ async function generateId() {
   const supabase = await createClient();
 
   const prefix = "LUNATECH";
-  const year = dayjs().year();
-  const month = (dayjs().month() + 1).toString().padStart(2, "0");
+  const year = date().year();
+  const month = (date().month() + 1).toString().padStart(2, "0");
 
   // 获取当前月份已存在的最大序列号
   const { data, error } = await supabase
@@ -162,8 +162,8 @@ export async function createWarranty(
     .insert({
       id: warrantyID,
       repairId,
-      createdAt: dayjs().toISOString(),
-      expiredAt: dayjs().add(3, "month").toISOString(),
+      createdAt: date().toISOString(),
+      expiredAt: date().add(3, "month").toISOString(),
     })
     .select()
     .single();
@@ -176,7 +176,7 @@ export async function createWarranty(
   }
 
   return {
-    msg: `保修创建成功, 到期时间为: ${dayjs(data.expiredAt).format(
+    msg: `保修创建成功, 到期时间为: ${date(data.expiredAt).format(
       "DD/MM/YYYY"
     )}, 可前往保修中心查看详情`,
     status: "success",

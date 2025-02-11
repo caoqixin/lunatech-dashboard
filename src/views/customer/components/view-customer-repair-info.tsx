@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toEUR } from "@/lib/utils";
-import dayjs from "dayjs";
+import date from "@/lib/date";
 
 interface RepairInfoTableProps {
   repairs: RepairInfo[] | null;
@@ -46,7 +46,7 @@ const RepairInfoTable = ({ repairs }: RepairInfoTableProps) => {
               </TableCell>
               <TableCell className="text-nowrap">{repair.problem}</TableCell>
               <TableCell>
-                {dayjs(repair.updatedAt).format("DD/MM/YYYY")}
+                {date(repair.updatedAt).format("DD/MM/YYYY")}
               </TableCell>
               <TableCell className="text-right font-semibold">
                 {toEUR(repair.price)}

@@ -1,4 +1,4 @@
-import dayjs from "dayjs";
+import date from "@/lib/date";
 import { z } from "zod";
 
 export enum RepairStatus {
@@ -36,8 +36,8 @@ export const repairFormSchema = z.object({
   price: z.coerce.number().nonnegative({
     message: "金额不能为负数",
   }),
-  createdAt: z.date().default(dayjs().toDate()).optional(),
-  updatedAt: z.date().default(dayjs().toDate()).optional(),
+  createdAt: z.date().default(date().toDate()).optional(),
+  updatedAt: z.date().default(date().toDate()).optional(),
 });
 
 export type RepairForm = z.infer<typeof repairFormSchema>;

@@ -3,7 +3,7 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
-import dayjs from "dayjs";
+import date from "@/lib/date";
 
 export type RevenueType = {
   month: string;
@@ -83,9 +83,8 @@ export async function fetchRevenue() {
 
   const data: RevenueType[] =
     revenue.data?.map((obj, index) => {
-      const date = dayjs(obj.month).tz("Europe/Rome");
       return {
-        month: `${date.month() + 1}月`,
+        month: `${date(obj.month).month() + 1}月`,
         revenue: obj.revenue,
         quantity: counts.data?.[index].repair_count,
       };

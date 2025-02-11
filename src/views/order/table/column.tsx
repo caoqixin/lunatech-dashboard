@@ -3,8 +3,8 @@
 import { Order } from "@/lib/types";
 import { toEUR } from "@/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
-import dayjs from "dayjs";
 import { OrderItemsInfo } from "@/views/order/components/order-items-info";
+import date from "@/lib/date";
 
 export const orderHistoryColumns: ColumnDef<Order>[] = [
   {
@@ -26,7 +26,7 @@ export const orderHistoryColumns: ColumnDef<Order>[] = [
     accessorKey: "createdAt",
     header: () => <span className="font-semibold text-nowrap">出库时间</span>,
     cell: ({ getValue }) => {
-      return <span>{dayjs(getValue() as string).format("DD/MM/YYYY")}</span>;
+      return <span>{date(getValue() as string).format("DD/MM/YYYY")}</span>;
     },
   },
   {

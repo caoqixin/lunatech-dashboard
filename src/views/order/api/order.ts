@@ -1,9 +1,9 @@
 "use server";
 
+import date from "@/lib/date";
 import redis from "@/lib/redis";
 import { createClient } from "@/lib/supabase/server";
 import { Component } from "@/lib/types";
-import dayjs from "dayjs";
 
 export type OrderComponent = Component & {
   quantity?: number;
@@ -21,8 +21,8 @@ export async function getOrderList(): Promise<OrderComponent[]> {
 
 async function generateOrderId(): Promise<string> {
   const prefix = "LUNATECH";
-  const year = dayjs().year();
-  const month = (dayjs().month() + 1).toString().padStart(2, "0");
+  const year = date().year();
+  const month = (date().month() + 1).toString().padStart(2, "0");
   const latestId = await redis.incr("orderId");
 
   return `${prefix}-${year}-${month}-${String(latestId).padStart(4, "0")}`;
@@ -77,8 +77,8 @@ export async function checkout() {
   const { error } = await supabase.from("orders").insert({
     id: orderId,
     amount,
-    createdAt: dayjs().toISOString(),
-    updatedAt: dayjs().toISOString(),
+    createdAt: date().toISOString(),
+    updatedAt: date().toISOString(),
   });
 
   if (error) {
