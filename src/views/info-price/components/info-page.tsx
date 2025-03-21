@@ -212,13 +212,7 @@ export const InfoPage = () => {
   return (
     <div className="min-h-screen w-full flex flex-col">
       <div>
-        <Navbar
-          titleButton={
-            <Button asChild>
-              <Link href="/dashboard">返回主页</Link>
-            </Button>
-          }
-        />
+        <Navbar showBackButton={true} />
       </div>
       <Separator className="mt-2" />
       <main className="h-full flex flex-col mt-0">

@@ -1,8 +1,9 @@
 import { Metadata } from "next";
-
 import { Separator } from "@/components/ui/separator";
 import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
+import { Suspense } from "react";
+import { SkeletonWrapper } from "@/components/ui/skeleton-wrapper";
 
 export const metadata: Metadata = {
   title: {
@@ -18,16 +19,26 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <div className="flex w-full">
-        <div className="fixed lef-0 top-0 hidden lg:block lg:w-[264px] h-screen overflow-y-auto ">
-          <Sidebar />
-        </div>
-        <div className="lg:pl-[264px] w-full h-screen">
-          <div className="mx-auto max-w-screen-2xl h-screen">
-            <Navbar />
-            <Separator className="my-2" />
-            <main className="h-full py-2 px-6 flex flex-col">{children}</main>
+        {/* 侧边栏 - 使用固定宽度和定位 */}
+        <aside className="fixed left-0 top-0 hidden lg:block lg:w-[264px] h-screen border-r">
+          <Suspense
+            fallback={
+              <div className="p-4">
+                <SkeletonWrapper variant="card" />
+              </div>
+            }
+          >
+            <Sidebar />
+          </Suspense>
+        </aside>
+
+        {/* 主内容区域 */}
+        <div className="w-full transition-all duration-300 lg:pl-[264px]">
+          <div className="mx-auto max-w-screen-2xl h-screen flex flex-col">
+            <Navbar showBackButton={false} />
+            <main className="flex-1 overflow-auto py-4 px-6">{children}</main>
           </div>
         </div>
       </div>

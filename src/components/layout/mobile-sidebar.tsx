@@ -1,44 +1,39 @@
 "use client";
 
+import { memo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { MenuIcon } from "lucide-react";
-import { Sidebar } from "./sidebar";
-import { useEffect, useState } from "react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
-import VisuallyHidden from "../custom/visually-hidden";
+import { Navigation } from "./navigation";
 
-export const MobileSidebar = () => {
-  const [isOpen, setIsOpen] = useState(false);
+// 使用memo优化组件
+export const MobileNavigation = memo(function MobileNavigation() {
+  const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  useEffect(() => {
-    setIsOpen(false);
-  }, [pathname]);
+  // 关闭侧边栏的函数
+  const handleClose = () => setOpen(false);
 
   return (
-    <Sheet modal={false} open={isOpen} onOpenChange={setIsOpen}>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button size="icon" variant="outline" className="lg:hidden">
-          <MenuIcon className="size-5" />
+        <Button variant="ghost" size="icon">
+          <Menu className="h-6 w-6" />
+          <span className="sr-only">打开菜单</span>
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="p-0">
-        <VisuallyHidden>
-          <SheetHeader>
-            <SheetTitle>mobile sidebar</SheetTitle>
-            <SheetDescription>mobile sidebar</SheetDescription>
-          </SheetHeader>
-        </VisuallyHidden>
-        <Sidebar />
+        <div className="flex h-14 items-center border-b px-6">
+          <span className="font-semibold">Luna Tech</span>
+        </div>
+        <div className="px-2">
+          <Navigation
+            currentPath={pathname.split("/").slice(0, 3).join("/")}
+            variant="mobile"
+          />
+        </div>
       </SheetContent>
     </Sheet>
   );
-};
+});

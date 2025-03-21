@@ -43,6 +43,25 @@ input::-webkit-inner-spin-button {
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+
+    /* 添加响应式断点适配 */
+    @media (max-width: 640px) {
+      html {
+        font-size: 14px;
+      }
+    }
+
+    /* 添加动画变量，统一过渡效果 */
+    --transition-fast: 150ms;
+    --transition-normal: 250ms;
+    --transition-slow: 350ms;
+
+    /* 添加统一阴影效果 */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
 
   .dark {
@@ -79,6 +98,12 @@ input::-webkit-inner-spin-button {
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3),
+      0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3),
+      0 4px 6px -2px rgba(0, 0, 0, 0.2);
   }
 }
 
@@ -88,5 +113,24 @@ input::-webkit-inner-spin-button {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* 添加统一间距工具类 */
+@layer utilities {
+  .spacing-y {
+    @apply space-y-4;
+  }
+
+  .spacing-x {
+    @apply space-x-4;
+  }
+
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+
+  .transition-all-normal {
+    transition: all var(--transition-normal) ease-in-out;
   }
 }
