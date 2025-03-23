@@ -5,6 +5,9 @@ import { orderSearchParams } from "@/views/order/schema/order.schema";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
+// 指定为动态渲染
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "出库管理",
 };

@@ -1,14 +1,13 @@
 import { SearchParams } from "@/components/data-table/type";
 import { createClient } from "@/lib/supabase/client";
-// import {
-//   generateBrandIdParams,
-//   getBrandById,
-// } from "@/lib/actions/server/brands";
 import { isLoggedIn } from "@/server/user";
 import { PhonePage } from "@/views/phones/components/phone-page";
 import { searchPhoneParamsSchema } from "@/views/phones/schema/phone.schema";
 import { Metadata, ResolvingMetadata } from "next";
 import { redirect } from "next/navigation";
+
+// 指定为动态渲染
+export const dynamic = "force-dynamic";
 
 export interface PhonePageProps {
   searchParams: SearchParams;

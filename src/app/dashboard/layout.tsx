@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import { Separator } from "@/components/ui/separator";
 import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Suspense } from "react";

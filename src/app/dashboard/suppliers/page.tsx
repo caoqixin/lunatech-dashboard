@@ -5,6 +5,9 @@ import { SupplierSearchParamsSchema } from "@/views/supplier/schema/supplier.sch
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
+// 指定为动态渲染
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "供应商管理",
 };

@@ -7,6 +7,9 @@ import { DashboardPage } from "@/views/dashboard/components/dashboard-page";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// 指定为动态渲染
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
   if (!(await isLoggedIn())) {
     redirect("/login");
