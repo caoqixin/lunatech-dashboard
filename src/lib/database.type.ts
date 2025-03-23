@@ -252,6 +252,27 @@ export type Database = {
           }
         ];
       };
+      profiles: {
+        Row: {
+          avatar_url: string | null;
+          id: string;
+          updated_at: string | null;
+          username: string | null;
+        };
+        Insert: {
+          avatar_url?: string | null;
+          id: string;
+          updated_at?: string | null;
+          username?: string | null;
+        };
+        Update: {
+          avatar_url?: string | null;
+          id?: string;
+          updated_at?: string | null;
+          username?: string | null;
+        };
+        Relationships: [];
+      };
       repair_problems: {
         Row: {
           id: number;
@@ -446,14 +467,18 @@ export type Database = {
         }[];
       };
       getRepairsCountByMonth: {
-        Args: Record<PropertyKey, never>;
+        Args: {
+          year?: number;
+        };
         Returns: {
           month: string;
           repair_count: number;
         }[];
       };
       getRevenueByMonth: {
-        Args: Record<PropertyKey, never>;
+        Args: {
+          year?: number;
+        };
         Returns: {
           month: string;
           revenue: number;

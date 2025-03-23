@@ -11,47 +11,92 @@ export type RevenueType = {
   quantity?: number;
 };
 
+export type DifferentData = {
+  current: number;
+  last: number;
+};
+
 export async function fetchAnnualy() {
   noStore();
 
   const supabase = await createClient();
-  const { data } = await supabase.rpc("getAnnuallyRepairPrice");
+  const [current, last] = await Promise.all([
+    supabase.rpc("getAnnuallyRepairPrice"),
+    supabase.rpc("getAnnuallyRepairPrice", {
+      year: date().year() - 1,
+    }),
+  ]);
 
-  return data ?? 0;
+  return {
+    current: current.data ?? 0,
+    last: last.data ?? 0,
+  };
 }
 
 export async function fetchMonthly() {
   noStore();
 
   const supabase = await createClient();
-  const { data } = await supabase.rpc("getMonthlyRepairPrice");
 
-  return data ?? 0;
+  const [current, last] = await Promise.all([
+    supabase.rpc("getMonthlyRepairPrice"),
+    supabase.rpc("getMonthlyRepairPrice", {
+      month: date().subtract(1, "month").startOf("month").toISOString(),
+    }),
+  ]);
+
+  return {
+    current: current.data ?? 0,
+    last: date().month() == 0 ? 0 : last.data ?? 0,
+  };
 }
 
 export async function fetchAnnualyRepair() {
   noStore();
   const supabase = await createClient();
 
-  const { data } = await supabase.rpc("getAnnuallyRepairs");
+  const [current, last] = await Promise.all([
+    supabase.rpc("getAnnuallyRepairs"),
+    supabase.rpc("getAnnuallyRepairs", {
+      year: date().year() - 1,
+    }),
+  ]);
 
-  return data ?? 0;
+  return {
+    current: current.data ?? 0,
+    last: last.data ?? 0,
+  };
 }
 
 export async function fetchMonthlyRepair() {
   noStore();
   const supabase = await createClient();
 
-  const { count } = await supabase.rpc(
-    "getMonthlyRepairs",
-    {},
-    {
-      count: "exact",
-      head: true,
-    }
-  );
+  const [current, last] = await Promise.all([
+    supabase.rpc(
+      "getMonthlyRepairs",
+      {},
+      {
+        count: "exact",
+        head: true,
+      }
+    ),
+    supabase.rpc(
+      "getMonthlyRepairs",
+      {
+        month: date().subtract(1, "month").startOf("month").toISOString(),
+      },
+      {
+        count: "exact",
+        head: true,
+      }
+    ),
+  ]);
 
-  return count ?? 0;
+  return {
+    current: current.count ?? 0,
+    last: date().month() == 0 ? 0 : last.count ?? 0,
+  };
 }
 
 export async function fetchAllComponentsStock() {
@@ -73,13 +118,15 @@ export async function fetchAllComponentsPrice() {
   return data ?? 0;
 }
 
-export async function fetchRevenue() {
+export async function fetchRevenue(year: number = date().year()) {
   noStore();
 
   const supabase = await createClient();
 
-  const revenue = await supabase.rpc("getRevenueByMonth");
-  const counts = await supabase.rpc("getRepairsCountByMonth");
+  const [revenue, counts] = await Promise.all([
+    supabase.rpc("getRevenueByMonth", { year }),
+    supabase.rpc("getRepairsCountByMonth", { year }),
+  ]);
 
   const data: RevenueType[] =
     revenue.data?.map((obj, index) => {
@@ -93,16 +140,6 @@ export async function fetchRevenue() {
   return data;
 }
 
-export async function fetchTopRepair() {
-  noStore();
-
-  const supabase = await createClient();
-
-  const { data } = await supabase.rpc("getTopList").limit(5);
-
-  return data ?? [];
-}
-
 export async function fetchAllTopRepair() {
   noStore();
 
@@ -111,4 +148,45 @@ export async function fetchAllTopRepair() {
   const { data } = await supabase.rpc("getTopList");
 
   return data ?? [];
+}
+
+export async function fetchDashboardData() {
+  noStore();
+
+  try {
+    // 使用Promise.all并行获取所有数据
+    const [
+      annualyPrice,
+      monthlyPrice,
+      annualyRepairs,
+      monthlyRepairs,
+      componentsStock,
+      componentsPrice,
+      revenue,
+      topRepair,
+    ] = await Promise.all([
+      fetchAnnualy(),
+      fetchMonthly(),
+      fetchAnnualyRepair(),
+      fetchMonthlyRepair(),
+      fetchAllComponentsStock(),
+      fetchAllComponentsPrice(),
+      fetchRevenue(),
+      fetchAllTopRepair(),
+    ]);
+
+    return {
+      annualyPrice,
+      monthlyPrice,
+      annualyRepairs,
+      monthlyRepairs,
+      componentsStock,
+      componentsPrice,
+      revenue,
+      topRepair,
+    };
+  } catch (error) {
+    console.error("Error fetching dashboard data:", error);
+    throw new Error("无法获取仪表盘数据");
+  }
 }
