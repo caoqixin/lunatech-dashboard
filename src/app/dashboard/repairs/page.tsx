@@ -17,7 +17,15 @@ export default async function Page({ searchParams }: RepairPageProps) {
     redirect("/login");
   }
 
-  const search = repairSearchSchema.parse(searchParams);
+  // 添加错误处理，确保搜索参数解析正确
+  let search;
+  try {
+    search = repairSearchSchema.parse(searchParams);
+  } catch (error) {
+    console.error("搜索参数解析错误:", error);
+    // 使用默认参数
+    search = repairSearchSchema.parse({});
+  }
 
   return <RepairPage params={search} />;
 }

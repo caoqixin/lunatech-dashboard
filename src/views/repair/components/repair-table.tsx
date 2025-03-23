@@ -10,9 +10,14 @@ import { DataTable } from "@/components/data-table";
 interface RepairTableProps {
   data: RepairWithCustomer[];
   count: number;
+  isLoading?: boolean;
 }
 
-export const RepairTable = ({ data, count }: RepairTableProps) => {
+export const RepairTable = ({
+  data,
+  count,
+  isLoading = false,
+}: RepairTableProps) => {
   const columns = React.useMemo<ColumnDef<RepairWithCustomer, unknown>[]>(
     () => repairColumn,
     []
@@ -21,16 +26,15 @@ export const RepairTable = ({ data, count }: RepairTableProps) => {
   const { table } = useDataTable({
     data,
     columns,
-    pageCount: count,
+    pageCount: Math.max(1, count),
   });
 
-  if (data.length == 0) {
-    return (
-      <div className="w-full h-20 flex justify-center items-center">
-        数据加载中 <i className="ml-4 animate-ping">...</i>
-      </div>
-    );
-  }
-
-  return <DataTable table={table} columns={columns} />;
+  return (
+    <DataTable
+      table={table}
+      columns={columns}
+      isLoading={isLoading}
+      noDataText="暂无维修记录"
+    />
+  );
 };

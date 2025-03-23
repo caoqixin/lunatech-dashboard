@@ -13,98 +13,122 @@ import {
 } from "@/components/ui/table";
 import { DataTableToolbar } from "./data-table-toolbar";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { DataTablePagination } from "./data-table-pagintion";
+import { DataTablePagination } from "./data-table-pagination";
 import { DataTableFilterableColumn, DataTableSearchableColumn } from "./type";
+import { cn } from "@/lib/utils";
+import { DataTableSkeleton } from "./data-table-skeleton";
 
 interface DataTableProps<TData, TValue> {
   /**
-   * The table instance returned from useDataTable hook with pagination, sorting, filtering, etc.
+   * 由 useDataTable hook 返回的表格实例，包含分页、排序、过滤等功能
    * @type TanstackTable<TData>
    */
   table: TanstackTable<TData>;
 
   /**
-   * The columns of the table.
+   * 表格的列定义
    * @default []
    * @type ColumnDef<TData, TValue>[]
    */
   columns: ColumnDef<TData, TValue>[];
 
   /**
-   * The searchable columns of the table.
+   * 可搜索的表格列
    * @default []
-   * @type {id: keyof TData, title: string}[]
-   * @example searchKey={[{ id: "title", title: "titles" }]}
+   * @type DataTableSearchableColumn<TData>[]
+   * @example searchKey={[{ id: "title", placeholder: "搜索标题..." }]}
    */
   searchKey?: DataTableSearchableColumn<TData>[];
   /**
-   * The filterable columns of the table. When provided, renders dynamic faceted filters, and the advancedFilter prop is ignored.
+   * 可过滤的表格列
    * @default []
-   * @type {id: keyof TData, title: string, options: { label: string, value: string, icon?: React.ComponentType<{ className?: string }> }[]}[]
-   * @example filterableColumns={[{ id: "status", title: "Status", options: ["todo", "in-progress", "done", "canceled"]}]}
+   * @type DataTableFilterableColumn<TData>[]
+   * @example filterableColumns={[{ id: "status", title: "状态", options: [{label: "待办", value: "todo"}] }]}
    */
   filterableColumns?: DataTableFilterableColumn<TData>[];
+  /**
+   * 是否显示加载状态
+   * @default false
+   * @type boolean
+   */
+  isLoading?: boolean;
+
+  /**
+   * 无数据时显示的文本
+   * @default "没有数据"
+   * @type string
+   */
+  noDataText?: string;
+
+  /**
+   * 自定义样式类名
+   * @type string
+   */
+  className?: string;
 }
 
+/**
+ * 基于 TanStack Table 的数据表格组件
+ * 支持分页、排序、过滤和搜索等功能
+ */
 export function DataTable<TData, TValue>({
   table,
   columns,
-  searchKey = [],
-  filterableColumns = [],
+  searchKey,
+  filterableColumns,
+  isLoading = false,
+  noDataText = "没有数据",
+  className,
 }: DataTableProps<TData, TValue>) {
-  return (
-    <div className="w-full space-y-2.5 overflow-auto">
-      {/* toolbar */}
+  // 提取行数据和表格状态
+  const { getHeaderGroups, getRowModel } = table;
+  const rows = getRowModel().rows;
+  const hasData = rows?.length > 0;
 
-      {searchKey && filterableColumns ? (
-        <DataTableToolbar
-          table={table}
-          searchableColumns={searchKey}
-          filterableColumns={filterableColumns}
-        />
-      ) : searchKey ? (
-        <DataTableToolbar table={table} searchableColumns={searchKey} />
-      ) : filterableColumns ? (
-        <DataTableToolbar table={table} filterableColumns={filterableColumns} />
-      ) : (
-        ""
-      )}
-      <ScrollArea className="rounded-md border h-[calc(80vh-220px)] touch-auto">
-        <div className="relative">
+  return (
+    <div className={cn(className, "space-y-4")}>
+      {/* 工具栏 - 搜索、过滤等 */}
+      <DataTableToolbar
+        table={table}
+        searchKey={searchKey}
+        filterableColumns={filterableColumns}
+      />
+
+      {/* 表格主体 */}
+      <div className="rounded-md border bg-white shadow-sm">
+        {isLoading ? (
+          <DataTableSkeleton columnCount={columns.length} />
+        ) : (
           <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
+            <TableHeader className="bg-gray-50">
+              {getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead
-                        key={header.id}
-                        style={{
-                          width: `${header.getSize()}px`,
-                        }}
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      className="font-medium text-gray-700"
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  ))}
                 </TableRow>
               ))}
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
+              {hasData ? (
+                rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className="transition-colors hover:bg-muted/50"
+                    data-state={row.getIsSelected() ? "selected" : undefined}
+                    className="hover:bg-gray-50 transition-colors"
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} className="py-3">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
@@ -117,22 +141,19 @@ export function DataTable<TData, TValue>({
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
-                    className="h-24 text-center"
+                    className="h-24 text-center text-gray-500"
                   >
-                    暂无数据
+                    {noDataText}
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
-
-      {/* pagination bar */}
-      <div className="space-y-2.5">
-        <DataTablePagination table={table} />
+        )}
       </div>
+
+      {/* 分页控件 */}
+      {hasData && <DataTablePagination table={table} />}
     </div>
   );
 }

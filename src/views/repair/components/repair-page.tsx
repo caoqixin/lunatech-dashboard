@@ -6,7 +6,7 @@ import { RepairSearch } from "@/views/repair/schema/repair.schema";
 import { countRepairs, fetchRepairs } from "@/views/repair/api/repair";
 import { RepairTable } from "@/views/repair/components/repair-table";
 import { CreateRepair } from "@/views/repair/components/create-repair";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RepairWithCustomer } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
 
@@ -21,23 +21,39 @@ const breadcrumbItems: BreadCrumbType[] = [
 export const RepairPage = ({ params }: RepairPageProps) => {
   const [repairs, setRepairs] = useState<RepairWithCustomer[]>([]);
   const [count, setCount] = useState<number>(0);
-  const supabase = createClient();
-  useEffect(() => {
-    //1, fetch init data
-    async function loadInitialData() {
-      const [data, count] = await Promise.all([
-        fetchRepairs(params),
-        countRepairs(params),
-      ]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // 使用 useRef 存储 supabase 客户端，避免每次渲染都创建新客户端
+  const supabaseRef = useRef(createClient());
+  const paramsRef = useRef(params);
 
-      setRepairs(data);
-      setCount(count);
+  // 使用字符串形式的 params 作为依赖项，避免对象引用比较
+  const paramsString = JSON.stringify(params);
+  useEffect(() => {
+    // 更新参数引用
+    paramsRef.current = params;
+    // 加载初始数据函数
+    async function loadInitialData() {
+      setIsLoading(true);
+      try {
+        const [data, count] = await Promise.all([
+          fetchRepairs(paramsRef.current),
+          countRepairs(paramsRef.current),
+        ]);
+
+        setRepairs(data);
+        setCount(count);
+      } catch (error) {
+        console.error("加载数据失败:", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
 
     loadInitialData();
 
-    // 2. subscribe supabase realtime update
-    const repairs = supabase
+    // 只在组件挂载时订阅一次，避免多次订阅
+    const supabase = supabaseRef.current;
+    const channel = supabase
       .channel("repairs")
       .on(
         "postgres_changes",
@@ -48,11 +64,11 @@ export const RepairPage = ({ params }: RepairPageProps) => {
       )
       .subscribe();
 
-    // 3. unscribe when unmounted component
+    // 在组件卸载时取消订阅
     return () => {
-      supabase.removeChannel(repairs);
+      supabase.removeChannel(channel);
     };
-  }, [params, supabase]);
+  }, [paramsString]);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -61,7 +77,7 @@ export const RepairPage = ({ params }: RepairPageProps) => {
         <CreateRepair />
       </Header>
       <Separator />
-      <RepairTable data={repairs} count={count} />
+      <RepairTable data={repairs} count={count} isLoading={isLoading} />
     </div>
   );
 };
