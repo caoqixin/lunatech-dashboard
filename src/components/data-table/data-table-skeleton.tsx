@@ -104,7 +104,7 @@ export function DataTableSkeleton({
       )}
 
       {/* 表格骨架 */}
-      <div className="rounded-md border bg-white">
+      <div className="rounded-md border bg-background">
         <Table>
           {/* 表头骨架 */}
           <TableHeader>

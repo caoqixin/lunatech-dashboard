@@ -7,9 +7,6 @@ import {
 import { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-// 指定为动态渲染
-export const dynamic = "force-dynamic";
-
 export const metadata: Metadata = {
   title: "分类管理",
 };

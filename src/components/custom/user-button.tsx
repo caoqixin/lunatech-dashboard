@@ -133,7 +133,7 @@ export const UserButton = () => {
         <Separator className="h-px bg-border" />
         <div className="p-1">
           <DropdownMenuItem
-            onClick={logout}
+            onClick={() => logout()}
             className="flex items-center justify-center h-10 px-3 cursor-pointer rounded-md text-destructive font-medium hover:bg-destructive/10 transition-all-normal"
           >
             <LogOut className="size-4 mr-2" />

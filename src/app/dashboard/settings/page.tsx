@@ -2,8 +2,6 @@ import { isLoggedIn } from "@/server/user";
 import SettingPage from "@/views/setting/components/setting-page";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
-// 使用 force-static 强制静态渲染
-export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "设置",

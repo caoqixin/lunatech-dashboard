@@ -64,6 +64,58 @@ input::-webkit-inner-spin-button {
       0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
 
+  /* Blue Accent Theme (Light Mode) */
+  [data-accent="blue"] {
+    --primary: 212 96% 44%;
+    --primary-foreground: 210 40% 98%;
+    --ring: 212 96% 44%;
+
+    --chart-1: 212 96% 44%;
+    --chart-2: 202 96% 44%;
+    --chart-3: 222 96% 44%;
+    --chart-4: 232 96% 44%;
+    --chart-5: 242 96% 44%;
+  }
+
+  /* Green Accent Theme (Light Mode) */
+  [data-accent="green"] {
+    --primary: 142 72% 29%;
+    --primary-foreground: 210 40% 98%;
+    --ring: 142 72% 29%;
+
+    --chart-1: 142 72% 29%;
+    --chart-2: 132 72% 29%;
+    --chart-3: 152 72% 29%;
+    --chart-4: 162 72% 29%;
+    --chart-5: 122 72% 29%;
+  }
+
+  /* Purple Accent Theme (Light Mode) */
+  [data-accent="purple"] {
+    --primary: 270 76% 50%;
+    --primary-foreground: 210 40% 98%;
+    --ring: 270 76% 50%;
+
+    --chart-1: 270 76% 50%;
+    --chart-2: 280 76% 50%;
+    --chart-3: 260 76% 50%;
+    --chart-4: 290 76% 50%;
+    --chart-5: 250 76% 50%;
+  }
+
+  /* Orange Accent Theme (Light Mode) */
+  [data-accent="orange"] {
+    --primary: 32 95% 50%;
+    --primary-foreground: 210 40% 98%;
+    --ring: 32 95% 50%;
+
+    --chart-1: 32 95% 50%;
+    --chart-2: 22 95% 50%;
+    --chart-3: 42 95% 50%;
+    --chart-4: 12 95% 50%;
+    --chart-5: 52 95% 50%;
+  }
+
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -105,6 +157,58 @@ input::-webkit-inner-spin-button {
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3),
       0 4px 6px -2px rgba(0, 0, 0, 0.2);
   }
+
+  /* Blue Accent Theme (Dark Mode) */
+  .dark[data-accent="blue"] {
+    --primary: 212 90% 60%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --ring: 212 90% 60%;
+
+    --chart-1: 212 90% 60%;
+    --chart-2: 202 90% 60%;
+    --chart-3: 222 90% 60%;
+    --chart-4: 232 90% 60%;
+    --chart-5: 242 90% 60%;
+  }
+
+  /* Green Accent Theme (Dark Mode) */
+  .dark[data-accent="green"] {
+    --primary: 142 70% 45%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --ring: 142 70% 45%;
+
+    --chart-1: 142 70% 45%;
+    --chart-2: 132 70% 45%;
+    --chart-3: 152 70% 45%;
+    --chart-4: 162 70% 45%;
+    --chart-5: 122 70% 45%;
+  }
+
+  /* Purple Accent Theme (Dark Mode) */
+  .dark[data-accent="purple"] {
+    --primary: 270 75% 60%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --ring: 270 75% 60%;
+
+    --chart-1: 270 75% 60%;
+    --chart-2: 280 75% 60%;
+    --chart-3: 260 75% 60%;
+    --chart-4: 290 75% 60%;
+    --chart-5: 250 75% 60%;
+  }
+
+  /* Orange Accent Theme (Dark Mode) */
+  .dark[data-accent="orange"] {
+    --primary: 32 90% 60%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --ring: 32 90% 60%;
+
+    --chart-1: 32 90% 60%;
+    --chart-2: 22 90% 60%;
+    --chart-3: 42 90% 60%;
+    --chart-4: 12 90% 60%;
+    --chart-5: 52 90% 60%;
+  }
 }
 
 @layer base {
@@ -132,5 +236,11 @@ input::-webkit-inner-spin-button {
 
   .transition-all-normal {
     transition: all var(--transition-normal) ease-in-out;
+  }
+
+  /* Utilities for animations control */
+  .no-animations * {
+    transition: none !important;
+    animation: none !important;
   }
 }

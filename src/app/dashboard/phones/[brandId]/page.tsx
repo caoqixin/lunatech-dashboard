@@ -6,9 +6,6 @@ import { searchPhoneParamsSchema } from "@/views/phones/schema/phone.schema";
 import { Metadata, ResolvingMetadata } from "next";
 import { redirect } from "next/navigation";
 
-// 指定为动态渲染
-export const dynamic = "force-dynamic";
-
 export interface PhonePageProps {
   searchParams: SearchParams;
   params: {

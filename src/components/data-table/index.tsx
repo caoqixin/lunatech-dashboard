@@ -95,18 +95,18 @@ export function DataTable<TData, TValue>({
       />
 
       {/* 表格主体 */}
-      <div className="rounded-md border bg-white shadow-sm">
+      <div className="rounded-md border bg-background shadow-sm">
         {isLoading ? (
           <DataTableSkeleton columnCount={columns.length} />
         ) : (
           <Table>
-            <TableHeader className="bg-gray-50">
+            <TableHeader className="bg-background">
               {getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
-                      className="font-medium text-gray-700"
+                      className="font-medium text-foreground"
                     >
                       {header.isPlaceholder
                         ? null
@@ -125,7 +125,7 @@ export function DataTable<TData, TValue>({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() ? "selected" : undefined}
-                    className="hover:bg-gray-50 transition-colors"
+                    className="hover:bg-muted transition-colors"
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id} className="py-3">
@@ -141,7 +141,7 @@ export function DataTable<TData, TValue>({
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
-                    className="h-24 text-center text-gray-500"
+                    className="h-24 text-center text-foreground"
                   >
                     {noDataText}
                   </TableCell>

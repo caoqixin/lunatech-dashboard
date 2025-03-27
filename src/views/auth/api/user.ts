@@ -6,7 +6,6 @@ import { DataReturnType } from "@/lib/definitions";
 import { UpdateUserName } from "../schema/user.schema";
 
 export async function getCurrentUser() {
-  noStore();
   const supabase = await createClient();
 
   const {

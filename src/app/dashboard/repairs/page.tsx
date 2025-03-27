@@ -4,8 +4,6 @@ import { RepairPage } from "@/views/repair/components/repair-page";
 import { repairSearchSchema } from "@/views/repair/schema/repair.schema";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
-// 指定为动态渲染
-export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "维修管理",

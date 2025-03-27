@@ -3,6 +3,7 @@
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -18,7 +19,7 @@ import { useEffect, useState } from "react";
 import { updateUserName } from "../api/user";
 import { toast } from "sonner";
 import { useUser } from "@/store/use-user";
-import { Loader } from "lucide-react";
+import { Loader, User } from "lucide-react";
 
 interface UserInfoProps {
   userName: string;
@@ -39,6 +40,7 @@ export const UserInfo = ({ userName }: UserInfoProps) => {
   const {
     formState: { isSubmitting },
     control,
+    reset,
   } = form;
 
   const watchedName = useWatch({
@@ -47,55 +49,68 @@ export const UserInfo = ({ userName }: UserInfoProps) => {
   });
 
   useEffect(() => {
-    setHasChanged(watchedName !== userName);
+    setHasChanged(watchedName !== userName && watchedName?.trim() !== "");
   }, [watchedName, userName]);
 
   useEffect(() => {
-    form.reset({
+    reset({
       name: userName,
     });
-  }, [userName]);
+  }, [userName, reset]);
 
   const onSubmit = async (values: UpdateUserName) => {
-    const { msg, status } = await updateUserName(values);
-    if (status == "success") {
-      setUserName(values.name);
-      toast.success(msg);
-      router.refresh();
-    } else {
-      toast.error(msg);
+    if (values.name.trim() === "") {
+      toast.error("用户名不能为空");
+      return;
+    }
+
+    try {
+      const { msg, status } = await updateUserName(values);
+      if (status == "success") {
+        setUserName(values.name);
+        toast.success(msg);
+        router.refresh();
+      } else {
+        toast.error(msg);
+      }
+    } catch (error) {
+      toast.error("更新用户名失败");
     }
   };
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col gap-4 space-y-2"
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>用户名</FormLabel>
+              <FormLabel className="flex items-center gap-2">
+                <User className="size-4" /> 用户名
+              </FormLabel>
               <FormControl>
-                <Input {...field} disabled={isSubmitting} />
+                <Input
+                  {...field}
+                  disabled={isSubmitting}
+                  className="transition-all"
+                />
               </FormControl>
+              <FormDescription>您的用户名将显示在个人资料中</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="flex justify-end gap-x-4">
+        <div className="flex justify-end gap-x-3">
           <Button
             type="button"
             variant="outline"
-            size="lg"
+            size="sm"
             disabled={!hasChanged || isSubmitting}
             onClick={() => {
               // 重置为初始值
-              form.reset({ name: userName });
+              reset({ name: userName });
               setHasChanged(false);
             }}
           >
@@ -103,9 +118,9 @@ export const UserInfo = ({ userName }: UserInfoProps) => {
           </Button>
           <Button
             type="submit"
-            size="lg"
+            size="sm"
             disabled={!hasChanged || isSubmitting}
-            className="flex items-center gap-x-2"
+            className="flex items-center gap-x-2 transition-all"
           >
             {isSubmitting && <Loader className="animate-spin size-4" />}
             保存

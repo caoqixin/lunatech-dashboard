@@ -5,9 +5,6 @@ import { searchCustomerParams } from "@/views/customer/schema/customer.schema";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-// 指定为动态渲染
-export const dynamic = "force-dynamic";
-
 export const metadata: Metadata = {
   title: "客户中心",
 };

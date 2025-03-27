@@ -18,10 +18,20 @@ import { updatePassword } from "../api/user";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { Eye, EyeOff, KeyRound, Loader } from "lucide-react";
+
+type PasswordVisibility = {
+  password: boolean;
+  confirmPassword: boolean;
+};
 
 export const ModifyPasswordField = () => {
   const router = useRouter();
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [showPassword, setShowPassword] = useState<PasswordVisibility>({
+    password: false,
+    confirmPassword: false,
+  });
 
   const form = useForm<ModifyPassword>({
     resolver: zodResolver(ModifyPasswordSchema),
@@ -34,6 +44,7 @@ export const ModifyPasswordField = () => {
   const {
     formState: { isSubmitting },
     control,
+    reset,
   } = form;
 
   const watchedPassword = useWatch({
@@ -46,25 +57,43 @@ export const ModifyPasswordField = () => {
     name: "confirmPassword",
   });
 
+  // 检查密码是否匹配
   useEffect(() => {
     if (
+      watchedPassword &&
+      watchedConfirmPassword &&
       watchedConfirmPassword === watchedPassword &&
-      (watchedConfirmPassword !== "" || watchedPassword !== "")
+      watchedPassword.length >= 6
     ) {
       setIsConfirmed(true);
+    } else {
+      setIsConfirmed(false);
     }
   }, [watchedPassword, watchedConfirmPassword]);
 
-  const onSubmit = async (values: ModifyPassword) => {
-    const { msg, status } = await updatePassword(values.confirmPassword);
+  const togglePasswordVisibility = (
+    field: "password" | "confirmPassword"
+  ): void => {
+    setShowPassword((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
 
-    if (status == "success") {
-      toast.success(msg);
-      form.reset();
-      setIsConfirmed(false);
-      router.refresh();
-    } else {
-      toast.error(msg);
+  const onSubmit = async (values: ModifyPassword) => {
+    try {
+      const { msg, status } = await updatePassword(values.confirmPassword);
+
+      if (status == "success") {
+        toast.success(msg);
+        reset();
+        setIsConfirmed(false);
+        router.refresh();
+      } else {
+        toast.error(msg);
+      }
+    } catch (error) {
+      toast.error("修改密码失败，请稍后重试");
     }
   };
 
@@ -76,9 +105,32 @@ export const ModifyPasswordField = () => {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>新密码</FormLabel>
+              <FormLabel className="flex items-center gap-2">
+                <KeyRound className="size-4" /> 新密码
+              </FormLabel>
               <FormControl>
-                <Input {...field} disabled={isSubmitting} />
+                <div className="relative">
+                  <Input
+                    {...field}
+                    disabled={isSubmitting}
+                    type={showPassword.password ? "text" : "password"}
+                    placeholder="请输入新密码"
+                    className="pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2"
+                    onClick={() => togglePasswordVisibility("password")}
+                  >
+                    {showPassword.password ? (
+                      <EyeOff className="size-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="size-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
               </FormControl>
               <FormDescription>新密码必须大于6位数</FormDescription>
               <FormMessage />
@@ -90,23 +142,46 @@ export const ModifyPasswordField = () => {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>确认密码</FormLabel>
+              <FormLabel className="flex items-center gap-2">
+                <KeyRound className="size-4" /> 确认密码
+              </FormLabel>
               <FormControl>
-                <Input {...field} disabled={isSubmitting} />
+                <div className="relative">
+                  <Input
+                    {...field}
+                    disabled={isSubmitting}
+                    type={showPassword.confirmPassword ? "text" : "password"}
+                    placeholder="请再次输入新密码"
+                    className="pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2"
+                    onClick={() => togglePasswordVisibility("confirmPassword")}
+                  >
+                    {showPassword.confirmPassword ? (
+                      <EyeOff className="size-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="size-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <div className="flex justify-end gap-x-3">
+        <div className="flex justify-end gap-x-3 mt-6">
           <Button
             type="button"
             variant="outline"
-            size="lg"
+            size="sm"
             disabled={!isConfirmed || isSubmitting}
             onClick={() => {
               // 重置为初始值
-              form.reset();
+              reset();
               setIsConfirmed(false);
             }}
           >
@@ -114,9 +189,11 @@ export const ModifyPasswordField = () => {
           </Button>
           <Button
             type="submit"
-            size="lg"
+            size="sm"
             disabled={!isConfirmed || isSubmitting}
+            className="flex items-center gap-x-2"
           >
+            {isSubmitting && <Loader className="animate-spin size-4" />}
             保存
           </Button>
         </div>

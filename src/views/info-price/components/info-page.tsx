@@ -20,17 +20,17 @@ import { Button } from "@/components/ui/button";
 import { debounce } from "lodash";
 import { Component, Phone } from "@/lib/types";
 import { Navbar } from "@/components/layout/navbar";
-import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { cn, toEUR } from "@/lib/utils";
-import { CommandLoading } from "cmdk";
 import { fetchPhonesByName } from "@/views/phones/api/phone";
 import { fetchComponentsByPhoneName } from "@/views/component/api/component";
-import { Loader } from "lucide-react";
+import { CheckCircle, Loader, Search, XCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { gotoRepair } from "../api/price";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 export const InfoPage = () => {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -69,19 +69,25 @@ export const InfoPage = () => {
     setIsFocus(false);
   };
 
-  const handleClickRepair = async (item: Component) => {
-    await gotoRepair(JSON.stringify(item));
-    router.push("/dashboard/repairs");
-  };
+  const handleClickRepair = useCallback(
+    async (item: Component) => {
+      await gotoRepair(JSON.stringify(item));
+      router.push("/dashboard/repairs");
+    },
+    [router]
+  );
 
   useEffect(() => {
     async function getPhones(value: string) {
       setIsLoading(true);
-      const data = await fetchPhonesByName(value);
-
-      setPhones(data.length > 0 ? data : null);
-
-      setIsLoading(false);
+      try {
+        const data = await fetchPhonesByName(value);
+        setPhones(data.length > 0 ? data : null);
+      } catch (error) {
+        console.error("Failed to fetch phones:", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
 
     if (query) {
@@ -93,8 +99,8 @@ export const InfoPage = () => {
 
   useEffect(() => {
     async function getComponents(phone: string) {
+      setIsLoadingComponents(true);
       try {
-        setIsLoadingComponents(true);
         const data = await fetchComponentsByPhoneName(phone);
         setComponents(data);
       } catch (error) {
@@ -107,6 +113,22 @@ export const InfoPage = () => {
       getComponents(selectedPhone);
     }
   }, [selectedPhone]);
+
+  const categories = useMemo(
+    () =>
+      new Set<string>(components?.map((component) => component.category) || []),
+    [components]
+  );
+
+  const filteredComponents = useMemo(
+    () =>
+      components?.filter(
+        (component) =>
+          checkedCategories.size === 0 ||
+          checkedCategories.has(component.category)
+      ) || [],
+    [components, checkedCategories]
+  );
 
   const renderComponent = () => {
     if (isLoadingComponents) {
@@ -210,70 +232,198 @@ export const InfoPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col">
-      <div>
-        <Navbar showBackButton={true} />
-      </div>
-      <Separator className="mt-2" />
-      <main className="h-full flex flex-col mt-0">
-        <div className="bg-[url('/images/banner.jpg')] bg-cover h-[100px] w-full bg-center" />
+    <div className="min-h-screen w-full flex flex-col bg-gray-50">
+      <Navbar showBackButton={true} />
+      <Separator />
 
-        <div className="mt-2">
-          <Command
-            shouldFilter={false}
-            className="rounded-xl border shadow-md mx-auto max-w-2xl"
-          >
-            <CommandInput
-              placeholder="输入手机型号..."
-              onValueChange={handleQueryChange}
-              onFocus={() => {
-                setIsFocus(true);
-              }}
-              onBlur={() => {
-                setIsFocus(false);
-              }}
-            />
-            <span className="px-2 font-bold">已选择内容: {selectedPhone}</span>
-            <CommandList
-              className={cn(
-                !isLoading
-                  ? phones && phones?.length > 7
-                    ? "h-[200px]"
-                    : "h-fit"
-                  : "h-9",
-                !isFocus && "hidden"
-              )}
-            >
-              {isLoading && (
-                <CommandLoading className="flex items-center justify-center h-9">
-                  查询中...
-                </CommandLoading>
-              )}
-              {!isLoading && query && !phones && (
-                <div className="h-9 flex items-center justify-center">
-                  未找到相应的配件
+      <div className="container mx-auto px-4 py-6">
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Search className="w-6 h-6 text-primary" />
+              <span>手机配件查询</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Command className="rounded-xl border shadow-md py-2">
+              <CommandInput
+                placeholder="输入手机型号..."
+                onValueChange={handleQueryChange}
+                onFocus={() => setIsFocus(true)}
+                onBlur={() => setTimeout(() => setIsFocus(false), 200)}
+                className="focus:ring-2 focus:ring-primary"
+              />
+              {selectedPhone && (
+                <div className="px-3 py-2 text-sm flex items-center space-x-2">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span>已选择: {selectedPhone}</span>
                 </div>
               )}
-              {!isLoading &&
-                phones &&
-                phones.map((phone) => (
-                  <CommandItem
-                    key={phone.id}
-                    value={phone.name}
-                    onSelect={() => handleSelect(phone.name)}
-                    className="grid grid-cols-3 font-mono cursor-pointer"
-                    onMouseDown={(e) => e.preventDefault()}
-                  >
-                    <span className="grid col-span-2 grid-cols-1 font-bold">
+              <CommandList
+                className={cn(
+                  "transition-all duration-300 ease-in-out",
+                  !isLoading
+                    ? phones && phones.length > 7
+                      ? "max-h-[200px] overflow-y-auto"
+                      : "max-h-fit"
+                    : "h-9",
+                  !isFocus && "hidden"
+                )}
+              >
+                {isLoading && (
+                  <div className="flex items-center justify-center p-2">
+                    <Loader className="w-5 h-5 animate-spin mr-2" />
+                    查询中...
+                  </div>
+                )}
+                <CommandEmpty>未找到相应的手机型号</CommandEmpty>
+                {!isLoading &&
+                  phones?.map((phone) => (
+                    <CommandItem
+                      key={phone.id}
+                      value={phone.name}
+                      onSelect={() => handleSelect(phone.name)}
+                      className="hover:bg-gray-100 cursor-pointer px-3 py-2"
+                    >
                       {phone.name}
-                    </span>
-                  </CommandItem>
+                    </CommandItem>
+                  ))}
+              </CommandList>
+            </Command>
+          </CardContent>
+        </Card>
+
+        {selectedPhone && (
+          <div className="grid grid-cols-12 gap-4">
+            <Card className="col-span-3">
+              <CardHeader>
+                <CardTitle>配件分类</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {Array.from(categories).map((category) => (
+                  <div
+                    key={category}
+                    className="flex items-center space-x-2 mb-2"
+                  >
+                    <Checkbox
+                      id={category}
+                      onCheckedChange={(state) => {
+                        const updatedCategories = new Set(checkedCategories);
+                        state
+                          ? updatedCategories.add(category)
+                          : updatedCategories.delete(category);
+                        setCheckedCategories(updatedCategories);
+                      }}
+                      checked={checkedCategories.has(category)}
+                    />
+                    <label
+                      htmlFor={category}
+                      className="flex items-center space-x-2"
+                    >
+                      <span>{category}</span>
+                      <Badge variant="secondary" className="ml-2">
+                        {components?.filter((c) => c.category === category)
+                          .length || 0}
+                      </Badge>
+                    </label>
+                  </div>
                 ))}
-            </CommandList>
-          </Command>
-        </div>
-        {renderComponent()}
-      </main>
+              </CardContent>
+            </Card>
+
+            <Card className="col-span-9">
+              <CardHeader>
+                <CardTitle>{selectedPhone} 的配件详情</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoadingComponents ? (
+                  <div className="flex items-center justify-center h-32">
+                    <Loader className="w-8 h-8 animate-spin mr-2" />
+                    数据查询中...
+                  </div>
+                ) : errorMsg ? (
+                  <div className="flex items-center justify-center h-32 text-red-500">
+                    <XCircle className="w-8 h-8 mr-2" />
+                    {errorMsg}
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>配件名称</TableHead>
+                        <TableHead>分类</TableHead>
+                        <TableHead>品质</TableHead>
+                        <TableHead>供应商</TableHead>
+                        <TableHead>库存</TableHead>
+                        <TableHead>维修价格</TableHead>
+                        <TableHead className="text-right">操作</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredComponents.map((component) => (
+                        <TableRow
+                          key={component.id}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
+                          <TableCell>{component.name}</TableCell>
+                          <TableCell>{component.category}</TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                component.quality === "高"
+                                  ? "default"
+                                  : component.quality === "中"
+                                  ? "secondary"
+                                  : "destructive"
+                              }
+                            >
+                              {component.quality}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{component.supplier}</TableCell>
+                          <TableCell>
+                            {component.stock > 0 ? (
+                              <Badge
+                                variant="outline"
+                                className="text-green-600"
+                              >
+                                有货
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="destructive"
+                                className="text-nowrap"
+                              >
+                                需要预订
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>{toEUR(component.public_price)}</TableCell>
+                          <TableCell className="text-right">
+                            {component.stock > 0 ? (
+                              <Button
+                                onClick={() => handleClickRepair(component)}
+                                size="sm"
+                                className="bg-primary hover:bg-primary/90"
+                              >
+                                去维修
+                              </Button>
+                            ) : (
+                              <Button variant="outline" size="sm" disabled>
+                                需要订购
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
