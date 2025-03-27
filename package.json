@@ -1,13 +1,13 @@
 {
   "name": "lunatech",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "create-user": "pnpm dlx ts-node -O '{\"module\": \"commonjs\"}' .scriptscreate-user.ts"
+    "create-user": "pnpm dlx ts-node -O '{\"module\": \"commonjs\"}' .scripts/create-user.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
