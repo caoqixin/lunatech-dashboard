@@ -39,26 +39,36 @@ export const DeleteRepair = ({ repair }: DeleteRepairProps) => {
         <Button
           variant="destructive"
           size="sm"
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 transition-all hover:bg-destructive/90"
         >
           <Trash className="size-4" /> 删除
         </Button>
       }
     >
       <div className="flex flex-col space-y-4 mx-4">
-        <p className="text-destructive">
+        <p className="text-destructive font-medium">
           确定要删除该维修吗? 维修ID: [{repair.id}] 吗?, 该操作是不可逆,
           慎重考虑 !!!
         </p>
-        <Button
-          variant="destructive"
-          className="flex w-full gap-2 items-center"
-          onClick={() => handleDelete()}
-          disabled={isDeleting}
-        >
-          {isDeleting && <Loader className="animate-spin size-4" />}
-          确定
-        </Button>
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            className=""
+            onClick={() => setOpen(false)}
+            disabled={isDeleting}
+          >
+            取消
+          </Button>
+          <Button
+            variant="destructive"
+            className="flex gap-2 items-center justify-center"
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            {isDeleting && <Loader className="animate-spin size-4" />}
+            确定
+          </Button>
+        </div>
       </div>
     </ResponsiveModal>
   );

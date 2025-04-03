@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
@@ -52,6 +52,7 @@ import { updateRepair } from "@/views/repair/api/repair";
 import { CustomerSelector } from "@/views/repair/components/customer-selector";
 import { fetchProblemsForCreateComponent } from "@/views/category/api/problem";
 import { RepairWithCustomer } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface EditRepairProps {
   repair: RepairWithCustomer;
@@ -69,23 +70,36 @@ export const EditRepair = ({ repair }: EditRepairProps) => {
     open
   );
 
-  const form = useForm<RepairForm>({
-    resolver: zodResolver(repairFormSchema),
-    defaultValues: {
+  // Memoize default values to prevent unnecessary rerenders
+  const defaultValues = useMemo<RepairForm>(
+    () => ({
       phone: repair.phone,
       problem: repair.problem ?? [],
       status: repair.status as RepairStatus,
       deposit: repair.deposit,
       price: repair.price,
       customerId: repair.customerId,
-    },
+    }),
+    [repair]
+  );
+
+  const form = useForm<RepairForm>({
+    resolver: zodResolver(repairFormSchema),
+    defaultValues,
   });
 
   const {
-    formState: { isSubmitting },
+    formState: { isSubmitting, isDirty },
+    reset,
   } = form;
 
   const onSubmit = async (values: RepairForm) => {
+    if (!isDirty) {
+      toast.info("没有变更内容");
+      setOpen(false);
+      return;
+    }
+
     const { msg, status } = await updateRepair(values, repair.id, repair);
 
     if (status === "success") {
@@ -97,21 +111,20 @@ export const EditRepair = ({ repair }: EditRepairProps) => {
     }
   };
 
+  // Reset form when repair data changes or modal opens
   useEffect(() => {
-    form.reset({
-      phone: repair.phone,
-      problem: repair.problem ?? [],
-      status: repair.status as RepairStatus,
-      deposit: repair.deposit,
-      price: repair.price,
-      customerId: repair.customerId,
-    });
-  }, [repair]);
+    if (open) {
+      reset(defaultValues);
+    }
+  }, [repair, open, reset, defaultValues]);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button size="sm" className="flex items-center gap-2">
+        <Button
+          size="sm"
+          className="flex items-center gap-2 transition-all hover:bg-primary/90"
+        >
           <Edit className="size-4" />
           修改
         </Button>
@@ -129,18 +142,19 @@ export const EditRepair = ({ repair }: EditRepairProps) => {
             onSubmit={form.handleSubmit(onSubmit)}
             className="flex flex-col space-y-4"
           >
-            <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
               <FormField
                 control={form.control}
                 name="status"
                 render={({ field }) => (
-                  <FormItem className="grid col-span-2 grid-cols-6 items-center gap-4">
+                  <FormItem className="grid md:col-span-2 grid-cols-4 md:grid-cols-6 items-center gap-4">
                     <FormLabel className="text-right">维修状态</FormLabel>
-                    <div className="col-span-5">
+                    <div className="col-span-3 md:col-span-5">
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                         disabled={isSubmitting}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -168,19 +182,23 @@ export const EditRepair = ({ repair }: EditRepairProps) => {
                 control={form.control}
                 name="customerId"
                 render={({ field }) => (
-                  <FormItem className="grid col-span-2 grid-cols-6 items-center gap-4">
+                  <FormItem className="grid md:col-span-2 grid-cols-4 md:grid-cols-6 items-center gap-4">
                     <FormLabel className="text-right">客户</FormLabel>
-                    <div className="col-span-5">
-                      <FormControl>
-                        <CustomerSelector
-                          options={customers}
-                          selectedValue={field.value}
-                          setValue={form.setValue}
-                          fieldName="customerId"
-                          isLoading={customerLoading}
-                          disabled={isSubmitting}
-                        />
-                      </FormControl>
+                    <div className="col-span-3 md:col-span-5">
+                      {customerLoading ? (
+                        <Skeleton className="h-10 w-full" />
+                      ) : (
+                        <FormControl>
+                          <CustomerSelector
+                            options={customers}
+                            selectedValue={field.value}
+                            setValue={form.setValue}
+                            fieldName="customerId"
+                            isLoading={customerLoading}
+                            disabled={isSubmitting}
+                          />
+                        </FormControl>
+                      )}
                       <FormMessage />
                     </div>
                   </FormItem>
@@ -190,9 +208,9 @@ export const EditRepair = ({ repair }: EditRepairProps) => {
                 control={form.control}
                 name="phone"
                 render={({ field }) => (
-                  <FormItem className="grid grid-cols-3 items-center gap-4">
+                  <FormItem className="grid grid-cols-4 md:grid-cols-3 items-center gap-4">
                     <FormLabel className="text-right">手机型号</FormLabel>
-                    <div className="col-span-2">
+                    <div className="col-span-3 md:col-span-2">
                       <FormControl>
                         <Input
                           {...field}
@@ -210,16 +228,20 @@ export const EditRepair = ({ repair }: EditRepairProps) => {
                 control={form.control}
                 name="problem"
                 render={({ field }) => (
-                  <FormItem className="grid grid-cols-3 items-center gap-4">
+                  <FormItem className="grid grid-cols-4 md:grid-cols-3 items-center gap-4">
                     <FormLabel className="text-right">维修故障</FormLabel>
-                    <div className="col-span-2">
-                      <MultiSelector
-                        options={problems}
-                        selectedValues={field.value}
-                        onChange={field.onChange}
-                        placeholder="选择维修故障"
-                        disabled={problemLoading || isSubmitting}
-                      />
+                    <div className="col-span-3 md:col-span-2">
+                      {problemLoading ? (
+                        <Skeleton className="h-10 w-full" />
+                      ) : (
+                        <MultiSelector
+                          options={problems}
+                          selectedValues={field.value}
+                          onChange={field.onChange}
+                          placeholder="选择维修故障"
+                          disabled={problemLoading || isSubmitting}
+                        />
+                      )}
                       <FormMessage />
                     </div>
                   </FormItem>
@@ -229,9 +251,9 @@ export const EditRepair = ({ repair }: EditRepairProps) => {
                 control={form.control}
                 name="deposit"
                 render={({ field }) => (
-                  <FormItem className="grid grid-cols-3 items-center gap-4">
+                  <FormItem className="grid grid-cols-4 md:grid-cols-3 items-center gap-4">
                     <FormLabel className="text-right">维修订金 €:</FormLabel>
-                    <div className="col-span-2">
+                    <div className="col-span-3 md:col-span-2">
                       <FormControl>
                         <Input {...field} disabled={isSubmitting} />
                       </FormControl>
@@ -244,9 +266,9 @@ export const EditRepair = ({ repair }: EditRepairProps) => {
                 control={form.control}
                 name="price"
                 render={({ field }) => (
-                  <FormItem className="grid grid-cols-3 items-center gap-4">
+                  <FormItem className="grid grid-cols-4 md:grid-cols-3 items-center gap-4">
                     <FormLabel className="text-right">维修金额 €:</FormLabel>
-                    <div className="col-span-2">
+                    <div className="col-span-3 md:col-span-2">
                       <FormControl>
                         <Input {...field} disabled={isSubmitting} />
                       </FormControl>
@@ -272,7 +294,7 @@ export const EditRepair = ({ repair }: EditRepairProps) => {
                 className="flex gap-2 items-center"
               >
                 {isSubmitting && <Loader className="size-4 animate-spin" />}
-                修改
+                {isDirty ? "保存修改" : "没有变更"}
               </Button>
             </SheetFooter>
           </form>

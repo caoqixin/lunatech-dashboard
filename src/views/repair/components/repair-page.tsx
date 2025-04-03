@@ -6,7 +6,7 @@ import { RepairSearch } from "@/views/repair/schema/repair.schema";
 import { countRepairs, fetchRepairs } from "@/views/repair/api/repair";
 import { RepairTable } from "@/views/repair/components/repair-table";
 import { CreateRepair } from "@/views/repair/components/create-repair";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { RepairWithCustomer } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
 
@@ -26,49 +26,61 @@ export const RepairPage = ({ params }: RepairPageProps) => {
   const supabaseRef = useRef(createClient());
   const paramsRef = useRef(params);
 
-  // 使用字符串形式的 params 作为依赖项，避免对象引用比较
-  const paramsString = JSON.stringify(params);
+  // 更新当前参数
   useEffect(() => {
-    // 更新参数引用
     paramsRef.current = params;
-    // 加载初始数据函数
-    async function loadInitialData() {
-      setIsLoading(true);
-      try {
-        const [data, count] = await Promise.all([
-          fetchRepairs(paramsRef.current),
-          countRepairs(paramsRef.current),
-        ]);
+  }, [params]);
 
-        setRepairs(data);
-        setCount(count);
-      } catch (error) {
-        console.error("加载数据失败:", error);
-      } finally {
-        setIsLoading(false);
-      }
+  // 提取加载数据逻辑为可重用的函数
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [data, newCount] = await Promise.all([
+        fetchRepairs(paramsRef.current),
+        countRepairs(paramsRef.current),
+      ]);
+
+      setRepairs(data);
+      setCount(newCount);
+    } catch (error) {
+      console.error("加载数据失败:", error);
+    } finally {
+      setIsLoading(false);
     }
+  }, []);
 
-    loadInitialData();
+  useEffect(() => {
+    // 初始加载数据
+    loadData();
 
-    // 只在组件挂载时订阅一次，避免多次订阅
+    // 设置 Supabase 实时订阅
     const supabase = supabaseRef.current;
     const channel = supabase
-      .channel("repairs")
+      .channel("repairs-changes")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "repairs" },
-        () => {
-          loadInitialData();
+        {
+          event: "*",
+          schema: "public",
+          table: "repairs",
+        },
+        (payload) => {
+          // 当数据变化时直接重新加载数据，无需等待参数变化
+          loadData();
         }
       )
       .subscribe();
 
-    // 在组件卸载时取消订阅
+    // 清理函数
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [paramsString]);
+  }, [loadData]); // 只在组件挂载时执行一次
+
+  // 当参数变化时重新加载数据
+  useEffect(() => {
+    loadData();
+  }, [params, loadData]);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">

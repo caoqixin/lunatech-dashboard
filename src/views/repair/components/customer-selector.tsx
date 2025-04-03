@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useForm, UseFormSetValue } from "react-hook-form";
 
@@ -65,29 +65,34 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({
   placeholder = "选择客户",
   disabled = false,
 }) => {
-  const [initialOptions, setInitialOptions] = useState<Customer[]>(
-    options || []
-  ); // 状态化选项
   const [open, setOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [parentElement, setParentElement] = useState<HTMLDivElement | null>(
     null
   );
-  useEffect(() => {
-    if (options) {
-      setInitialOptions(options);
-    }
-  }, [options]);
+  // 使用 memo 缓存客户列表，避免不必要的重新渲染
+  const customerOptions = useMemo(() => options || [], [options]);
 
   // 过滤后的客户数据
   const filteredOptions = useMemo(() => {
-    if (!options) return [];
-    if (!query.trim()) return initialOptions;
-    return initialOptions.filter(
-      (option) => option.name.includes(query) || option.tel.includes(query)
+    if (!customerOptions.length) return [];
+    if (!query.trim()) return customerOptions;
+    // 使用 toLowerCase 进行不区分大小写的搜索
+    const lowerQuery = query.toLowerCase();
+    return customerOptions.filter(
+      (option) =>
+        option.name.toLowerCase().includes(lowerQuery) ||
+        option.tel.includes(query)
     );
-  }, [query, initialOptions, options]);
+  }, [query, customerOptions]);
+
+  // 使用 useMemo 避免 dialog 状态变化导致的不必要重新计算
+  const selectedCustomer = useMemo(() => {
+    return selectedValue
+      ? customerOptions.find((option) => option.id === selectedValue)?.name
+      : null;
+  }, [selectedValue, customerOptions]);
 
   const form = useForm<CustomerSchema>({
     resolver: zodResolver(customerSchema),
@@ -109,25 +114,38 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({
     overscan: 5,
   });
 
+  // 使用 useCallback 优化事件处理函数，防止不必要的重新创建
+  const handleSelect = useCallback(
+    (id: number) => {
+      setValue(fieldName, id === selectedValue ? null : id);
+      setOpen(false);
+    },
+    [setValue, fieldName, selectedValue]
+  );
+
   const onSubmit = async (values: CustomerSchema) => {
     const { msg, status, data } = await createCustomerForCreateRepair(values);
     if (status == "success" && data) {
-      setInitialOptions((prevOptions) => [...prevOptions, data]); // 更新选项列表
+      // 如果提交成功，自动选择新创建的客户
       setValue(fieldName, data.id); // 自动选择新创建的客户
       toast.success(msg);
       setDialogOpen(false);
       form.reset();
+      setOpen(false); // 关闭客户选择器
     } else {
       toast.error(msg);
     }
   };
 
-  const stopPropagation = (handler: (event: React.SyntheticEvent) => void) => {
-    return (event: React.SyntheticEvent) => {
-      event.stopPropagation();
-      handler(event);
-    };
-  };
+  const stopPropagation = useCallback(
+    (handler: (event: React.SyntheticEvent) => void) => {
+      return (event: React.SyntheticEvent) => {
+        event.stopPropagation();
+        handler(event);
+      };
+    },
+    []
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -142,12 +160,8 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({
             )}
             disabled={isLoading || disabled}
           >
-            {selectedValue
-              ? filteredOptions.find((option) => option.id === selectedValue)
-                  ?.name
-              : isLoading
-              ? "正在加载数据..."
-              : placeholder ?? "选择选项"}
+            {selectedCustomer ||
+              (isLoading ? "正在加载数据..." : placeholder ?? "选择选项")}
             <ChevronsUpDown className="opacity-50" />
           </Button>
         </FormControl>
@@ -158,7 +172,8 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({
             placeholder="搜索客户..."
             className="h-9"
             value={query}
-            onValueChange={(s) => setQuery(s)}
+            onValueChange={setQuery}
+            autoFocus
           />
           <CommandList className="w-96">
             <CommandEmpty>
@@ -170,7 +185,7 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({
                       variant="outline"
                       className="flex flex-col justify-center items-center mt-4"
                     >
-                      <PlusCircle className="size-4" />
+                      <PlusCircle className="size-4 mr-2" />
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
@@ -193,7 +208,11 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({
                               </FormLabel>
                               <div className="flex flex-col gap-1 w-full">
                                 <FormControl>
-                                  <Input {...field} disabled={isSubmitting} />
+                                  <Input
+                                    {...field}
+                                    disabled={isSubmitting}
+                                    autoComplete="off"
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </div>
@@ -210,7 +229,11 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({
                               </FormLabel>
                               <div className="flex flex-col gap-1 w-full">
                                 <FormControl>
-                                  <Input {...field} disabled={isSubmitting} />
+                                  <Input
+                                    {...field}
+                                    disabled={isSubmitting}
+                                    autoComplete="off"
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </div>
@@ -227,7 +250,11 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({
                               </FormLabel>
                               <div className="flex flex-col gap-1 w-full">
                                 <FormControl>
-                                  <Input {...field} disabled={isSubmitting} />
+                                  <Input
+                                    {...field}
+                                    disabled={isSubmitting}
+                                    autoComplete="off"
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </div>
@@ -257,7 +284,10 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({
                 onWheel={(e) => e.stopPropagation()}
               >
                 <div
-                  className={`h-[${rowVirtualizer.getTotalSize()}px] relative`}
+                  style={{
+                    height: `${rowVirtualizer.getTotalSize()}px`,
+                    position: "relative",
+                  }}
                 >
                   {rowVirtualizer.getVirtualItems().map((virtualItem) => {
                     const option = filteredOptions[virtualItem.index];
@@ -267,15 +297,11 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({
                       <CommandItem
                         value={String(option.id)}
                         key={option.id}
-                        onSelect={() => {
-                          setValue(
-                            fieldName,
-                            option.id === selectedValue ? "" : option.id
-                          );
-                        }}
+                        onSelect={() => handleSelect(option.id)}
                         className="absolute top-0 left-0 w-full"
                         style={{
                           transform: `translateY(${virtualItem.start}px)`,
+                          height: `${virtualItem.size}px`,
                         }}
                       >
                         <span className="font-mono">{option.tel}</span>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
@@ -78,20 +78,24 @@ export const CreateRepair = () => {
 
   const {
     formState: { isSubmitting },
+    reset,
   } = form;
 
-  const onSubmit = async (values: RepairForm) => {
-    const { msg, status } = await createNewRepair(values);
+  const onSubmit = useCallback(
+    async (values: RepairForm) => {
+      const { msg, status } = await createNewRepair(values);
 
-    if (status === "success") {
-      toast.success(msg);
-      setOpen(false);
-      form.reset();
-      router.refresh();
-    } else {
-      toast.error(msg);
-    }
-  };
+      if (status === "success") {
+        toast.success(msg);
+        setOpen(false);
+        reset();
+        router.refresh();
+      } else {
+        toast.error(msg);
+      }
+    },
+    [router, reset]
+  );
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
