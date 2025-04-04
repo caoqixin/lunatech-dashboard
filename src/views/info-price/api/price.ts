@@ -1,6 +1,5 @@
 "use server";
 import redis from "@/lib/redis";
-import { createClient } from "@/lib/supabase/server";
 import { OrderComponent, saveOrderState } from "@/views/order/api/order";
 
 export async function gotoRepair(item: string): Promise<void> {
