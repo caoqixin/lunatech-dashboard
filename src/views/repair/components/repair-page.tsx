@@ -26,6 +26,9 @@ export const RepairPage = ({ params }: RepairPageProps) => {
   const supabaseRef = useRef(createClient());
   const paramsRef = useRef(params);
 
+  // 追踪订阅状态，避免重复订阅
+  const isSubscribed = useRef(false);
+
   // 更新当前参数
   useEffect(() => {
     paramsRef.current = params;
@@ -50,8 +53,8 @@ export const RepairPage = ({ params }: RepairPageProps) => {
   }, []);
 
   useEffect(() => {
-    // 初始加载数据
-    loadData();
+    // 避免重复订阅
+    if (isSubscribed.current) return;
 
     // 设置 Supabase 实时订阅
     const supabase = supabaseRef.current;
@@ -69,13 +72,20 @@ export const RepairPage = ({ params }: RepairPageProps) => {
           loadData();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          isSubscribed.current = true;
+        } else {
+          console.error("Supabase 订阅失败:", status);
+        }
+      });
 
     // 清理函数
     return () => {
       supabase.removeChannel(channel);
+      isSubscribed.current = false;
     };
-  }, [loadData]); // 只在组件挂载时执行一次
+  }, [loadData]); // 只依赖loadData，确保只设置一次订阅
 
   // 当参数变化时重新加载数据
   useEffect(() => {
