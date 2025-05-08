@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { isLoggedIn } from "@/server/user";
 import { InfoPage } from "@/views/info-price/components/info-page";
 
-export default async function Home() {
+export default async function RootPage() {
   if (!(await isLoggedIn())) {
     redirect("/login");
   }

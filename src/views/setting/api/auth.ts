@@ -84,7 +84,7 @@ export async function unenrollMFA({
 
     return { success: true };
   } catch (err) {
-    console.error("MFA Unenrollment Error:", err);
+    // console.error("MFA Unenrollment Error:", err);
     return {
       success: false,
       error: err instanceof Error ? err.message : "取消注册失败",

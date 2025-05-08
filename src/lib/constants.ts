@@ -1,28 +1,27 @@
 import {
   Home,
-  MonitorSmartphone,
-  ScrollText,
   Users,
   Component,
   FileText,
   Tag,
-  Globe,
   Smartphone,
   Settings,
   Search,
   Briefcase,
+  Warehouse,
+  Building2,
 } from "lucide-react";
 
 export const NAVIGATION_ITEMS = [
   {
-    label: "首页",
+    label: "仪表盘",
     href: "/dashboard",
     icon: Home,
   },
   {
     label: "出入库管理",
     href: "/dashboard/orders",
-    icon: MonitorSmartphone,
+    icon: Warehouse,
   },
   {
     label: "维修管理",
@@ -52,7 +51,7 @@ export const NAVIGATION_ITEMS = [
   {
     label: "供应商管理",
     href: "/dashboard/suppliers",
-    icon: Globe,
+    icon: Building2,
   },
   {
     label: "手机型号大全",

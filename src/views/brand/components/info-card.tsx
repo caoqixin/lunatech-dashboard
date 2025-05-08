@@ -1,165 +1,132 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
+
 import Image from "next/image";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ImageIcon, MoreVertical, Pencil, Trash } from "lucide-react";
-import { useMemo, useState } from "react";
-import { useMediaQuery } from "@uidotdev/usehooks";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { Drawer, DrawerTrigger } from "@/components/ui/drawer";
+
 import { UpdateBrand } from "@/views/brand/components/update-brand";
 import { DeleteBrand } from "@/views/brand/components/delete-brand";
-import { usePathname, useRouter } from "next/navigation";
-import { Brand } from "@/lib/types";
+import type { Brand } from "@/lib/types";
+
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 interface InfoCardProps {
   brand: Brand;
+  onSuccess: () => void;
 }
 
-type ContentType = "edit" | "delete";
-
-export const InfoCard = ({ brand }: InfoCardProps) => {
-  const [open, setOpen] = useState(false);
-  const isDesktop = useMediaQuery("(min-width: 768px)");
-  const [activeContent, setActiveContent] = useState<ContentType | null>(null);
+export const InfoCard = ({ brand, onSuccess }: InfoCardProps) => {
   const router = useRouter();
-  const pathname = usePathname();
 
-  const handleClose = () => {
-    setOpen(false);
-    setActiveContent(null);
+  const handleNavigate = () => {
+    // Navigate to the detail page for this brand
+    router.push(`/dashboard/phones/${brand.id}`); // Adjust path as needed
   };
 
-  const renderResponsiveContent = useMemo(() => {
-    if (isDesktop) {
-      return (
-        <div>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DropdownMenu>
-              <DropdownMenuTrigger>
-                <MoreVertical className="size-5 rounded-full hover:bg-muted-foreground" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DialogTrigger asChild>
-                  <DropdownMenuItem
-                    className="flex w-full items-center gap-x-2"
-                    onSelect={() => setActiveContent("edit")}
-                  >
-                    <Pencil className="size-4" /> 修改
-                  </DropdownMenuItem>
-                </DialogTrigger>
-                <DialogTrigger asChild>
-                  <DropdownMenuItem
-                    className="flex w-full items-center gap-x-2 text-destructive"
-                    onSelect={() => setActiveContent("delete")}
-                  >
-                    <Trash className="size-4" /> 删除
-                  </DropdownMenuItem>
-                </DialogTrigger>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            {open && (
-              <>
-                {activeContent == "edit" && (
-                  <UpdateBrand brand={brand} onCancel={handleClose} />
-                )}
-                {activeContent == "delete" && (
-                  <DeleteBrand brand={brand} onCancel={handleClose} />
-                )}
-              </>
-            )}
-          </Dialog>
-        </div>
-      );
-    } else {
-      return (
-        <div>
-          <Drawer open={open} onOpenChange={setOpen}>
-            <DropdownMenu>
-              <DropdownMenuTrigger>
-                <MoreVertical className="size-5 rounded-full hover:bg-muted-foreground" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DrawerTrigger asChild>
-                  <DropdownMenuItem
-                    className="flex w-full items-center gap-x-2"
-                    onSelect={() => setActiveContent("edit")}
-                  >
-                    <Pencil className="size-4" /> 修改
-                  </DropdownMenuItem>
-                </DrawerTrigger>
-                <DrawerTrigger asChild>
-                  <DropdownMenuItem
-                    className="flex w-full items-center gap-x-2 text-destructive"
-                    onSelect={() => setActiveContent("delete")}
-                  >
-                    <Trash className="size-4" /> 删除
-                  </DropdownMenuItem>
-                </DrawerTrigger>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            {open && (
-              <>
-                {activeContent == "edit" && (
-                  <UpdateBrand brand={brand} onCancel={handleClose} />
-                )}
-                {activeContent == "delete" && (
-                  <DeleteBrand brand={brand} onCancel={handleClose} />
-                )}
-              </>
-            )}
-          </Drawer>
-        </div>
-      );
-    }
-  }, [isDesktop, open, activeContent, brand]);
-
   return (
-    <Card className="cursor-pointer">
-      <CardHeader className="p-0">
-        <CardTitle className="flex justify-end mr-1 mt-1">
-          {renderResponsiveContent}
-        </CardTitle>
-      </CardHeader>
-      <CardContent
-        className="flex items-center justify-center p-6"
-        onClick={() => router.push(`${pathname}/${brand.id}`)}
+    <Card className="group relative flex flex-col overflow-hidden transition-shadow hover:shadow-lg">
+      {/* Action Menu - Positioned top-right */}
+      <div className="absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 bg-background/70 hover:bg-muted/90"
+              aria-label="品牌操作"
+            >
+              <MoreVertical className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {/* Edit Trigger */}
+            <DropdownMenuItem
+              onSelect={(e) => e.preventDefault()}
+              className="p-0"
+            >
+              <UpdateBrand
+                brand={brand}
+                onSuccess={onSuccess}
+                triggerButton={
+                  <div className="flex items-center w-full px-2 py-1.5 text-sm cursor-pointer">
+                    <Pencil className="mr-2 size-4" /> 修改
+                  </div>
+                }
+              />
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {/* Delete Trigger */}
+            <DropdownMenuItem
+              onSelect={(e) => e.preventDefault()}
+              className="p-0"
+            >
+              <DeleteBrand
+                brand={brand}
+                onSuccess={onSuccess}
+                triggerButton={
+                  <div className="flex items-center w-full px-2 py-1.5 text-sm cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
+                    <Trash className="mr-2 size-4" /> 删除
+                  </div>
+                }
+              />
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Clickable Content Area */}
+      <div
+        className="flex flex-1 flex-col cursor-pointer"
+        onClick={handleNavigate}
+        title={`查看 ${brand.name} 型号`} // Tooltip for click action
       >
-        {brand.brand_image ? (
-          <div className="size-16 relative rounded-md overflow-hidden">
-            <Image
-              alt="Logo"
-              fill
-              className="object-cover"
-              src={brand.brand_image}
-            />
-          </div>
-        ) : (
-          <Avatar className="size-16">
-            <AvatarFallback>
-              <ImageIcon className="size-8" />
-            </AvatarFallback>
-          </Avatar>
-        )}
-      </CardContent>
-      <Separator />
-      <CardFooter className="flex justify-center items-center p-2">
-        {brand.name}
-      </CardFooter>
+        <CardContent className="flex flex-1 items-center justify-center p-4 aspect-square">
+          {" "}
+          {/* Aspect ratio for consistency */}
+          {brand.brand_image ? (
+            <div className="relative h-16 w-16 transition-transform group-hover:scale-105">
+              {" "}
+              {/* Scale image on hover */}
+              <Image
+                alt={`${brand.name} Logo`}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" // Example sizes
+                className="object-contain rounded-full" // Contain and maybe rounded
+                src={brand.brand_image}
+                // Add unoptimized if using external URLs without loader config
+                // unoptimized
+              />
+            </div>
+          ) : (
+            <Avatar className="h-16 w-16 rounded-full">
+              {" "}
+              {/* Match size */}
+              <AvatarFallback className="rounded-md text-xl font-semibold bg-muted">
+                {/* Get first char */}
+                {brand.name?.charAt(0).toUpperCase() || (
+                  <ImageIcon className="size-8 text-muted-foreground" />
+                )}
+              </AvatarFallback>
+            </Avatar>
+          )}
+        </CardContent>
+        <Separator />
+        <CardFooter className="flex justify-center items-center p-2.5">
+          {/* Brand name */}
+          <span className="text-sm font-medium truncate">{brand.name}</span>
+        </CardFooter>
+      </div>
     </Card>
   );
 };

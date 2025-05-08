@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 
 import { Login, loginSchema } from "@/views/auth/schema/login.schema";
 import { login } from "@/views/auth/api/auth";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   isNeedVerify,
   listMFAFactors,
@@ -34,14 +34,30 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { AuthError } from "@supabase/supabase-js";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
+import type { AuthError, Factor } from "@supabase/supabase-js";
+import { KeyRound, Loader } from "lucide-react";
 
 export default function LoginForm() {
   const router = useRouter();
   const [showMFADialog, setShowMFADialog] = useState(false);
+
+  // Store factorId needed for verification when MFA dialog opens
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState(""); // State for the OTP code
+  const [isVerifyingMFA, setIsVerifyingMFA] = useState(false); // Loading state for MFA verification
+  const [mfaError, setMfaError] = useState<string | null>(null); // Error specific to MFA dialog
+
   const [loginCredentials, setLoginCredentials] = useState<Login | null>(null);
 
   const form = useForm<Login>({
@@ -54,88 +70,140 @@ export default function LoginForm() {
 
   const {
     formState: { isSubmitting },
+    handleSubmit,
   } = form;
 
   const onSubmit = async (values: Login) => {
-    const { msg, status } = await login(values);
-    if (status == "success") {
-      try {
-        const { success, data } = await isNeedVerify();
+    setMfaError(null);
 
-        if (success && data) {
-          setLoginCredentials(values);
-          setShowMFADialog(true);
-        } else {
-          toast.success(msg);
-          router.replace("/dashboard");
-        }
-      } catch (error) {
-        toast.error("登录失败，请重试");
+    try {
+      // Step 1: Basic Login
+      const loginResult = await login(values);
+
+      if (loginResult.status !== "success") {
+        toast.error(loginResult.msg || "邮箱或密码错误。");
+        return;
       }
-    } else {
-      toast.error(msg);
+
+      // Step 2: Check if MFA verification is needed
+      // console.log("Login successful, checking MFA requirement...");
+      const verifyCheck = await isNeedVerify();
+      if (verifyCheck.success) {
+        console.log("MFA verification needed.");
+        // Need to get the factor ID to use for verification
+        const factorsResult = await listMFAFactors();
+        if (factorsResult.success && factorsResult.data?.totp?.length > 0) {
+          // Assuming the first *verified* or *enabled* factor is the one to use
+          // Supabase might prioritize one if multiple exist. Find the relevant one.
+          const relevantFactor = factorsResult.data.totp.find(
+            (f: Factor) => f.status === "verified"
+          ); // Prioritize verified
+          if (relevantFactor) {
+            setMfaFactorId(relevantFactor.id);
+            setShowMFADialog(true); // Show MFA dialog
+          } else {
+            // console.error(
+            //   "isNeedVerify is true, but no verified TOTP factor found.",
+            //   factorsResult.data.totp
+            // );
+            toast.error(
+              "需要 MFA 验证，但未找到有效的验证器设置。请联系管理员。"
+            );
+          }
+        } else {
+          // console.error(
+          //   "isNeedVerify is true, but failed to list factors or no TOTP factors exist.",
+          //   factorsResult
+          // );
+          toast.error("需要 MFA 验证，但无法获取验证器信息。");
+        }
+      } else {
+        console.log("MFA verification not needed or already passed.");
+        // No MFA needed or already satisfied (e.g., remembered device)
+        toast.success(loginResult.msg || "登录成功");
+        router.replace("/dashboard"); // Redirect directly
+      }
+    } catch (error) {
+      // console.error("Login process error:", error);
+      // Handle errors from isNeedVerify or listMFAFactors if they throw
+      toast.error("登录过程中发生错误，请重试。");
     }
   };
 
-  const handleMFAVerification = async (mfaCode: string) => {
-    if (!loginCredentials) {
-      toast.error("登录凭证丢失，请重新登录");
+  // --- MFA Verification Handler ---
+  const handleMFAVerification = useCallback(async () => {
+    if (!mfaFactorId || mfaCode.length !== 6) {
+      setMfaError("请输入 6 位验证码。");
       return;
     }
 
+    setIsVerifyingMFA(true);
+    setMfaError(null);
+
     try {
-      const factors = await listMFAFactors();
-
-      const totpFactor = factors.data.totp[0];
-
-      if (!totpFactor) {
-        throw new Error("No TOTP factors found!");
-      }
-
-      const factorId = totpFactor.id;
-
-      const result = await verifyMFA({ factorId, code: mfaCode });
+      console.log(`Verifying MFA code for factorId: ${mfaFactorId}`);
+      const result = await verifyMFA({ factorId: mfaFactorId, code: mfaCode });
 
       if (result.success) {
-        // MFA successful
-        toast.success("登录成功");
-        router.replace("/dashboard");
+        toast.success("验证成功，正在登录...");
         setShowMFADialog(false);
+        setMfaCode(""); // Clear code
+        setMfaFactorId(null);
+        router.replace("/dashboard"); // Redirect after successful MFA
+      } else {
+        const errorMsg = result.error || "验证码无效或已过期，请重试。";
+        setMfaError(errorMsg);
+        toast.error(errorMsg);
       }
     } catch (error) {
-      toast.error((error as AuthError).message);
+      const errorMsg =
+        (error as AuthError)?.message || "验证过程中发生未知错误。";
+      setMfaError(errorMsg);
+      toast.error(errorMsg);
+      console.error("MFA Verification exception:", error);
+    } finally {
+      setIsVerifyingMFA(false);
     }
+  }, [mfaFactorId, mfaCode, router]); // Dependencies
+
+  const handleDialogClose = () => {
+    // Reset MFA state when dialog is closed manually
+    setShowMFADialog(false);
+    setMfaCode("");
+    setMfaFactorId(null);
+    setMfaError(null);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold text-gray-800 dark:text-white">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary/30 via-background to-background p-4">
+      <Card className="w-full max-w-sm shadow-xl dark:border-border/50">
+        {" "}
+        {/* Reduced max-w */}
+        <CardHeader className="text-center space-y-1">
+          {/* Optional: Add Logo */}
+          {/* <img src="/logo.png" alt="Luna Tech Logo" className="w-16 h-16 mx-auto mb-2" /> */}
+          <CardTitle className="text-2xl font-bold">
+            {" "}
+            {/* Adjusted size */}
             Luna Tech
           </CardTitle>
-          <CardDescription className="text-gray-500">
-            新月手机维修系统登录
-          </CardDescription>
+          <CardDescription>后台管理系统登录</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 dark:text-gray-300">
-                      电子邮箱
-                    </FormLabel>
+                    <FormLabel>电子邮箱</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="输入您的电子邮箱"
+                        placeholder="you@example.com"
                         disabled={isSubmitting}
                         {...field}
                         autoComplete="email"
-                        className="dark:bg-gray-800 dark:text-white"
                       />
                     </FormControl>
                     <FormMessage />
@@ -147,29 +215,31 @@ export default function LoginForm() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 dark:text-gray-300">
-                      密码
-                    </FormLabel>
+                    <FormLabel>密码</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="输入您的密码"
+                        placeholder="••••••••"
                         disabled={isSubmitting}
                         {...field}
                         autoComplete="current-password"
-                        className="dark:bg-gray-800 dark:text-white"
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button
-                disabled={isSubmitting}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                type="submit"
-              >
-                {isSubmitting ? "登录中..." : "登录"}
+              {/* Display login errors if any */}
+              {form.formState.errors.root && (
+                <p className="text-sm font-medium text-destructive">
+                  {form.formState.errors.root.message}
+                </p>
+              )}
+              <Button disabled={isSubmitting} className="w-full" type="submit">
+                {isSubmitting && (
+                  <Loader className="mr-2 size-4 animate-spin" />
+                )}
+                登录
               </Button>
             </form>
           </Form>
@@ -177,31 +247,70 @@ export default function LoginForm() {
       </Card>
 
       {/* MFA Dialog */}
-      <Dialog open={showMFADialog} onOpenChange={setShowMFADialog}>
-        <DialogContent>
+      <Dialog
+        open={showMFADialog}
+        onOpenChange={(open) => !open && handleDialogClose()}
+      >
+        <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>两步验证</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="size-5 text-primary" /> 两步验证 (MFA)
+            </DialogTitle>
+            <DialogDescription>
+              您的账户已启用 MFA。请输入您身份验证器应用中的 6 位验证码。
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-gray-600">
-              您的账户已启用两步验证，请输入验证码
-            </p>
-            <Input
-              type="text"
-              placeholder="输入6位验证码"
+          <div className="space-y-3 py-4">
+            {/* Use InputOTP for better UX */}
+            <InputOTP
               maxLength={6}
-              onChange={(e) => {
-                const code = e.target.value;
-                if (code.length === 6) {
-                  handleMFAVerification(code);
-                }
+              value={mfaCode}
+              onChange={(value) => {
+                setMfaCode(value);
+                setMfaError(null); // Clear error on input
               }}
-              className="w-full"
-            />
-            <p className="text-sm text-gray-500">
-              请从您的身份验证应用程序中获取验证码
-            </p>
+              disabled={isVerifyingMFA}
+            >
+              <InputOTPGroup className="w-full justify-center">
+                <InputOTPSlot index={0} />
+                <InputOTPSlot index={1} />
+                <InputOTPSlot index={2} />
+              </InputOTPGroup>
+              {/* Optional: Add separator for visual grouping */}
+              {/* <InputOTPSeparator /> */}
+              <InputOTPGroup className="w-full justify-center">
+                <InputOTPSlot index={3} />
+                <InputOTPSlot index={4} />
+                <InputOTPSlot index={5} />
+              </InputOTPGroup>
+            </InputOTP>
+
+            {/* Display MFA specific errors */}
+            {mfaError && (
+              <p className="text-sm font-medium text-destructive text-center pt-1">
+                {mfaError}
+              </p>
+            )}
           </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={handleDialogClose}
+              disabled={isVerifyingMFA}
+            >
+              取消
+            </Button>
+            <Button
+              onClick={handleMFAVerification}
+              disabled={isVerifyingMFA || mfaCode.length !== 6}
+              className="min-w-[90px]"
+            >
+              {isVerifyingMFA && (
+                <Loader className="mr-2 size-4 animate-spin" />
+              )}
+              验证
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

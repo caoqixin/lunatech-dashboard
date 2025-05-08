@@ -10,9 +10,10 @@ import { orderHistoryColumns } from "@/views/order/table/column";
 interface HistoryTableProps {
   data: Order[];
   count: number;
+  isLoading?: boolean;
 }
 
-export const HistoryTable = ({ data, count }: HistoryTableProps) => {
+export const HistoryTable = ({ data, count, isLoading }: HistoryTableProps) => {
   const columns = React.useMemo<ColumnDef<Order, unknown>[]>(
     () => orderHistoryColumns,
     []
@@ -24,5 +25,5 @@ export const HistoryTable = ({ data, count }: HistoryTableProps) => {
     pageCount: count,
   });
 
-  return <DataTable table={table} columns={columns} />;
+  return <DataTable table={table} columns={columns} isLoading={isLoading} />;
 };

@@ -9,8 +9,10 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Smartphone } from "lucide-react";
+import { Smartphone, Crown, Medal, Trophy } from "lucide-react";
 import { ShowMoreList } from "./show-more-list";
+import { Progress } from "@/components/ui/progress";
+import { useMemo } from "react";
 
 interface TopListProps {
   data: {
@@ -20,71 +22,108 @@ interface TopListProps {
   className?: string;
 }
 
+// Helper to get ranking icon and color
+export const getRankStyle = (
+  index: number
+): { Icon: React.ElementType; colorClass: string } => {
+  if (index === 0)
+    return { Icon: Crown, colorClass: "text-amber-500 dark:text-amber-400" };
+  if (index === 1)
+    return { Icon: Medal, colorClass: "text-slate-500 dark:text-slate-400" };
+  if (index === 2)
+    return { Icon: Trophy, colorClass: "text-orange-600 dark:text-orange-500" }; // Bronze/Orange
+  return {
+    Icon: () => <span className="text-xs font-semibold">{index + 1}</span>,
+    colorClass: "text-muted-foreground",
+  }; // Use number for others
+};
+
+// Helper to get progress bar color based on rank
+const getProgressColor = (index: number): string => {
+  if (index === 0) return "bg-amber-500";
+  if (index === 1) return "bg-slate-500";
+  if (index === 2) return "bg-orange-500";
+  return "bg-primary"; // Default color
+};
+
 export function TopList({ data, className }: TopListProps) {
-  // 获取最高维修量以设置进度条比例
-  const maxCount = Math.max(...data.map((item) => item.count));
+  // Ensure data is sorted by count descending for ranking
+  const sortedData = useMemo(
+    () => [...data].sort((a, b) => b.count - a.count),
+    [data]
+  );
+  const maxCount = sortedData.length > 0 ? sortedData[0].count : 1; // Use first item's count as max, avoid division by zero
 
   return (
-    <Card className={cn("h-full", className)}>
+    <Card className={cn("flex h-full flex-col", className)}>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <CardTitle>最常维修手机型号</CardTitle>
-            <CardDescription>
-              基于历史数据统计的维修频率最高的手机型号
+            <CardTitle className="text-base font-semibold">
+              最常维修型号 Top 5
+            </CardTitle>
+            <CardDescription className="text-xs">
+              维修频率最高的手机型号排名
             </CardDescription>
           </div>
-          <Smartphone className="h-5 w-5 text-muted-foreground" />
+          <Smartphone className="h-5 w-5 shrink-0 text-muted-foreground" />
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          {data.slice(0, 5).map((item, index) => (
-            <div key={item.name} className="flex items-center">
-              <div
-                className={cn(
-                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-semibold text-sm",
-                  index === 0
-                    ? "bg-amber-100 text-amber-700 dark:bg-amber-700/20 dark:text-amber-500"
-                    : index === 1
-                    ? "bg-slate-100 text-slate-700 dark:bg-slate-700/20 dark:text-slate-500"
-                    : index === 2
-                    ? "bg-orange-100 text-orange-700 dark:bg-orange-700/20 dark:text-orange-500"
-                    : "bg-muted text-muted-foreground"
-                )}
-              >
-                {index + 1}
-              </div>
-              <div className="ml-3 flex-1 space-y-1">
-                <p className="text-sm font-medium leading-none">{item.name}</p>
-                <div className="flex items-center pt-2">
-                  <div className="h-2 w-full rounded-full bg-muted">
-                    <div
-                      className={cn(
-                        "h-2 rounded-full transition-all",
-                        index === 0
-                          ? "bg-amber-500"
-                          : index === 1
-                          ? "bg-slate-500"
-                          : index === 2
-                          ? "bg-orange-500"
-                          : "bg-primary"
-                      )}
-                      style={{ width: `${(item.count / maxCount) * 100}%` }}
+      <CardContent className="flex-1 pt-2">
+        {sortedData.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-muted-foreground">
+            暂无排行数据
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {sortedData.slice(0, 5).map((item, index) => {
+              const { Icon, colorClass } = getRankStyle(index);
+              const progressColor = getProgressColor(index);
+              const progressValue =
+                maxCount > 0 ? (item.count / maxCount) * 100 : 0;
+
+              return (
+                <div key={item.name} className="flex items-center gap-3">
+                  {/* Rank Icon/Number */}
+                  <div
+                    className={cn(
+                      "flex size-7 shrink-0 items-center justify-center rounded-full",
+                      colorClass
+                    )}
+                  >
+                    <Icon className={index < 3 ? "size-4" : ""} />{" "}
+                    {/* Icon size for top 3 */}
+                  </div>
+                  {/* Name and Progress Bar */}
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="truncate text-sm font-medium leading-tight">
+                        {item.name}
+                      </p>
+                      <span className="text-xs font-semibold text-muted-foreground">
+                        {item.count} 次
+                      </span>
+                    </div>
+                    {/* Use Shadcn Progress component */}
+                    <Progress
+                      value={progressValue}
+                      className={cn("h-1.5", progressColor)}
                     />
                   </div>
-                  <span className="ml-2 text-sm text-muted-foreground min-w-10 text-right">
-                    {item.count}
-                  </span>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </CardContent>
-      <CardFooter>
-        <ShowMoreList data={data} />
-      </CardFooter>
+      {/* Footer only shown if there's data */}
+      {sortedData.length > 0 && (
+        <CardFooter className="pt-4">
+          {" "}
+          {/* Add padding top */}
+          <ShowMoreList data={sortedData} /> {/* Pass sorted data */}
+        </CardFooter>
+      )}
     </Card>
   );
 }

@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import React from "react";
 import { useDataTable } from "@/hooks/use-data-table";
 import { DataTable } from "@/components/data-table";
-import { Warranty } from "@/lib/types";
+import type { Warranty } from "@/lib/types";
 import {
   searchWarrantyColumn,
   warrantyColumn,
@@ -21,18 +21,22 @@ export const WarrantyTable = ({ data, count }: WarrantyTableProps) => {
     []
   );
 
+  const searchbleColumns = React.useMemo(() => searchWarrantyColumn, []);
+
   const { table } = useDataTable({
     data,
     columns,
     pageCount: count,
-    searchableColumns: searchWarrantyColumn,
+    searchableColumns: searchbleColumns,
   });
 
   return (
     <DataTable
       table={table}
       columns={columns}
-      searchKey={searchWarrantyColumn}
+      searchableColumns={searchWarrantyColumn}
+      isLoading={!data}
+      noDataText="未找到保修记录"
     />
   );
 };

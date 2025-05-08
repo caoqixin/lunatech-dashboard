@@ -1,45 +1,49 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import { ImageIcon, Loader, X } from "lucide-react";
+import { ImageIcon, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
   Brand as BrandType,
   BrandSchema,
 } from "@/views/brand/schema/brand.schema";
-import Image from "next/image";
 import { updateBrand } from "@/views/brand/api/brand";
 import { createClient } from "@/lib/supabase/client";
-import dynamic from "next/dynamic";
-import { Brand } from "@/lib/types";
+import type { Brand } from "@/lib/types";
+import { ResponsiveModal } from "@/components/custom/responsive-modal";
 
 interface UpdateBrandProps {
   brand: Brand;
-  onCancel?: () => void;
+  triggerButton: React.ReactNode; // Expect trigger
+  onSuccess?: () => void; // Success callback
 }
 
-const ResponsiveActionModal = dynamic(
-  () => import("@/components/custom/responsive-action-modal"),
-  { ssr: false }
-);
-
-export const UpdateBrand = ({ brand, onCancel }: UpdateBrandProps) => {
-  const [errorMessage, setErrorMessage] = useState("");
-  const router = useRouter();
+export const UpdateBrand = ({
+  brand,
+  triggerButton,
+  onSuccess,
+}: UpdateBrandProps) => {
+  const [open, setOpen] = useState(false);
+  const [initialImageUrl, setInitialImageUrl] = useState<string | undefined>(
+    brand?.brand_image ?? undefined
+  );
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    initialImageUrl ?? null
+  );
   const supabase = createClient();
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,58 +51,130 @@ export const UpdateBrand = ({ brand, onCancel }: UpdateBrandProps) => {
   const form = useForm<BrandType>({
     resolver: zodResolver(BrandSchema),
     defaultValues: {
-      name: brand.name,
-      brand_image: brand.brand_image ?? "",
+      name: brand?.name ?? "",
+      brand_image: initialImageUrl,
     },
   });
 
-  useEffect(() => {
-    if (errorMessage) {
-      toast.error(errorMessage);
-    }
-  }, [errorMessage]);
-
   const {
-    formState: { isSubmitting },
+    formState: { isSubmitting, isDirty },
+    control,
+    handleSubmit,
+    setValue,
+    reset,
+    watch,
   } = form;
 
-  const onSubmit = async (values: BrandType) => {
-    if (values.brand_image && values.brand_image instanceof File) {
-      const file = values.brand_image as File;
+  // Update preview
+  const watchedImage = watch("brand_image");
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    if (watchedImage instanceof File) {
+      objectUrl = URL.createObjectURL(watchedImage);
+      setPreviewUrl(objectUrl);
+    } else if (typeof watchedImage === "string" && watchedImage) {
+      setPreviewUrl(watchedImage); // Existing URL string
+    } else {
+      setPreviewUrl(null); // No image or undefined
+    }
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [watchedImage]);
 
-      const path = `${file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from("brand")
-        .upload(path, file, { upsert: true });
+  // Reset form when brand prop changes or modal closes without save
+  useEffect(() => {
+    const imageUrl = brand?.brand_image ?? undefined;
+    if (brand && !isSubmitting) {
+      // Only reset if not submitting
+      form.reset({ name: brand.name ?? "", brand_image: imageUrl });
+      setInitialImageUrl(imageUrl); // Update initial URL tracker
+      setPreviewUrl(imageUrl ?? null);
+    }
+  }, [brand, form.reset, isSubmitting, open]);
 
-      if (uploadError) {
-        setErrorMessage(
-          `图标上传失败, 图片格式错误, 请重试 失败原因: ${uploadError.message}`
-        );
+  const handleModalChange = useCallback((isOpen: boolean) => {
+    setOpen(isOpen);
+    // Reset logic moved to useEffect dependent on 'open'
+  }, []);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("图片大小不能超过 5MB");
+        if (inputRef.current) inputRef.current.value = "";
         return;
       }
+      setValue("brand_image", file, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+  };
 
-      const { data } = supabase.storage.from("brand").getPublicUrl(path);
+  const handleRemoveImage = () => {
+    setValue("brand_image", undefined, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+    setPreviewUrl(null);
+    if (inputRef.current) inputRef.current.value = "";
+  };
 
-      const finalData = { ...values, brand_image: data.publicUrl };
+  const onSubmit = async (values: BrandType) => {
+    // Only submit if form is dirty (data changed)
+    if (!isDirty) {
+      handleModalChange(false);
+      return;
+    }
 
-      const { msg, status } = await updateBrand(finalData, brand.id);
-      if (status == "success") {
+    let imageUrl: string | undefined = initialImageUrl; // Start with initial
+    let uploadError = null;
+    const imageChanged = values.brand_image !== initialImageUrl;
+
+    // Handle image upload/removal ONLY if it actually changed
+    if (imageChanged) {
+      if (values.brand_image instanceof File) {
+        const file = values.brand_image;
+        const filePath = `public/${Date.now()}-${file.name}`;
+        const { error } = await supabase.storage
+          .from("brand")
+          .upload(filePath, file, { upsert: true });
+        if (error) {
+          uploadError = error;
+        } else {
+          const { data: urlData } = supabase.storage
+            .from("brand")
+            .getPublicUrl(filePath);
+          imageUrl = urlData?.publicUrl;
+        }
+      } else {
+        // If it's not a File and changed, it means it was removed
+        imageUrl = undefined; // Explicitly null to potentially clear in DB
+        // TODO: Optionally delete the old image from Supabase storage here if imageUrl was previously set
+      }
+    }
+
+    if (uploadError) {
+      toast.error(`图标上传失败: ${uploadError.message}`);
+      return;
+    }
+
+    const apiData = { ...values, brand_image: imageUrl ?? "" }; // Send URL or null
+
+    try {
+      const { msg, status } = await updateBrand(apiData, brand.id);
+      if (status === "success") {
         toast.success(msg);
-        onCancel?.();
-        router.refresh();
+        handleModalChange(false);
+        onSuccess?.();
       } else {
         toast.error(msg);
       }
-    } else {
-      const { msg, status } = await updateBrand(values, brand.id);
-      if (status == "success") {
-        toast.success(msg);
-        onCancel?.();
-        router.refresh();
-      } else {
-        toast.error(msg);
-      }
+    } catch (error) {
+      toast.error("更新品牌失败，请稍后重试。");
+      console.error("Update Brand API error:", error);
     }
   };
 
@@ -119,113 +195,116 @@ export const UpdateBrand = ({ brand, onCancel }: UpdateBrandProps) => {
   }, [brand]);
 
   return (
-    <ResponsiveActionModal title={`品牌 ${brand.name} 更新`}>
+    <ResponsiveModal
+      open={open}
+      onOpenChange={handleModalChange}
+      triggerButton={triggerButton}
+      title={`修改品牌: ${brand?.name}`}
+      dialogClassName="sm:max-w-md"
+      showMobileFooter={false}
+    >
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col gap-4 space-y-2"
-        >
-          <FormField
-            control={form.control}
-            name="brand_image"
-            render={({ field }) => (
-              <div className="flex flex-col gap-y-2">
-                <div className="flex items-center justify-center gap-x-5">
-                  {field.value ? (
-                    <div className="size-16 relative rounded-md overflow-hidden">
-                      <Image
-                        alt="Logo"
-                        fill
-                        className="object-cover"
-                        src={
-                          field.value instanceof File
-                            ? URL.createObjectURL(field.value)
-                            : field.value
-                        }
-                      />
-                    </div>
-                  ) : (
-                    <Avatar className="size-16">
-                      <AvatarFallback>
-                        <ImageIcon className="size-8" />
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div className="flex flex-col">
-                    <p className="text-sm">品牌图标</p>
-                    <p className="text-sm text-muted-foreground">
-                      JPG, PNG, SVG OR JPEG, MAX 5MB
-                    </p>
-                    <input
-                      className="hidden"
-                      type="file"
-                      accept=".jpg, .png, .jpeg, .svg"
-                      ref={inputRef}
-                      onChange={handleImageChange}
-                      disabled={isSubmitting}
-                    />
-                    <div className="flex gap-x-2 items-center">
-                      <Button
-                        type="button"
-                        disabled={isSubmitting}
-                        variant="outline"
-                        size="sm"
-                        className="w-fit mt-2"
-                        onClick={() => inputRef.current?.click()}
-                      >
-                        上传图标
-                      </Button>
-                      {field.value && (
-                        <Button
-                          type="button"
-                          disabled={isSubmitting}
-                          variant="destructive"
-                          size="sm"
-                          className="w-fit mt-2"
-                          onClick={() => {
-                            form.setValue("brand_image", "");
-                            if (inputRef.current) {
-                              inputRef.current.value = ""; // 清空文件输入的值
-                            }
-                          }}
-                        >
-                          <X className="size-5" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 px-1 pb-2">
+          {/* Image Upload Section - similar to Create */}
+          <FormItem>
+            <FormLabel>品牌图标 (可选)</FormLabel>
+            <div className="flex items-center gap-4 pt-1">
+              <Avatar className="size-16 rounded-md border bg-muted">
+                {previewUrl ? (
+                  <AvatarImage
+                    src={previewUrl}
+                    alt="预览"
+                    className="object-contain"
+                  />
+                ) : (
+                  <AvatarFallback className="rounded-md">
+                    {" "}
+                    <ImageIcon className="size-6 text-muted-foreground" />{" "}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <div className="flex flex-col space-y-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => inputRef.current?.click()}
+                  disabled={isSubmitting}
+                >
+                  {" "}
+                  更改图片{" "}
+                </Button>
+                {previewUrl && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-destructive hover:text-destructive"
+                    onClick={handleRemoveImage}
+                    disabled={isSubmitting}
+                  >
+                    {" "}
+                    移除图片{" "}
+                  </Button>
+                )}
+                <FormDescription className="text-xs">
+                  {" "}
+                  Max 5MB.{" "}
+                </FormDescription>
               </div>
-            )}
-          />
+              <FormControl>
+                <Input
+                  type="file"
+                  ref={inputRef}
+                  className="hidden"
+                  accept=".jpg,.jpeg,.png,.svg,.webp"
+                  onChange={handleFileChange}
+                  disabled={isSubmitting}
+                />
+              </FormControl>
+            </div>
+            <FormMessage>
+              {form.formState.errors.brand_image?.message?.toString()}
+            </FormMessage>
+          </FormItem>
+
+          {/* Brand Name */}
           <FormField
-            control={form.control}
+            control={control}
             name="name"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-2 mx-2">
-                <FormLabel className="text-nowrap min-w-12 text-right">
-                  名称
-                </FormLabel>
-                <div className="flex flex-col gap-1 w-full">
-                  <FormControl>
-                    <Input {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </div>
+              <FormItem>
+                {" "}
+                <FormLabel>品牌名称 *</FormLabel>{" "}
+                <FormControl>
+                  <Input {...field} disabled={isSubmitting} />
+                </FormControl>{" "}
+                <FormMessage />{" "}
               </FormItem>
             )}
           />
 
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex gap-2 items-center"
-          >
-            {isSubmitting && <Loader className="animate-spin" />}
-            更新
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3 pt-3">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => handleModalChange(false)}
+              disabled={isSubmitting}
+            >
+              取消
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !isDirty}
+              className="min-w-[90px]"
+            >
+              {isSubmitting && <Loader className="mr-2 size-4 animate-spin" />}
+              保存修改
+            </Button>
+          </div>
         </form>
       </Form>
-    </ResponsiveActionModal>
+    </ResponsiveModal>
   );
 };

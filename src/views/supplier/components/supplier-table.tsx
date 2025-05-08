@@ -10,19 +10,31 @@ import { Supplier } from "@/lib/types";
 interface SupplierTableProps {
   data: Supplier[];
   count: number;
+  isLoading?: boolean;
 }
 
-export const SupplierTable = ({ data, count }: SupplierTableProps) => {
+export const SupplierTable = ({
+  data,
+  count,
+  isLoading,
+}: SupplierTableProps) => {
   const columns = useMemo<ColumnDef<Supplier, unknown>[]>(
     () => supplierColumns,
     []
   );
 
   const { table } = useDataTable({
-    data,
+    data: data ?? [],
     columns,
-    pageCount: count,
+    pageCount: count ?? 0,
   });
 
-  return <DataTable table={table} columns={columns} />;
+  return (
+    <DataTable
+      table={table}
+      columns={columns}
+      isLoading={isLoading}
+      noDataText="未找到供应商信息"
+    />
+  );
 };

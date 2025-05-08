@@ -8,7 +8,7 @@ interface HeaderProps {
   title: string;
   description?: string;
   back?: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export const Header = ({ title, description, back, children }: HeaderProps) => {

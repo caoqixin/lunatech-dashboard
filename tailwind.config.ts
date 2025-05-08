@@ -17,6 +17,10 @@ const config = {
       },
     },
     extend: {
+      // 将 Inter 字体变量关联到 font-sans
+      fontFamily: {
+        sans: ["var(--font-inter)", "sans-serif"], // 使用 layout.tsx 中定义的 CSS 变量
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -57,6 +61,12 @@ const config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      // 使用 globals.css 中定义的阴影变量创建工具类
+      boxShadow: {
+        sm: "var(--shadow-sm)",
+        md: "var(--shadow-md)",
+        lg: "var(--shadow-lg)",
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -70,6 +80,12 @@ const config = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+      },
+      // 使用 globals.css 中定义的过渡变量
+      transitionDuration: {
+        fast: "var(--transition-fast)",
+        normal: "var(--transition-normal)",
+        slow: "var(--transition-slow)",
       },
     },
   },

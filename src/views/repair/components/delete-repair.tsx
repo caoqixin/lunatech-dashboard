@@ -2,71 +2,89 @@
 
 import { ResponsiveModal } from "@/components/custom/responsive-modal";
 import { Button } from "@/components/ui/button";
-import { RepairWithCustomer } from "@/lib/types";
-import { Loader, Trash } from "lucide-react";
-import { useRouter } from "next/navigation";
+import type { RepairWithCustomer } from "@/lib/types";
+import { AlertTriangle, Loader, Trash } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { deleteRepair } from "@/views/repair/api/repair";
 
 interface DeleteRepairProps {
   repair: RepairWithCustomer;
+  triggerButton: React.ReactNode; // Expect trigger
+  onSuccess?: () => void; // Success callback
 }
 
-export const DeleteRepair = ({ repair }: DeleteRepairProps) => {
+export const DeleteRepair = ({
+  repair,
+  triggerButton,
+  onSuccess,
+}: DeleteRepairProps) => {
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const router = useRouter();
+  const title = `删除维修单 #${repair.id}`;
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    const { msg, status } = await deleteRepair(repair.id);
-    if (status == "success") {
-      toast.success(msg);
-      setOpen(false);
-      router.refresh();
-    } else {
-      toast.error(msg);
+    try {
+      const { msg, status } = await deleteRepair(repair.id);
+      if (status === "success") {
+        toast.success(msg);
+        setOpen(false);
+        onSuccess?.();
+      } else {
+        toast.error(msg || "删除失败。");
+      }
+    } catch (error: any) {
+      toast.error(`删除失败: ${error.message || "请稍后重试"}`);
+      console.error("Delete repair error:", error);
+    } finally {
+      setIsDeleting(false);
     }
-    setIsDeleting(false);
   };
+
+  const handleModalChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) setIsDeleting(false);
+  };
+
   return (
     <ResponsiveModal
       open={open}
-      onOpen={setOpen}
-      title={`删除维修 维修ID: ${repair.id}`}
-      triggerButton={
-        <Button
-          variant="destructive"
-          size="sm"
-          className="flex items-center gap-2 transition-all hover:bg-destructive/90"
-        >
-          <Trash className="size-4" /> 删除
-        </Button>
-      }
+      onOpenChange={handleModalChange}
+      title={title}
+      description="此操作不可逆，维修记录将被永久删除。"
+      triggerButton={triggerButton} // Use passed trigger
+      dialogClassName="sm:max-w-sm"
+      showMobileFooter={false}
     >
-      <div className="flex flex-col space-y-4 mx-4">
-        <p className="text-destructive font-medium">
-          确定要删除该维修吗? 维修ID: [{repair.id}] 吗?, 该操作是不可逆,
-          慎重考虑 !!!
-        </p>
-        <div className="flex justify-end gap-2">
+      <div className="space-y-4 px-1">
+        <div className="flex items-start gap-3 rounded-md border border-destructive/50 bg-destructive/5 p-3 text-destructive">
+          <AlertTriangle className="size-5 flex-shrink-0 mt-0.5" />
+          <p className="text-sm ">
+            确定要永久删除属于
+            <span className="font-medium">
+              {repair.customers?.name ?? "未知客户"}
+            </span>
+            的维修单 (<span className="font-medium">{repair.phone}</span>) 吗?
+          </p>
+        </div>
+        <div className="flex w-full justify-end gap-3 pt-2">
           <Button
             variant="outline"
-            className=""
-            onClick={() => setOpen(false)}
+            onClick={() => handleModalChange(false)}
             disabled={isDeleting}
           >
             取消
           </Button>
           <Button
             variant="destructive"
-            className="flex gap-2 items-center justify-center"
             onClick={handleDelete}
             disabled={isDeleting}
           >
-            {isDeleting && <Loader className="animate-spin size-4" />}
-            确定
+            {isDeleting ? (
+              <Loader className="mr-2 animate-spin size-4" />
+            ) : null}
+            确认删除
           </Button>
         </div>
       </div>

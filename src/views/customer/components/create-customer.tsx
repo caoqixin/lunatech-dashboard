@@ -3,7 +3,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 import { Loader, PlusIcon } from "lucide-react";
 import { ResponsiveModal } from "@/components/custom/responsive-modal";
@@ -24,9 +23,11 @@ import {
 } from "@/views/customer/schema/customer.schema";
 import { createCustomer } from "@/views/customer/api/customer";
 
-export const CreateCustomer = () => {
+interface CreateCustomerProps {
+  onSuccess?: () => void; // 添加 onSuccess
+}
+export const CreateCustomer = ({ onSuccess }: CreateCustomerProps) => {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
   const form = useForm<CustomerSchema>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
@@ -40,48 +41,62 @@ export const CreateCustomer = () => {
     formState: { isSubmitting },
   } = form;
 
+  const handleModalChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      form.reset(); // 关闭时重置
+    }
+  };
+
   const onSubmit = async (values: CustomerSchema) => {
-    const { msg, status } = await createCustomer(values);
-    if (status == "success") {
-      toast.success(msg);
-      setOpen(false);
-      form.reset();
-      router.refresh();
-    } else {
-      toast.error(msg);
+    try {
+      const { msg, status } = await createCustomer(values);
+      if (status === "success") {
+        toast.success(msg);
+        handleModalChange(false); // 关闭
+        onSuccess?.(); // 调用回调
+      } else {
+        toast.error(msg);
+      }
+    } catch (error) {
+      toast.error("创建失败，请稍后重试。");
+      console.error("Create customer error:", error);
     }
   };
 
   return (
     <ResponsiveModal
       open={open}
-      onOpen={setOpen}
+      onOpenChange={handleModalChange} // 使用 handler
       triggerButton={
-        <Button className="text-xs md:text-sm">
-          <PlusIcon className="mr-2 h-4 w-4" /> 新增
+        <Button size="sm" className="text-xs md:text-sm">
+          {" "}
+          {/* size=sm */}
+          <PlusIcon className="mr-1.5 h-4 w-4" /> 新增客户
         </Button>
       }
       title="添加新客户"
+      dialogClassName="sm:max-w-md"
     >
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col gap-4"
+          className="grid grid-cols-1 gap-4 px-1"
         >
           <FormField
             control={form.control}
             name="name"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-2 mx-2">
-                <FormLabel className="text-nowrap min-w-16 text-right">
-                  名称
-                </FormLabel>
-                <div className="flex flex-col gap-1 w-full">
-                  <FormControl>
-                    <Input {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </div>
+              <FormItem>
+                <FormLabel>客户名称 *</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="例如：张三"
+                    {...field}
+                    disabled={isSubmitting}
+                  />
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -89,16 +104,17 @@ export const CreateCustomer = () => {
             control={form.control}
             name="tel"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-2 mx-2">
-                <FormLabel className="text-nowrap min-w-16 text-right">
-                  电话号码
-                </FormLabel>
-                <div className="flex flex-col gap-1 w-full">
-                  <FormControl>
-                    <Input {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </div>
+              <FormItem>
+                <FormLabel>电话号码 *</FormLabel>
+                <FormControl>
+                  <Input
+                    type="tel"
+                    placeholder="用于搜索和联系"
+                    {...field}
+                    disabled={isSubmitting}
+                  />
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -106,28 +122,29 @@ export const CreateCustomer = () => {
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-2 mx-2">
-                <FormLabel className="text-nowrap min-w-16 text-right">
-                  邮箱
-                </FormLabel>
-                <div className="flex flex-col gap-1 w-full">
-                  <FormControl>
-                    <Input {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </div>
+              <FormItem>
+                <FormLabel>邮箱 (可选)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="可选，用于发送邮件"
+                    {...field}
+                    disabled={isSubmitting}
+                  />
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
 
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex gap-2 items-center"
-          >
-            {isSubmitting && <Loader className="animate-spin" />}
-            添加
-          </Button>
+          <div className="pt-2">
+            <Button type="submit" disabled={isSubmitting} className="w-full">
+              {isSubmitting ? (
+                <Loader className="mr-2 size-4 animate-spin" />
+              ) : null}
+              添加客户
+            </Button>
+          </div>
         </form>
       </Form>
     </ResponsiveModal>

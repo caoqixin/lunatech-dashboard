@@ -1,9 +1,8 @@
 "use client";
 
-import { Customer } from "@/lib/types";
+import type { Customer } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
@@ -28,43 +27,70 @@ import { updateCustomer } from "@/views/customer/api/customer";
 
 interface EditCustomerProps {
   customer: Customer;
-  isDropDownMenu?: boolean;
-  onCancel?: () => void;
+  triggerButton: React.ReactNode;
+  onSuccess?: () => void;
 }
 
 export const EditCustomer = ({
   customer,
-  isDropDownMenu,
-  onCancel,
+  triggerButton,
+  onSuccess,
 }: EditCustomerProps) => {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
 
   const form = useForm<CustomerSchema>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
-      name: customer.name,
+      name: customer.name ?? "",
       tel: customer.tel ?? "",
       email: customer.email ?? "",
     },
   });
 
   const {
-    formState: { isSubmitting },
+    formState: { isSubmitting, isDirty },
   } = form;
 
+  // Reset form when customer data changes or modal opens/closes
+  useEffect(() => {
+    if (customer) {
+      form.reset({
+        name: customer.name ?? "",
+        tel: customer.tel ?? "",
+        email: customer.email ?? "",
+      });
+    }
+  }, [customer, form.reset]);
+
+  const handleModalChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      // Reset to original values on close if not submitted
+      form.reset({
+        name: customer?.name ?? "",
+        tel: customer?.tel ?? "",
+        email: customer?.email ?? "",
+      });
+    }
+  };
+
   const onSubmit = async (values: CustomerSchema) => {
-    const { msg, status } = await updateCustomer(values, customer.id);
-    if (status == "success") {
-      toast.success(msg);
-      if (isDropDownMenu) {
-        onCancel?.();
+    if (!isDirty) {
+      handleModalChange(false); // Close if nothing changed
+      return;
+    }
+    try {
+      const { msg, status } = await updateCustomer(values, customer.id);
+      if (status === "success") {
+        toast.success(msg);
+        handleModalChange(false); // Close modal
+        onSuccess?.(); // Trigger refresh
       } else {
-        setOpen(false);
+        toast.error(msg);
       }
-      router.refresh();
-    } else {
-      toast.error(msg);
+    } catch (error) {
+      toast.error("更新失败，请稍后重试。");
+      console.error("Update customer error:", error);
     }
   };
 
@@ -76,115 +102,29 @@ export const EditCustomer = ({
     });
   }, [customer]);
 
-  if (isDropDownMenu) {
-    return (
-      <ResponsiveModal
-        open={open}
-        onOpen={setOpen}
-        dropdownMenu={isDropDownMenu}
-        title="更新客户资料"
-      >
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="flex flex-col gap-4"
-          >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem className="flex items-center gap-2 mx-2">
-                  <FormLabel className="text-nowrap min-w-16 text-right">
-                    名称
-                  </FormLabel>
-                  <div className="flex flex-col gap-1 w-full">
-                    <FormControl>
-                      <Input {...field} disabled={isSubmitting} />
-                    </FormControl>
-                    <FormMessage />
-                  </div>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="tel"
-              render={({ field }) => (
-                <FormItem className="flex items-center gap-2 mx-2">
-                  <FormLabel className="text-nowrap min-w-16 text-right">
-                    电话号码
-                  </FormLabel>
-                  <div className="flex flex-col gap-1 w-full">
-                    <FormControl>
-                      <Input {...field} disabled={isSubmitting} />
-                    </FormControl>
-                    <FormMessage />
-                  </div>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem className="flex items-center gap-2 mx-2">
-                  <FormLabel className="text-nowrap min-w-16 text-right">
-                    邮箱
-                  </FormLabel>
-                  <div className="flex flex-col gap-1 w-full">
-                    <FormControl>
-                      <Input {...field} disabled={isSubmitting} />
-                    </FormControl>
-                    <FormMessage />
-                  </div>
-                </FormItem>
-              )}
-            />
-
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex gap-2 items-center"
-            >
-              {isSubmitting && <Loader className="animate-spin" />}
-              更新资料
-            </Button>
-          </form>
-        </Form>
-      </ResponsiveModal>
-    );
-  }
-
   return (
     <ResponsiveModal
       open={open}
-      onOpen={setOpen}
-      triggerButton={
-        <Button variant="default" size="sm" className="flex items-center gap-2">
-          <Pencil className="size-4" /> 修改
-        </Button>
-      }
-      title="更新客户资料"
+      onOpenChange={handleModalChange}
+      triggerButton={triggerButton}
+      title={`修改客户: ${customer?.name ?? ""}`}
+      dialogClassName="sm:max-w-md"
     >
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col gap-4"
+          className="grid grid-cols-1 gap-4 px-1"
         >
           <FormField
             control={form.control}
             name="name"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-2 mx-2">
-                <FormLabel className="text-nowrap min-w-16 text-right">
-                  名称
-                </FormLabel>
-                <div className="flex flex-col gap-1 w-full">
-                  <FormControl>
-                    <Input {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </div>
+              <FormItem>
+                <FormLabel>客户名称 *</FormLabel>
+                <FormControl>
+                  <Input {...field} disabled={isSubmitting} />
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -192,16 +132,12 @@ export const EditCustomer = ({
             control={form.control}
             name="tel"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-2 mx-2">
-                <FormLabel className="text-nowrap min-w-16 text-right">
-                  电话号码
-                </FormLabel>
-                <div className="flex flex-col gap-1 w-full">
-                  <FormControl>
-                    <Input {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </div>
+              <FormItem>
+                <FormLabel>电话号码 *</FormLabel>
+                <FormControl>
+                  <Input type="tel" {...field} disabled={isSubmitting} />
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -209,28 +145,28 @@ export const EditCustomer = ({
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-2 mx-2">
-                <FormLabel className="text-nowrap min-w-16 text-right">
-                  邮箱
-                </FormLabel>
-                <div className="flex flex-col gap-1 w-full">
-                  <FormControl>
-                    <Input {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </div>
+              <FormItem>
+                <FormLabel>邮箱 (可选)</FormLabel>
+                <FormControl>
+                  <Input type="email" {...field} disabled={isSubmitting} />
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
 
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex gap-2 items-center"
-          >
-            {isSubmitting && <Loader className="animate-spin" />}
-            更新资料
-          </Button>
+          <div className="pt-2">
+            <Button
+              type="submit"
+              disabled={isSubmitting || !isDirty}
+              className="w-full"
+            >
+              {isSubmitting ? (
+                <Loader className="mr-2 size-4 animate-spin" />
+              ) : null}
+              保存修改
+            </Button>
+          </div>
         </form>
       </Form>
     </ResponsiveModal>

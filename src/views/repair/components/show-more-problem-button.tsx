@@ -3,11 +3,12 @@
 import { ResponsiveModal } from "@/components/custom/responsive-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 
 interface ShowMoreProblemButtonProps {
-  problems: string[];
+  problems?: string[] | null;
   id: number;
   phone: string;
 }
@@ -19,40 +20,52 @@ export const ShowMoreProblemButton = ({
 }: ShowMoreProblemButtonProps) => {
   const [open, setOpen] = useState(false);
 
-  // Only show button if we have more than 1 problem
-  const shouldShow = problems.length > 1;
-  const remainingCount = problems.length - 1;
+  const validProblems = useMemo(
+    () =>
+      problems?.filter((p) => typeof p === "string" && p.trim() !== "") ?? [],
+    [problems]
+  );
+  // Only render button if there are more than 1 problem to show
+  if (validProblems.length <= 1) {
+    return null; // Don't show button if 0 or 1 extra problem
+  }
 
-  // Memoize badges to prevent unnecessary re-renders
+  const additionalProblemCount = validProblems.length - 1;
+
+  // Memoize badge items
   const badgeItems = useMemo(
     () =>
-      problems.map((model, index) => (
-        <Badge key={index} variant="outline" className="m-1">
-          {model}
+      validProblems.map((problem, index) => (
+        <Badge key={index} variant="secondary" className="text-sm px-2 py-0.5">
+          {problem}
         </Badge>
       )),
-    [problems]
+    [validProblems]
   );
 
   return (
     <ResponsiveModal
       open={open}
-      onOpen={setOpen}
-      title={`维修ID: [${id}], 机型: ${phone} 的维修故障`}
+      onOpenChange={setOpen} // Use direct setter
+      title={`维修故障详情`} // Simplified title
+      description={`手机: ${phone} (维修ID: #${id})`} // Details in description
       triggerButton={
         <Button
           variant="outline"
           size="sm"
-          className="flex items-center gap-x-px w-fit transition-all hover:bg-accent"
+          className="h-6 px-1.5 flex items-center text-xs"
+          aria-label={`查看其余 ${additionalProblemCount} 个故障`}
         >
-          <Plus className="size-3" />
-          {remainingCount}
+          <Plus className="size-3 mr-0.5" />
+          {additionalProblemCount}
         </Button>
       }
+      dialogClassName="sm:max-w-sm" // Standard width
+      showMobileFooter={true} // Keep close button
     >
-      <div className="p-4 flex flex-wrap justify-start items-start">
-        {badgeItems}
-      </div>
+      <ScrollArea className="max-h-[40vh] pr-1">
+        <div className="flex flex-wrap gap-2 py-2">{badgeItems}</div>
+      </ScrollArea>
     </ResponsiveModal>
   );
 };

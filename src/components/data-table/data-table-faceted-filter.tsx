@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CheckIcon, PlusCircledIcon } from "@radix-ui/react-icons";
+import { CheckIcon, PlusCircleIcon, XIcon } from "lucide-react";
 import { type Column } from "@tanstack/react-table";
 
 import { cn } from "@/lib/utils";
@@ -51,19 +51,18 @@ export function DataTableFacetedFilter<TData, TValue>({
   options,
 }: DataTableFacetedFilterProps<TData, TValue>) {
   const facets = column?.getFacetedUniqueValues();
-  const selectedValues = new Set(column?.getFilterValue() as string[]);
+  // Ensure filter value is always treated as an array
+  const filterValue = column?.getFilterValue();
+  const selectedValues = new Set(Array.isArray(filterValue) ? filterValue : []);
 
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 border-dashed bg-white hover:bg-gray-50"
-        >
-          <PlusCircledIcon className="mr-2 size-4 text-gray-600" />
+        {/* Use standard outline button */}
+        <Button variant="outline" size="sm" className="h-8 border-dashed">
+          <PlusCircleIcon className="mr-2 size-4" />
           {title}
-          {selectedValues?.size > 0 && (
+          {selectedValues.size > 0 && (
             <>
               <Separator orientation="vertical" className="mx-2 h-4" />
               <Badge
@@ -78,7 +77,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                     variant="secondary"
                     className="rounded-sm px-1 font-normal"
                   >
-                    {selectedValues.size} 选中
+                    {selectedValues.size} 已选
                   </Badge>
                 ) : (
                   options
@@ -98,11 +97,16 @@ export function DataTableFacetedFilter<TData, TValue>({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0" align="start">
+      <PopoverContent className="w-[220px] p-0" align="start">
+        {" "}
+        {/* Slightly wider */}
         <Command>
-          <CommandInput placeholder={title} className="h-9" />
+          {/* Optional: Hide input if options list is short */}
+          {options.length > 10 && (
+            <CommandInput placeholder={title} className="h-9" />
+          )}
           <CommandList>
-            <CommandEmpty>无匹配选项</CommandEmpty>
+            <CommandEmpty>无结果.</CommandEmpty>
             <CommandGroup>
               {options.map((option) => {
                 const isSelected = selectedValues.has(option.value);
@@ -112,6 +116,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                   <CommandItem
                     key={option.value}
                     onSelect={() => {
+                      // Logic for updating selection remains the same
                       const newSelectedValues = new Set(selectedValues);
                       if (isSelected) {
                         newSelectedValues.delete(option.value);
@@ -123,32 +128,35 @@ export function DataTableFacetedFilter<TData, TValue>({
                         filterValues.length ? filterValues : undefined
                       );
                     }}
-                    className="flex items-center justify-between py-1.5"
+                    className="cursor-pointer" // Add cursor pointer
                   >
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={cn(
-                          "flex size-4 items-center justify-center rounded-sm border",
-                          isSelected
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-gray-300 opacity-70 [&_svg]:invisible"
-                        )}
-                      >
-                        <CheckIcon className="size-3.5" aria-hidden="true" />
-                      </div>
-                      {option.icon && (
-                        <option.icon
-                          className="mr-1 size-4 text-gray-500"
-                          aria-hidden="true"
-                        />
+                    <div
+                      className={cn(
+                        "mr-2 flex size-4 items-center justify-center rounded-sm border border-primary",
+                        isSelected
+                          ? "bg-primary text-primary-foreground"
+                          : "opacity-50 [&_svg]:invisible"
                       )}
-                      <span className="text-sm">{option.label}</span>
+                      aria-hidden="true"
+                    >
+                      <CheckIcon className={cn("size-3")} />
                     </div>
-                    {facets && (
-                      <span className="ml-auto flex h-4 w-4 items-center justify-center text-xs font-medium text-gray-500">
-                        {count}
-                      </span>
+                    {option.icon && (
+                      <option.icon
+                        className="mr-2 size-4 text-muted-foreground" // Use theme color
+                        aria-hidden="true"
+                      />
                     )}
+                    <span className="flex-1 text-sm truncate">
+                      {option.label}
+                    </span>{" "}
+                    {/* Truncate label */}
+                    {facets &&
+                      count > 0 && ( // Only show count if > 0
+                        <span className="ml-auto flex size-4 items-center justify-center text-xs text-muted-foreground">
+                          {count}
+                        </span>
+                      )}
                   </CommandItem>
                 );
               })}
@@ -159,9 +167,10 @@ export function DataTableFacetedFilter<TData, TValue>({
                 <CommandGroup>
                   <CommandItem
                     onSelect={() => column?.setFilterValue(undefined)}
-                    className="justify-center text-center text-sm font-medium text-red-500 hover:text-red-600"
+                    className="justify-center text-center text-xs text-destructive hover:bg-destructive/10 focus:bg-destructive/10" // Consistent destructive styling
                   >
-                    清除全部
+                    <XIcon className="mr-2 size-3.5" /> {/* Clear icon */}
+                    清除筛选
                   </CommandItem>
                 </CommandGroup>
               </>

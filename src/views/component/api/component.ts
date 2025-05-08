@@ -1,9 +1,9 @@
 "use server";
 
 import { unstable_noStore as noStore } from "next/cache";
-import { DataReturnType } from "@/lib/definitions";
+import type { DataReturnType } from "@/lib/definitions";
 import { createClient } from "@/lib/supabase/server";
-import {
+import type {
   ComponentSchema,
   SearchComponent,
 } from "@/views/component/schema/component.schema";

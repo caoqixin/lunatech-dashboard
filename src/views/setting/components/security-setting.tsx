@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -16,6 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog";
 import {
   enrollMFA,
@@ -24,8 +26,13 @@ import {
   listMFAFactors,
   isMFAActivated,
 } from "@/views/setting/api/auth";
-import { MFAEnrollmentDetails } from "./types";
-import { AuthError } from "@supabase/supabase-js";
+import type { MFAEnrollmentDetails } from "./types";
+import { AuthError, Factor } from "@supabase/supabase-js";
+import { Loader } from "lucide-react";
+import Image from "next/image";
+import { Input } from "@/components/ui/input";
+import { CopyButton } from "@/components/custom/copy-button";
+import { cn } from "@/lib/utils";
 
 const SecuritySetting: React.FC = () => {
   // 状态管理
@@ -38,112 +45,166 @@ const SecuritySetting: React.FC = () => {
     useState<MFAEnrollmentDetails | null>(null);
   // 验证码
   const [verificationCode, setVerificationCode] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [verificationError, setVerificationError] = useState("");
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Fetch initial MFA status using listMFAFactors
+  const loadMFAStatus = useCallback(async () => {
+    setIsLoadingStatus(true);
+    // console.log("Loading MFA Status...");
+    const result = await listMFAFactors();
+    if (result.success && result.data) {
+      // Check if there's at least one *verified* totp factor
+      const verifiedFactorExists = result.data.totp?.some(
+        (factor: Factor) => factor.status === "verified"
+      );
+      setTwoFactorEnabled(verifiedFactorExists);
+      // console.log(
+      //   "MFA Status Loaded:",
+      //   verifiedFactorExists ? "Enabled" : "Disabled",
+      //   result.data.totp
+      // );
+    } else {
+      setTwoFactorEnabled(false);
+      // console.warn("Failed to load MFA factors:", result.error);
+      // Don't necessarily show toast for initial load failure unless persistent
+      // toast.warning("无法检查 MFA 状态。");
+    }
+    setIsLoadingStatus(false);
+  }, []);
 
   // 初始化加载是否已经开启MFA
   useEffect(() => {
-    const loadMFAFactors = async () => {
-      setIsLoading(true);
-      try {
-        const { success, data } = await isMFAActivated();
+    loadMFAStatus();
+  }, [loadMFAStatus]);
 
-        if (success && data) {
-          const factors = await listMFAFactors();
+  // --- Action Handlers ---
+  const handleEnableMFA = async () => {
+    setActionLoading(true);
+    const enrollResult = await enrollMFA();
+    if (enrollResult.success && enrollResult.data) {
+      setMfaEnrollmentDetails(enrollResult.data);
+      setEnrollmentModalOpen(true);
+    } else {
+      toast.error(enrollResult.error || "开启 MFA 失败，请重试。");
+    }
+    setActionLoading(false);
+  };
 
-          if (factors.success && factors.data.totp.length > 0) {
-            setTwoFactorEnabled(true);
-          }
-        }
-      } catch (err) {
-        toast.error((err as AuthError).message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const handleDisableMFA = async () => {
+    setActionLoading(true);
+    const listResult = await listMFAFactors(); // Get current factors
 
-    loadMFAFactors();
-  }, []);
+    if (listResult.success && listResult.data?.totp?.length > 0) {
+      const verifiedFactor = listResult.data.totp.find(
+        (f: Factor) => f.status === "verified"
+      );
 
-  const handleTwoFactorToggle = async (checked: boolean) => {
-    setIsLoading(true);
-    try {
-      if (checked) {
-        // 启用 MFA
-        const result = await enrollMFA();
-        if (result.success && result.data) {
-          setMfaEnrollmentDetails(result.data);
-          setEnrollmentModalOpen(true);
+      if (verifiedFactor) {
+        // console.log("Disabling factor:", verifiedFactor.id);
+        const unenrollResult = await unenrollMFA({
+          factorId: verifiedFactor.id,
+        });
+        if (unenrollResult.success) {
+          setTwoFactorEnabled(false); // Update UI immediately
+          toast.success("已成功禁用双因素认证 (下次登录生效)。");
         } else {
-          toast.error(result.error || "MFA 注册失败");
-          setTwoFactorEnabled(false);
-        }
-      } else {
-        // 禁用 MFA
-        const factors = await listMFAFactors();
-
-        if (factors.success && factors.data.totp.length > 0) {
-          const currentMfaFactor = factors.data.totp[0];
-
-          const result = await unenrollMFA({ factorId: currentMfaFactor.id });
-
-          if (result.success) {
-            setTwoFactorEnabled(false);
-            toast.success("已成功禁用双因素认证");
-            // 成功禁用之后需要退出登录才会生效
+          // Handle specific errors like 'factor_not_found' gracefully
+          if (unenrollResult.error?.includes("Factor not found")) {
+            // Simple check based on likely error message
+            // console.warn(
+            //   "Factor not found during unenroll attempt, syncing state."
+            // );
+            setTwoFactorEnabled(false); // Sync state
+            toast.info("MFA 因子未找到，可能已被禁用。");
           } else {
-            toast.error(result.error || "禁用双因素认证失败");
+            toast.error(unenrollResult.error || "禁用双因素认证失败。");
           }
         }
-      }
-    } catch (err) {
-      toast.error("操作失败");
-      setTwoFactorEnabled(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerifyMFA = async () => {
-    if (!mfaEnrollmentDetails) return;
-
-    setIsLoading(true);
-    try {
-      const result = await verifyMFA({
-        factorId: mfaEnrollmentDetails.id,
-        code: verificationCode,
-      });
-
-      if (result.success) {
-        toast.success("多因素认证设置成功");
-        setEnrollmentModalOpen(false);
-        setTwoFactorEnabled(true);
-        setVerificationCode("");
       } else {
-        setError(result.error || "验证失败");
+        setTwoFactorEnabled(false); // No verified factor found, already disabled
+        toast.info("未找到已验证的 MFA 因子。");
       }
-    } catch (err) {
-      setError("验证过程出现错误");
-    } finally {
-      setIsLoading(false);
+    } else {
+      setTwoFactorEnabled(false); // No factors found or error listing
+      if (!listResult.success) {
+        toast.warning(`无法确认 MFA 状态: ${listResult.error}`);
+      } else {
+        toast.info("当前没有 MFA 因子。");
+      }
+    }
+    setActionLoading(false);
+  };
+
+  // Combined Toggle Handler
+  const handleTwoFactorToggle = (checked: boolean) => {
+    if (checked) {
+      handleEnableMFA();
+    } else {
+      handleDisableMFA();
     }
   };
 
-  const handleCancelEnrollment = async () => {
-    try {
-      if (mfaEnrollmentDetails) {
-        await unenrollMFA({ factorId: mfaEnrollmentDetails.id });
-      }
+  // Verification Handler
+  const handleVerifyMFA = async () => {
+    if (!mfaEnrollmentDetails || verificationCode.length !== 6) {
+      setVerificationError("请输入有效的 6 位验证码。");
+      return;
+    }
+    setActionLoading(true);
+    setVerificationError("");
 
+    // Call verifyMFA API function
+    const result = await verifyMFA({
+      factorId: mfaEnrollmentDetails.id,
+      code: verificationCode,
+    });
+
+    if (result.success) {
+      toast.success("双因素认证已成功启用！");
       setEnrollmentModalOpen(false);
-      setTwoFactorEnabled(false);
-      setMfaEnrollmentDetails(null);
+      setTwoFactorEnabled(true); // Set enabled state
       setVerificationCode("");
-      setError("");
-    } catch (error) {
-      toast.error("操作失败");
+      setMfaEnrollmentDetails(null);
+    } else {
+      const errorMsg = result.error || "验证码无效或已过期，请重试。";
+      setVerificationError(errorMsg);
+      toast.error(errorMsg);
     }
+    setActionLoading(false);
   };
+
+  // Cancel Enrollment Handler
+  const handleCancelEnrollment = useCallback(async () => {
+    const factorIdToCancel = mfaEnrollmentDetails?.id;
+    // Close modal and reset UI state first
+    setEnrollmentModalOpen(false);
+    setMfaEnrollmentDetails(null);
+    setVerificationCode("");
+    setVerificationError("");
+
+    if (factorIdToCancel) {
+      // Attempt unenroll in background - don't block UI, don't show toast on success
+      setActionLoading(true); // Briefly indicate activity
+      try {
+        await unenrollMFA({ factorId: factorIdToCancel });
+        console.log(
+          "Cancelled pending MFA enrollment, factor unenrolled:",
+          factorIdToCancel
+        );
+      } catch (err: any) {
+        // Ignore factor_not_found, log others
+        if (!err?.message?.includes("Factor not found")) {
+          console.error("Unexpected error unenrolling during cancel:", err);
+        }
+      } finally {
+        setActionLoading(false);
+        // Refresh status just in case
+        loadMFAStatus();
+      }
+    }
+  }, [mfaEnrollmentDetails, loadMFAStatus]);
 
   return (
     <>
@@ -153,80 +214,134 @@ const SecuritySetting: React.FC = () => {
           <CardDescription>管理系统安全和访问控制</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="two-factor">双因素认证</Label>
-              <p className="text-sm text-gray-500">启用后登录需要额外验证</p>
+          {isLoadingStatus ? (
+            <div className="flex items-center justify-center h-20 text-muted-foreground">
+              <Loader className="mr-2 size-4 animate-spin" /> 加载 MFA 状态...
             </div>
-            <Switch
-              id="two-factor"
-              disabled={isLoading}
-              checked={twoFactorEnabled}
-              onCheckedChange={handleTwoFactorToggle}
-            />
-          </div>
+          ) : (
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="two-factor" className="text-base font-medium">
+                  双因素认证 (MFA)
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  {twoFactorEnabled
+                    ? "已启用，提高账户安全性。"
+                    : "未启用，建议开启以保护账户。"}
+                </p>
+              </div>
+              <Switch
+                id="two-factor"
+                checked={twoFactorEnabled}
+                onCheckedChange={handleTwoFactorToggle}
+                disabled={actionLoading} // Disable during toggle action
+                aria-label="双因素认证开关"
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <Dialog open={enrollmentModalOpen} onOpenChange={handleCancelEnrollment}>
-        <DialogContent className="sm:max-w-[425px]">
+      <Dialog
+        open={enrollmentModalOpen}
+        onOpenChange={(open) => !open && handleCancelEnrollment()}
+      >
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>设置双因素认证</DialogTitle>
+            <DialogTitle>启用双因素认证 (MFA)</DialogTitle>
             <DialogDescription>
-              使用身份验证器应用程序保护您的账户
+              使用认证器应用 (如 Google Authenticator, Authy)
+              扫描二维码或手动输入密钥。
             </DialogDescription>
           </DialogHeader>
 
           {mfaEnrollmentDetails && (
-            <div className="space-y-4">
-              <div className="text-center">
-                <p className="mb-4">
-                  请使用 Google Authenticator 或 Authy 扫描以下二维码：
+            <div className="space-y-4 pt-2 pb-4 px-1">
+              {/* QR Code Section */}
+              <div className="flex flex-col items-center rounded-lg border p-4 bg-muted/50">
+                <p className="text-sm text-center mb-3">扫描二维码:</p>
+                {/* Use Next Image for better optimization */}
+                <div className="relative w-48 h-48 mb-3 bg-white p-1 rounded">
+                  {" "}
+                  {/* White background for QR */}
+                  <Image
+                    src={mfaEnrollmentDetails.qr_code}
+                    alt="MFA QR Code"
+                    width={192} // Example size, should match container
+                    height={192}
+                  />
+                </div>
+
+                <p className="text-xs text-center text-muted-foreground mb-2">
+                  或手动输入密钥:
                 </p>
-                <img
-                  src={mfaEnrollmentDetails.qr_code}
-                  alt="MFA QR Code"
-                  className="mx-auto mb-4 max-w-[250px]"
-                />
-                <p className="text-sm text-gray-600 mb-2">
-                  无法扫描？使用以下密钥：
-                </p>
-                <div className="bg-gray-100 p-2 rounded text-center font-mono">
-                  {mfaEnrollmentDetails.secret}
+                {/* Secret Key with Copy Button */}
+                <div className="flex items-center gap-2 w-full max-w-xs mx-auto">
+                  <Input
+                    readOnly
+                    value={mfaEnrollmentDetails.secret}
+                    className="flex-1 font-mono text-sm h-8 text-center bg-background"
+                  />
+                  <CopyButton
+                    valueToCopy={mfaEnrollmentDetails.secret}
+                    size="sm"
+                  />
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="verification-code">输入验证码</Label>
-                <input
+              {/* Verification Code Input */}
+              <div className="space-y-1">
+                <Label htmlFor="verification-code">输入 6 位验证码</Label>
+                <Input
                   id="verification-code"
-                  type="text"
+                  type="text" // Use text to allow leading zeros if needed by user
+                  inputMode="numeric" // Hint for mobile keyboards
+                  pattern="[0-9]*" // Allow only numbers
+                  autoComplete="one-time-code" // Browser hint
                   value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value.trim())}
-                  placeholder="输入 6 位验证码"
+                  onChange={(e) => {
+                    // Allow only digits and max 6 chars
+                    const val = e.target.value.replace(/\D/g, "");
+                    setVerificationCode(val.slice(0, 6));
+                    setVerificationError(""); // Clear error on input
+                  }}
+                  placeholder="来自验证器应用"
                   maxLength={6}
-                  className="w-full p-2 border rounded mt-2"
+                  className={cn(
+                    "h-10 text-lg tracking-widest text-center",
+                    verificationError &&
+                      "border-destructive focus-visible:ring-destructive"
+                  )}
+                  disabled={actionLoading}
                 />
-                {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-              </div>
-
-              <div className="flex justify-between space-x-2">
-                <Button
-                  variant="outline"
-                  onClick={handleCancelEnrollment}
-                  disabled={isLoading}
-                >
-                  取消
-                </Button>
-                <Button
-                  onClick={handleVerifyMFA}
-                  disabled={isLoading || verificationCode.length !== 6}
-                >
-                  验证并启用
-                </Button>
+                {verificationError && (
+                  <p className="text-destructive text-sm px-1">
+                    {verificationError}
+                  </p>
+                )}
               </div>
             </div>
           )}
+
+          <DialogFooter className="gap-2 sm:justify-end">
+            <DialogClose asChild>
+              <Button
+                variant="outline"
+                onClick={handleCancelEnrollment}
+                disabled={actionLoading}
+              >
+                取消
+              </Button>
+            </DialogClose>
+            <Button
+              onClick={handleVerifyMFA}
+              disabled={actionLoading || verificationCode.length !== 6}
+              className="min-w-[120px]"
+            >
+              {actionLoading && <Loader className="mr-2 size-4 animate-spin" />}
+              验证并启用
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

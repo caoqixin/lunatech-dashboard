@@ -15,32 +15,40 @@ import { useForm, useWatch } from "react-hook-form";
 import { UpdateUserName, updateUserNameSchema } from "../schema/user.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { updateUserName } from "../api/user";
 import { toast } from "sonner";
 import { useUser } from "@/store/use-user";
 import { Loader, User } from "lucide-react";
 
 interface UserInfoProps {
-  userName: string;
+  initialUserName: string;
 }
 
-export const UserInfo = ({ userName }: UserInfoProps) => {
+export const UserInfo = ({ initialUserName }: UserInfoProps) => {
   const router = useRouter();
-  const [hasChanged, setHasChanged] = useState(false);
-  const setUserName = useUser((state) => state.updateUserName);
+  // Get update function and current name from store
+  const { userName: storeUserName, updateUserName: updateStoreUserName } =
+    useUser((state) => ({
+      userName: state.userName,
+      updateUserName: state.updateUserName,
+    }));
+
+  // Initialize form with store value OR initial prop
+  const currentName = storeUserName || initialUserName;
 
   const form = useForm<UpdateUserName>({
     resolver: zodResolver(updateUserNameSchema),
     defaultValues: {
-      name: userName,
+      name: currentName,
     },
   });
 
   const {
-    formState: { isSubmitting },
+    formState: { isSubmitting, isDirty },
     control,
     reset,
+    handleSubmit,
   } = form;
 
   const watchedName = useWatch({
@@ -49,83 +57,94 @@ export const UserInfo = ({ userName }: UserInfoProps) => {
   });
 
   useEffect(() => {
-    setHasChanged(watchedName !== userName && watchedName?.trim() !== "");
-  }, [watchedName, userName]);
-
-  useEffect(() => {
-    reset({
-      name: userName,
-    });
-  }, [userName, reset]);
-
-  const onSubmit = async (values: UpdateUserName) => {
-    if (values.name.trim() === "") {
-      toast.error("用户名不能为空");
-      return;
+    const nameToUse = storeUserName || initialUserName;
+    // Only reset if form isn't dirty to avoid losing user input
+    if (!isDirty) {
+      reset({ name: nameToUse });
     }
+  }, [initialUserName, storeUserName, reset, isDirty]);
 
-    try {
-      const { msg, status } = await updateUserName(values);
-      if (status == "success") {
-        setUserName(values.name);
-        toast.success(msg);
-        router.refresh();
-      } else {
-        toast.error(msg);
+  const handleCancel = useCallback(() => {
+    reset({ name: currentName }); // Reset form to current value
+  }, [reset, currentName]);
+
+  const onSubmit = useCallback(
+    async (values: UpdateUserName) => {
+      const newName = values.name.trim();
+      if (!newName) {
+        toast.error("用户名不能为空。");
+        reset({ name: currentName }); // Reset to current value if empty submit attempt
+        return;
       }
-    } catch (error) {
-      toast.error("更新用户名失败");
-    }
-  };
+
+      try {
+        const { msg, status } = await updateUserName(values);
+        if (status == "success") {
+          updateStoreUserName(newName);
+          toast.success(msg || "用户名更新成功！");
+          reset({ name: newName });
+          router.refresh();
+        } else {
+          toast.error(msg);
+        }
+      } catch (error) {
+        toast.error("更新用户名失败");
+      }
+    },
+    [currentName, reset, updateStoreUserName, router]
+  );
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-center gap-2">
+              <FormLabel className="flex items-center gap-1.5 text-sm">
                 <User className="size-4" /> 用户名
               </FormLabel>
               <FormControl>
                 <Input
                   {...field}
                   disabled={isSubmitting}
+                  placeholder="输入新的用户名"
                   className="transition-all"
                 />
               </FormControl>
-              <FormDescription>您的用户名将显示在个人资料中</FormDescription>
+              <FormDescription className="text-xs">
+                这是您在系统中的显示名称。
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="flex justify-end gap-x-3">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={!hasChanged || isSubmitting}
-            onClick={() => {
-              // 重置为初始值
-              reset({ name: userName });
-              setHasChanged(false);
-            }}
-          >
-            取消
-          </Button>
-          <Button
-            type="submit"
-            size="sm"
-            disabled={!hasChanged || isSubmitting}
-            className="flex items-center gap-x-2 transition-all"
-          >
-            {isSubmitting && <Loader className="animate-spin size-4" />}
-            保存
-          </Button>
-        </div>
+        {isDirty && (
+          <div className="flex justify-end gap-x-2 pt-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={isSubmitting}
+              onClick={handleCancel}
+            >
+              取消
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={isSubmitting}
+              className="min-w-[70px]"
+            >
+              {isSubmitting && (
+                <Loader className="mr-1.5 animate-spin size-4" />
+              )}
+              保存
+            </Button>
+          </div>
+        )}
       </form>
     </Form>
   );

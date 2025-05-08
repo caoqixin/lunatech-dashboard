@@ -7,99 +7,126 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import { updateRepairStatus } from "@/views/repair/api/repair";
 import {
   RepairStatus,
   RepairWarrantyStatus,
 } from "@/views/repair/schema/repair.schema";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { Loader } from "lucide-react";
+import { ChevronDown, Loader } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { getStatusBadgeStyle } from "./repair-status-badge";
 
 interface TableSelectStatusProps {
   initialValue: unknown;
   isRework: boolean;
   id: number;
+  onSuccess?: () => void;
 }
 
 export const TableSelectStatus = ({
   initialValue,
   isRework,
   id,
+  onSuccess,
 }: TableSelectStatusProps) => {
-  const router = useRouter();
-  const [value, setValue] = useState(initialValue);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleChange = useCallback(
-    async (newValue: RepairStatus | RepairWarrantyStatus) => {
-      if (newValue === value) {
-        setIsEditing(false);
-        return;
-      }
-      setIsSubmitting(true);
-
-      try {
-        const { msg, status } = await updateRepairStatus(id, newValue);
-        if (status === "success") {
-          setValue(newValue);
-          toast.success(msg);
-        } else {
-          toast.error(msg);
-        }
-      } catch (error) {
-        console.error("更新状态失败:", error);
-        toast.error("更新状态失败，请重试");
-      } finally {
-        setIsSubmitting(false);
-        setIsEditing(false);
-      }
-    },
-    [id, value]
+  // Define status options based on isRework FIRST
+  const statusOptions = useMemo<Array<RepairStatus | RepairWarrantyStatus>>(
+    () =>
+      isRework
+        ? Object.values(RepairWarrantyStatus)
+        : Object.values(RepairStatus),
+    [isRework]
   );
 
-  // 使用 useEffect 同步外部值变化
+  const getValidInitialStatus = useCallback(
+    (val: unknown): RepairStatus | RepairWarrantyStatus => {
+      const stringVal = String(val);
+      if (statusOptions.includes(stringVal as any)) {
+        // Check if string is in the specific options array
+        return val as RepairStatus | RepairWarrantyStatus;
+      }
+      return isRework ? RepairWarrantyStatus.REWORKING : RepairStatus.PENDING;
+    },
+    [isRework, statusOptions]
+  );
+
+  const [value, setValue] = useState(() => getValidInitialStatus(initialValue));
+  const [isPending, startTransition] = useTransition();
+
+  // Sync with external initialValue changes
   useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
+    setValue(getValidInitialStatus(initialValue));
+  }, [initialValue, getValidInitialStatus]);
 
-  // 优化状态选项的渲染
-  const statusOptions = isRework
-    ? Object.values(RepairWarrantyStatus)
-    : Object.values(RepairStatus);
+  const handleSave = useCallback(
+    async (newValue: RepairStatus | RepairWarrantyStatus) => {
+      // No need for setIsEditing(false) here, onOpenChange handles closing
+      if (newValue === value) return; // No change
 
-  return isEditing ? (
-    <div className="relative">
+      startTransition(async () => {
+        try {
+          const { msg, status } = await updateRepairStatus(id, newValue);
+          if (status === "success") {
+            setValue(newValue); // Update local state visually
+            toast.success(msg);
+            onSuccess?.();
+          } else {
+            toast.error(msg);
+          }
+        } catch (error) {
+          console.error("更新状态失败:", error);
+          toast.error("更新状态失败，请重试");
+        }
+      });
+    },
+    [id, value, onSuccess, startTransition] // Dependencies
+  );
+
+  // Get badge style based on the CURRENT validated state
+  const badgeStyle = getStatusBadgeStyle(value);
+
+  return (
+    <div className="relative w-32">
       <Select
-        defaultValue={value as string}
-        onValueChange={handleChange}
-        disabled={isSubmitting}
+        value={value} // Controlled component
+        onValueChange={(newValue) =>
+          handleSave(newValue as RepairStatus | RepairWarrantyStatus)
+        } // Cast newValue back
+        disabled={isPending}
       >
-        <SelectTrigger className="w-32">
-          <SelectValue placeholder="选择状态" />
+        <SelectTrigger
+          className={cn(
+            "h-8 text-xs font-medium border-0 focus:ring-0 focus:ring-offset-0 data-[state=open]:ring-1 data-[state=open]:ring-ring", // Add ring on open for focus
+            badgeStyle.className // Apply badge styling
+          )}
+          aria-label="更改维修状态"
+        >
+          {/* Display the current value (status string) */}
+          <SelectValue />
+          {/* Icons inside trigger */}
+          {!isPending && (
+            <ChevronDown className="ml-auto size-3.5 opacity-50 shrink-0" />
+          )}
+          {isPending && (
+            <Loader className="ml-auto size-4 animate-spin shrink-0" />
+          )}
         </SelectTrigger>
         <SelectContent>
           {statusOptions.map((status) => (
-            <SelectItem key={status} value={status}>
+            <SelectItem key={status} value={status} className="text-xs">
               {status}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-      {isSubmitting && (
-        <div className="absolute right-8 top-2">
-          <Loader className="size-4 animate-spin" />
-        </div>
-      )}
     </div>
-  ) : (
-    <span
-      className="font-extrabold cursor-pointer hover:underline"
-      onClick={() => !isSubmitting && setIsEditing(true)}
-    >
-      {value as string}
-    </span>
   );
 };

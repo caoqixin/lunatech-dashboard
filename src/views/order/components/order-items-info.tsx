@@ -27,15 +27,16 @@ export const OrderItemsInfo = ({ items, orderId }: OrderItemsInfoProps) => {
   return (
     <ResponsiveModal
       open={open}
-      onOpen={setOpen}
+      onOpenChange={setOpen}
       title={`${orderId}出库 详情`}
       triggerButton={
         <Button size="icon" variant="ghost">
           <Info className="size-4" />
         </Button>
       }
+      dialogClassName="max-w-fit"
     >
-      <Table>
+      <Table className="min-w-full table-fixed md:table-auto">
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px]">配件名称</TableHead>

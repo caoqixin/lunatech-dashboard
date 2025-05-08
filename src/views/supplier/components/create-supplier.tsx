@@ -3,7 +3,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 import {
   Supplier,
@@ -25,9 +24,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
-export const CreateSupplier = () => {
+interface CreateSupplierProps {
+  onSuccess?: () => void;
+}
+
+export const CreateSupplier = ({ onSuccess }: CreateSupplierProps) => {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
   const form = useForm<Supplier>({
     resolver: zodResolver(SupplierSchema),
     defaultValues: {
@@ -43,42 +45,52 @@ export const CreateSupplier = () => {
     formState: { isSubmitting },
   } = form;
 
+  const handleModalChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      form.reset(); // 关闭时重置表单
+    }
+  };
+
   const onSubmit = async (values: Supplier) => {
-    const { msg, status } = await createSupplier(values);
-    if (status == "success") {
-      toast.success(msg);
-      setOpen(false);
-      form.reset();
-      router.refresh();
-    } else {
-      toast.error(msg);
+    try {
+      const { msg, status } = await createSupplier(values);
+      if (status === "success") {
+        toast.success(msg);
+        handleModalChange(false); // 关闭
+        onSuccess?.(); // 调用回调
+      } else {
+        toast.error(msg);
+      }
+    } catch (error) {
+      toast.error("创建失败，请稍后重试。");
+      console.error("Create supplier error:", error);
     }
   };
 
   return (
     <ResponsiveModal
       open={open}
-      onOpen={setOpen}
+      onOpenChange={handleModalChange}
       triggerButton={
-        <Button className="text-xs md:text-sm">
-          <PlusIcon className="mr-2 h-4 w-4" /> 新增
+        <Button size="sm" className="text-xs md:text-sm">
+          <PlusIcon className="mr-1.5 h-4 w-4" /> 新增供应商
         </Button>
       }
-      title="添加供应商"
+      title="添加新供应商"
+      dialogClassName="sm:max-w-lg"
     >
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col gap-4"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-5 sm:gap-y-4 px-1"
         >
           <FormField
             control={form.control}
             name="name"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-2 mx-2">
-                <FormLabel className="text-nowrap min-w-12 text-right">
-                  名称
-                </FormLabel>
+              <FormItem className="sm:col-span-2">
+                <FormLabel>供应商名称 *</FormLabel>
                 <div className="flex flex-col gap-1 w-full">
                   <FormControl>
                     <Input {...field} disabled={isSubmitting} />
@@ -92,16 +104,16 @@ export const CreateSupplier = () => {
             control={form.control}
             name="description"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-2 mx-2">
-                <FormLabel className="text-nowrap min-w-12 text-right">
-                  描述
-                </FormLabel>
-                <div className="flex flex-col gap-1 w-full">
-                  <FormControl>
-                    <Input {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </div>
+              <FormItem className="sm:col-span-2">
+                <FormLabel>描述 (可选)</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="例如：主营屏幕、电池"
+                    {...field}
+                    disabled={isSubmitting}
+                  />
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -109,16 +121,16 @@ export const CreateSupplier = () => {
             control={form.control}
             name="site"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-2 mx-2">
-                <FormLabel className="text-nowrap min-w-12 text-right">
-                  网址
-                </FormLabel>
-                <div className="flex flex-col gap-1 w-full">
-                  <FormControl>
-                    <Input {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </div>
+              <FormItem>
+                <FormLabel>登录网址 (可选)</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="https://..."
+                    {...field}
+                    disabled={isSubmitting}
+                  />
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -126,16 +138,16 @@ export const CreateSupplier = () => {
             control={form.control}
             name="username"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-2 mx-2">
-                <FormLabel className="text-nowrap min-w-12 text-right">
-                  用户名
-                </FormLabel>
-                <div className="flex flex-col gap-1 w-full">
-                  <FormControl>
-                    <Input {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </div>
+              <FormItem>
+                <FormLabel>登录用户名 (可选)</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="供应商网站用户名"
+                    {...field}
+                    disabled={isSubmitting}
+                  />
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -143,27 +155,27 @@ export const CreateSupplier = () => {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-2 mx-2">
-                <FormLabel className="text-nowrap min-w-12 text-right">
-                  密码
-                </FormLabel>
-                <div className="flex flex-col gap-1 w-full">
-                  <FormControl>
-                    <Input {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </div>
+              <FormItem>
+                <FormLabel>登录密码 (可选)</FormLabel>
+                <FormControl>
+                  {/* 考虑使用 type="password" */}
+                  <Input
+                    type="password"
+                    placeholder="供应商网站密码"
+                    {...field}
+                    disabled={isSubmitting}
+                  />
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex gap-2 items-center"
-          >
-            {isSubmitting && <Loader className="animate-spin" />}
-            添加
-          </Button>
+          <div className="sm:col-span-2 pt-2">
+            <Button type="submit" disabled={isSubmitting} className="w-full">
+              {isSubmitting && <Loader className="mr-2 size-4 animate-spin" />}
+              添加供应商
+            </Button>
+          </div>
         </form>
       </Form>
     </ResponsiveModal>

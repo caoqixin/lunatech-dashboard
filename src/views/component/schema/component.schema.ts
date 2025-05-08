@@ -1,12 +1,9 @@
 import { z } from "zod";
 
 export const componentSchema = z.object({
-  code: z
-    .string()
-    .min(1, {
-      message: "商品条形码不能为空",
-    })
-    .optional(),
+  code: z.string().min(1, {
+    message: "商品条形码不能为空",
+  }),
   name: z.string().min(1, {
     message: "商品名称不能为空",
   }),
@@ -43,8 +40,8 @@ export const searchComponentParamsSchema = z.object({
   brand: z.string().default(""),
 });
 
-export type ComponentSchema = z.infer<typeof componentSchema>;
 export type SearchComponent = z.infer<typeof searchComponentParamsSchema>;
+export type ComponentSchema = z.infer<typeof componentSchema>;
 
 export enum Qualities {
   COMPATIBILE = "compatibile",
