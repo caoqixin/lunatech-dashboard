@@ -2,11 +2,7 @@
 
 import * as React from "react";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
-import {
-  MixerHorizontalIcon,
-  EyeNoneIcon,
-  EyeOpenIcon,
-} from "@radix-ui/react-icons";
+import { Settings2, Eye, EyeOff } from "lucide-react";
 import { Table } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +15,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface DataTableViewOptionsProps<TData> {
   /**
@@ -40,96 +38,93 @@ export function DataTableViewOptions<TData>({
   table,
   className,
 }: DataTableViewOptionsProps<TData>) {
-  const [open, setOpen] = React.useState(false);
-
-  // 获取所有可隐藏的列
+  // Get only columns that are explicitly enabled for hiding
   const hideableColumns = table
     .getAllColumns()
-    .filter(
-      (column) =>
-        typeof column.accessorFn !== "undefined" && column.getCanHide()
-    );
+    .filter((column) => column.getCanHide()); // Filter based on getCanHide
 
-  // 检查是否有可隐藏的列
-  const hasHideableColumns = hideableColumns.length > 0;
+  const visibleColumnCount = hideableColumns.filter((col) =>
+    col.getIsVisible()
+  ).length;
+  const hiddenColumnCount = hideableColumns.length - visibleColumnCount;
 
-  // 检查是否有任何列被隐藏
-  const hasHiddenColumns = hideableColumns.some((col) => !col.getIsVisible());
-
-  // 如果没有可隐藏的列，不渲染组件
-  if (!hasHideableColumns) {
-    return null;
+  if (hideableColumns.length === 0) {
+    return null; // Don't render if no columns can be hidden
   }
 
-  // 切换所有列的可见性
   const toggleAllColumns = (isVisible: boolean) => {
-    table.getAllColumns().forEach((column) => {
-      if (column.getCanHide()) {
-        column.toggleVisibility(isVisible);
-      }
-    });
+    table.toggleAllColumnsVisible(isVisible); // Use built-in function
   };
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
+          aria-label="切换列可见性"
           variant="outline"
           size="sm"
-          className={`ml-auto h-8 lg:flex ${className || ""} ${
-            hasHiddenColumns ? "bg-blue-50" : "bg-white"
-          }`}
+          className={cn("ml-auto h-9 hidden lg:flex", className)} // Use standard size, hide on small screens by default
         >
-          <MixerHorizontalIcon className="mr-2 h-4 w-4 text-gray-600" />
-          视图选项
-          {hasHiddenColumns && (
-            <span className="ml-1 rounded-full bg-blue-100 px-1.5 py-0.5 text-xs text-blue-600">
-              {hideableColumns.length -
-                hideableColumns.filter((col) => col.getIsVisible()).length}
-            </span>
+          <Settings2 className="mr-2 h-4 w-4" /> {/* Changed icon */}
+          视图
+          {hiddenColumnCount > 0 && (
+            // Subtle badge to indicate hidden columns
+            <Badge
+              variant="secondary"
+              className="ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-normal"
+            >
+              {hiddenColumnCount}
+            </Badge>
           )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[180px]">
-        <DropdownMenuLabel className="font-medium">列显示</DropdownMenuLabel>
+        <DropdownMenuLabel>切换列显示</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuGroup className="max-h-[250px] overflow-y-auto">
-          {hideableColumns.map((column) => {
-            const columnTitle =
-              column.id.charAt(0).toUpperCase() + column.id.slice(1);
-
-            return (
-              <DropdownMenuCheckboxItem
-                key={column.id}
-                checked={column.getIsVisible()}
-                onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                className="capitalize py-1.5"
-              >
-                {column.getIsVisible() ? (
-                  <EyeOpenIcon className="mr-2 h-4 w-4 text-gray-600" />
-                ) : (
-                  <EyeNoneIcon className="mr-2 h-4 w-4 text-gray-400" />
-                )}
-                <span className="text-sm">{columnTitle}</span>
-              </DropdownMenuCheckboxItem>
-            );
-          })}
-        </DropdownMenuGroup>
-
-        <DropdownMenuSeparator />
+        {/* Add Show/Hide All buttons */}
         <DropdownMenuGroup>
           <DropdownMenuItem
             onClick={() => toggleAllColumns(true)}
-            className="justify-center text-center text-sm font-medium"
+            disabled={hiddenColumnCount === 0} // Disable if all are visible
+            className="text-xs justify-center cursor-pointer"
           >
             显示全部
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => toggleAllColumns(false)}
-            className="justify-center text-center text-sm font-medium"
+            disabled={visibleColumnCount === 0} // Disable if all are hidden
+            className="text-xs justify-center cursor-pointer"
           >
             隐藏全部
           </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        {/* Scrollable group for individual columns */}
+        <DropdownMenuGroup className="max-h-[250px] overflow-y-auto">
+          {hideableColumns.map((column) => {
+            // Attempt to get a display name, fallback to ID
+            const columnTitle =
+              typeof column.columnDef.header === "string"
+                ? column.columnDef.header
+                : column.id.charAt(0).toUpperCase() + column.id.slice(1);
+
+            return (
+              <DropdownMenuCheckboxItem
+                key={column.id}
+                className="capitalize"
+                checked={column.getIsVisible()}
+                onCheckedChange={(value) => column.toggleVisibility(!!value)}
+              >
+                {/* Show icon based on visibility state */}
+                {column.getIsVisible() ? (
+                  <Eye className="mr-2 h-3.5 w-3.5 text-muted-foreground/80" />
+                ) : (
+                  <EyeOff className="mr-2 h-3.5 w-3.5 text-muted-foreground/50" />
+                )}
+                <span className="truncate">{columnTitle}</span>
+              </DropdownMenuCheckboxItem>
+            );
+          })}
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>

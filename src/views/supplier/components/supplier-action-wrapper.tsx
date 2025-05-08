@@ -2,119 +2,149 @@
 
 import { useState } from "react";
 import { useMediaQuery } from "@uidotdev/usehooks";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { ViewSupplier } from "@/views/supplier/components/view-supplier";
 import { DeleteSupplier } from "@/views/supplier/components/delete-supplier";
 import { EditSupplier } from "@/views/supplier/components/edit-supplier";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerTrigger } from "@/components/ui/drawer";
 import { Eye, MoreVertical, Pencil, Trash } from "lucide-react";
-import { Supplier } from "@/lib/types";
+import type { Supplier } from "@/lib/types";
+import { useRouter } from "next/navigation";
 
 interface SupplierActionWrapperProps {
   supplier: Supplier;
 }
 
-type Content = "view" | "edit" | "delete";
-
 export const SupplierActionWrapper = ({
   supplier,
 }: SupplierActionWrapperProps) => {
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const [open, setOpen] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [activeContent, setActiveContent] = useState<Content | null>(null);
+  const router = useRouter();
 
-  const handleClose = () => {
-    setDrawerOpen(false);
+  // Callback for actions
+  const handleSuccess = () => {
+    router.refresh();
   };
 
   if (isDesktop) {
     return (
-      <div className="flex items-center justify-end">
-        <div className="flex items-center gap-2">
-          <ViewSupplier supplier={supplier} />
-          <EditSupplier supplier={supplier} />
-          <DeleteSupplier supplier={supplier} />
-        </div>
+      <div className="flex items-center justify-end space-x-1">
+        {" "}
+        {/* Reduced space */}
+        <ViewSupplier
+          supplier={supplier}
+          triggerButton={
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              aria-label="查看"
+            >
+              <Eye className="size-4" />
+            </Button>
+          }
+        />
+        <EditSupplier
+          supplier={supplier}
+          onSuccess={handleSuccess}
+          triggerButton={
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              aria-label="编辑"
+            >
+              <Pencil className="size-4" />
+            </Button>
+          }
+        />
+        <DeleteSupplier
+          supplier={supplier}
+          onSuccess={handleSuccess}
+          triggerButton={
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              aria-label="删除"
+            >
+              <Trash className="size-4" />
+            </Button>
+          }
+        />
       </div>
     );
   }
 
   return (
     <div className="flex items-center justify-end">
-      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <DropdownMenu open={open} onOpenChange={setOpen}>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost">
-              <MoreVertical className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DrawerTrigger asChild>
-              <DropdownMenuItem
-                onSelect={() => {
-                  setActiveContent("view");
-                }}
-                className="flex items-start gap-2 cursor-pointer"
-              >
-                <Eye className="size-4" />
-                查看
-              </DropdownMenuItem>
-            </DrawerTrigger>
-            <DrawerTrigger asChild>
-              <DropdownMenuItem
-                onSelect={() => {
-                  setActiveContent("edit");
-                }}
-                className="flex items-start gap-2 cursor-pointer"
-              >
-                <Pencil className="size-4" />
-                修改
-              </DropdownMenuItem>
-            </DrawerTrigger>
-            <DrawerTrigger asChild>
-              <DropdownMenuItem
-                onSelect={() => {
-                  setActiveContent("delete");
-                }}
-                className="flex items-start gap-2 cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive"
-              >
-                <Trash className="size-4" />
-                删除
-              </DropdownMenuItem>
-            </DrawerTrigger>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        {drawerOpen && (
-          <div>
-            {activeContent === "view" && (
-              <ViewSupplier supplier={supplier} isDropDownMenu={true} />
-            )}
-            {activeContent === "edit" && (
-              <EditSupplier
-                supplier={supplier}
-                isDropDownMenu={true}
-                onCancel={() => handleClose()}
-              />
-            )}
-            {activeContent === "delete" && (
-              <DeleteSupplier
-                supplier={supplier}
-                isDropDownMenu={true}
-                onCancel={() => handleClose()}
-              />
-            )}
-          </div>
-        )}
-      </Drawer>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            aria-label="更多操作"
+          >
+            <MoreVertical className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {/* View Action */}
+          <DropdownMenuItem
+            onSelect={(e) => e.preventDefault()}
+            className="p-0 cursor-pointer"
+          >
+            <ViewSupplier
+              supplier={supplier}
+              triggerButton={
+                <div className="flex items-center w-full px-2 py-1.5 text-sm">
+                  <Eye className="mr-2 size-4" /> 查看详情
+                </div>
+              }
+            />
+          </DropdownMenuItem>
+          {/* Edit Action */}
+          <DropdownMenuItem
+            onSelect={(e) => e.preventDefault()}
+            className="p-0 cursor-pointer"
+          >
+            <EditSupplier
+              supplier={supplier}
+              onSuccess={handleSuccess}
+              triggerButton={
+                <div className="flex items-center w-full px-2 py-1.5 text-sm">
+                  <Pencil className="mr-2 size-4" /> 编辑
+                </div>
+              }
+            />
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {/* Delete Action */}
+          <DropdownMenuItem
+            onSelect={(e) => e.preventDefault()}
+            className="p-0 cursor-pointer"
+          >
+            <DeleteSupplier
+              supplier={supplier}
+              onSuccess={handleSuccess}
+              triggerButton={
+                <div className="flex items-center w-full px-2 py-1.5 text-sm text-destructive focus:bg-destructive/10 focus:text-destructive">
+                  <Trash className="mr-2 size-4" /> 删除
+                </div>
+              }
+            />
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 };

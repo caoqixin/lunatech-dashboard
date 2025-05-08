@@ -7,9 +7,8 @@ import {
   Qualities,
 } from "@/views/component/schema/component.schema";
 
-import { Component } from "@/lib/types";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import type { Component } from "@/lib/types";
+import { useEffect, useState, useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useFetchOptionData } from "@/views/component/hooks/use-fetch-data";
 import { useFetchPhonesByBrand } from "@/views/component/hooks/use-fetch-phones";
@@ -32,16 +31,7 @@ import {
 } from "@/components/ui/select";
 
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+
 import {
   Form,
   FormControl,
@@ -50,329 +40,401 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Loader, Edit } from "lucide-react";
+import { Loader, AlertCircle } from "lucide-react";
+import { ResponsiveModal } from "@/components/custom/responsive-modal";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface EditComponentProps {
   component: Component;
+  triggerButton: React.ReactNode; // Expect trigger
+  onSuccess?: () => void; // Success callback
 }
 
-export const EditComponent = ({ component }: EditComponentProps) => {
-  const router = useRouter();
+export const EditComponent = ({
+  component,
+  triggerButton,
+  onSuccess,
+}: EditComponentProps) => {
   const [open, setOpen] = useState(false);
-  const { data: brands, isLoading: brandFieldLocker } = useFetchOptionData(
-    fetchBrandsForCreateComponent,
-    open
-  );
-  const { data: categories, isLoading: categoryFieldLocker } =
-    useFetchOptionData(fetchCategoryForCreateComponent, open);
-  const { data: suppliers, isLoading: supplierFieldLocker } =
-    useFetchOptionData(fetchSuppliersForCreateComponent, open);
+  // Fetch options only when modal opens
+  const {
+    data: brands,
+    isLoading: brandLoading,
+    error: brandError,
+  } = useFetchOptionData(fetchBrandsForCreateComponent, open);
+  const {
+    data: categories,
+    isLoading: categoryLoading,
+    error: categoryError,
+  } = useFetchOptionData(fetchCategoryForCreateComponent, open);
+  const {
+    data: suppliers,
+    isLoading: supplierLoading,
+    error: supplierError,
+  } = useFetchOptionData(fetchSuppliersForCreateComponent, open);
 
   const form = useForm<ComponentSchema>({
     resolver: zodResolver(componentSchema),
     defaultValues: {
-      code: component.code ?? "",
-      name: component.name,
-      alias: component.alias ?? "",
-      brand: component.brand,
-      model: component.model ?? [],
-      category: component.category,
-      quality: component.quality,
-      supplier: component.supplier,
-      stock: component.stock,
-      purchase_price: component.purchase_price,
-      public_price: component.public_price,
+      code: component?.code ?? "",
+      name: component?.name ?? "",
+      alias: component?.alias ?? "",
+      brand: component?.brand ?? undefined,
+      model: component?.model ?? [],
+      category: component?.category ?? undefined,
+      quality: component?.quality ?? undefined,
+      supplier: component?.supplier ?? undefined,
+      stock: component?.stock ?? 0,
+      purchase_price: component?.purchase_price ?? 0,
+      public_price: component?.public_price ?? 0,
     },
   });
 
   const {
-    formState: { isSubmitting },
+    formState: { isSubmitting, isDirty },
     control,
+    setValue,
   } = form;
 
-  const onSubmit = async (values: ComponentSchema) => {
-    const { msg, status } = await updateComponent(values, component.id);
+  // Watch brand for fetching phones
+  const watchedBrand = useWatch({ control, name: "brand" });
+  const {
+    phones,
+    isLoading: phonesLoading,
+    error: phonesError,
+  } = useFetchPhonesByBrand(watchedBrand);
 
-    if (status === "success") {
-      toast.success(msg);
-      setOpen(false);
-      router.refresh();
-    } else {
-      toast.error(msg);
+  // Reset form when component prop changes or modal closes without saving
+  useEffect(() => {
+    if (component && !isSubmitting) {
+      // Only reset if not submitting
+      form.reset({
+        code: component.code ?? "",
+        name: component.name ?? "",
+        alias: component.alias ?? "",
+        brand: component.brand ?? undefined,
+        model: component.model ?? [],
+        category: component.category ?? undefined,
+        quality: component.quality ?? undefined,
+        supplier: component.supplier ?? undefined,
+        stock: component.stock ?? 0,
+        purchase_price: component.purchase_price ?? 0,
+        public_price: component.public_price ?? 0,
+      });
+    }
+  }, [component, form.reset, isSubmitting, open]);
+
+  const handleModalChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    // No reset here, useEffect handles it based on 'open' state
+  };
+
+  const onSubmit = async (values: ComponentSchema) => {
+    if (!isDirty) {
+      handleModalChange(false);
+      return;
+    }
+    const dataToSend = {
+      // Ensure numeric types
+      ...values,
+      stock: Number(values.stock || 0),
+      purchase_price: Number(values.purchase_price || 0),
+      public_price: Number(values.public_price || 0),
+    };
+
+    try {
+      const { msg, status } = await updateComponent(dataToSend, component.id);
+      if (status === "success") {
+        toast.success(msg);
+        handleModalChange(false);
+        onSuccess?.();
+      } else {
+        toast.error(msg);
+      }
+    } catch (error) {
+      toast.error("更新配件失败，请稍后重试。");
+      console.error("Update component error:", error);
     }
   };
 
-  const watchedBrand = useWatch({
-    control,
-    name: "brand",
-  });
-
-  const phones = useFetchPhonesByBrand(watchedBrand);
-
-  useEffect(() => {
-    form.reset({
-      code: component.code ?? "",
-      name: component.name,
-      alias: component.alias ?? "",
-      brand: component.brand,
-      model: component.model ?? [],
-      category: component.category,
-      quality: component.quality,
-      supplier: component.supplier,
-      stock: component.stock,
-      purchase_price: component.purchase_price,
-      public_price: component.public_price,
-    });
-  }, [component]);
+  const qualityOptions = useMemo(() => Object.values(Qualities), []);
+  const fetchErrors = [
+    brandError,
+    categoryError,
+    supplierError,
+    phonesError,
+  ].filter(Boolean);
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button size="sm" className="flex items-center gap-2">
-          <Edit className="size-4" /> 修改
-        </Button>
-      </SheetTrigger>
-      <SheetContent
-        side="bottom"
-        className="min-w-full max-h-[75%] overflow-y-auto"
-      >
-        <SheetHeader>
-          <SheetTitle>修改配件信息</SheetTitle>
-          <SheetDescription>
-            配件ID: {component.id} 配件名称: {component.name}
-          </SheetDescription>
-        </SheetHeader>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="flex flex-col space-y-4"
-          >
-            <div className="grid grid-cols-2 gap-4 py-4">
-              <FormField
-                control={form.control}
-                name="code"
-                render={({ field }) => (
-                  <FormItem className="grid order-1 grid-cols-4 items-center gap-4">
-                    <FormLabel className="text-right">配件编号</FormLabel>
-                    <div className="col-span-3">
-                      <FormControl>
-                        <Input {...field} disabled={isSubmitting} />
-                      </FormControl>
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem className="grid order-2 grid-cols-4 items-center gap-4">
-                    <FormLabel className="text-right">配件名称</FormLabel>
-                    <div className="col-span-3">
-                      <FormControl>
-                        <Input {...field} disabled={isSubmitting} />
-                      </FormControl>
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="alias"
-                render={({ field }) => (
-                  <FormItem className="grid order-3 grid-cols-4 items-center gap-4">
-                    <FormLabel className="text-right">配件别名</FormLabel>
-                    <div className="col-span-3">
-                      <FormControl>
-                        <Input {...field} disabled={isSubmitting} />
-                      </FormControl>
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="brand"
-                render={({ field }) => (
-                  <FormItem className="grid order-5 grid-cols-4 items-center gap-4">
-                    <FormLabel className="text-right">适用品牌</FormLabel>
-                    <div className="col-span-3">
-                      <DataSelector
-                        options={brands}
-                        selectedValue={field.value}
-                        setValue={form.setValue}
-                        fieldName="brand"
-                        isLocked={brandFieldLocker}
-                        disabled={isSubmitting}
-                        placeholder="选择适用的品牌"
-                      />
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="model"
-                render={({ field }) => (
-                  <FormItem className="grid order-6 grid-cols-4 items-center gap-4">
-                    <FormLabel className="text-right">适用型号</FormLabel>
-                    <div className="col-span-3">
-                      <MultiSelector
-                        options={phones}
-                        selectedValues={field.value}
-                        onChange={field.onChange}
-                        placeholder="选择适用型号"
-                        disabled={!watchedBrand || isSubmitting}
-                      />
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem className="grid order-4 grid-cols-4 items-center gap-4">
-                    <FormLabel className="text-right">分类</FormLabel>
-                    <div className="col-span-3">
-                      <DataSelector
-                        options={categories}
-                        selectedValue={field.value}
-                        setValue={form.setValue}
-                        fieldName="category"
-                        isLocked={categoryFieldLocker}
-                        disabled={isSubmitting}
-                        placeholder="选择分类"
-                      />
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="supplier"
-                render={({ field }) => (
-                  <FormItem className="grid order-7 grid-cols-4 items-center gap-4">
-                    <FormLabel className="text-right">供应商</FormLabel>
-                    <div className="col-span-3">
-                      <DataSelector
-                        options={suppliers}
-                        selectedValue={field.value}
-                        setValue={form.setValue}
-                        fieldName="supplier"
-                        isLocked={supplierFieldLocker}
-                        disabled={isSubmitting}
-                        placeholder="选择供应商"
-                      />
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="quality"
-                render={({ field }) => (
-                  <FormItem className="grid order-7 grid-cols-4 items-center gap-4">
-                    <FormLabel className="text-right">配件品质</FormLabel>
-                    <div className="col-span-3">
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        disabled={isSubmitting}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="选择配件品质" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Object.values(Qualities).map((item) => (
-                            <SelectItem key={item} value={item}>
-                              {item}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="stock"
-                render={({ field }) => (
-                  <FormItem className="grid order-8 grid-cols-4 items-center gap-4">
-                    <FormLabel className="text-right">库存数量</FormLabel>
-                    <div className="col-span-3">
-                      <FormControl>
-                        <Input {...field} disabled={isSubmitting} />
-                      </FormControl>
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="purchase_price"
-                render={({ field }) => (
-                  <FormItem className="grid order-9 grid-cols-4 items-center gap-4">
-                    <FormLabel className="text-right">进价</FormLabel>
-                    <div className="col-span-3">
-                      <FormControl>
-                        <Input {...field} disabled={isSubmitting} />
-                      </FormControl>
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="public_price"
-                render={({ field }) => (
-                  <FormItem className="grid order-10 grid-cols-4 items-center gap-4">
-                    <FormLabel className="text-right">维修报价</FormLabel>
-                    <div className="col-span-3">
-                      <FormControl>
-                        <Input {...field} disabled={isSubmitting} />
-                      </FormControl>
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </div>
-            <SheetFooter>
-              <SheetClose asChild>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  disabled={isSubmitting}
-                >
-                  关闭
-                </Button>
-              </SheetClose>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex gap-2 items-center"
-              >
-                {isSubmitting && <Loader className="size-4 animate-spin" />}
-                保存
-              </Button>
-            </SheetFooter>
-          </form>
-        </Form>
-      </SheetContent>
-    </Sheet>
+    <ResponsiveModal
+      open={open}
+      onOpenChange={handleModalChange}
+      triggerButton={triggerButton} // Use passed trigger
+      title={`修改配件: ${component?.name}`}
+      description={`ID: ${component?.id}`}
+      dialogClassName="sm:max-w-2xl"
+      showMobileFooter={false} // Disable default footer
+    >
+      <Form {...form}>
+        {fetchErrors.length > 0 && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>错误</AlertTitle>
+            <AlertDescription>
+              无法加载部分选项：{fetchErrors.join("; ")}
+            </AlertDescription>
+          </Alert>
+        )}
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 pb-2"
+        >
+          {/* Form Grid - same structure as Create */}
+          <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 px-1">
+            {/* Code */}
+            <FormField
+              control={control}
+              name="code"
+              render={({ field }) => (
+                <FormItem>
+                  {" "}
+                  <FormLabel>配件编号 *</FormLabel>{" "}
+                  <FormControl>
+                    <Input {...field} disabled={isSubmitting} />
+                  </FormControl>{" "}
+                  <FormMessage />{" "}
+                </FormItem>
+              )}
+            />
+            {/* Name */}
+            <FormField
+              control={control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  {" "}
+                  <FormLabel>配件名称 *</FormLabel>{" "}
+                  <FormControl>
+                    <Input {...field} disabled={isSubmitting} />
+                  </FormControl>{" "}
+                  <FormMessage />{" "}
+                </FormItem>
+              )}
+            />
+            {/* Category */}
+            <FormField
+              control={control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  {" "}
+                  <FormLabel>分类 *</FormLabel>
+                  <DataSelector
+                    options={categories}
+                    selectedValue={field.value}
+                    setValue={setValue}
+                    fieldName="category"
+                    isLocked={categoryLoading}
+                    disabled={isSubmitting || categoryLoading}
+                    placeholder="选择分类"
+                  />
+                  <FormMessage />{" "}
+                </FormItem>
+              )}
+            />
+            {/* Brand */}
+            <FormField
+              control={control}
+              name="brand"
+              render={({ field }) => (
+                <FormItem>
+                  {" "}
+                  <FormLabel>适用品牌 *</FormLabel>
+                  <DataSelector
+                    options={brands}
+                    selectedValue={field.value}
+                    setValue={setValue}
+                    fieldName="brand"
+                    isLocked={brandLoading}
+                    disabled={isSubmitting || brandLoading}
+                    placeholder="选择品牌"
+                  />
+                  <FormMessage />{" "}
+                </FormItem>
+              )}
+            />
+            {/* Model */}
+            <FormField
+              control={control}
+              name="model"
+              render={({ field }) => (
+                <FormItem>
+                  {" "}
+                  <FormLabel>适用型号 *</FormLabel>
+                  <MultiSelector
+                    options={phones}
+                    selectedValues={field.value ?? []}
+                    onChange={field.onChange}
+                    placeholder="选择型号"
+                    disabled={!watchedBrand || phonesLoading || isSubmitting}
+                    isLoading={phonesLoading}
+                  />
+                  <FormMessage />{" "}
+                </FormItem>
+              )}
+            />
+            {/* Quality */}
+            <FormField
+              control={control}
+              name="quality"
+              render={({ field }) => (
+                <FormItem>
+                  {" "}
+                  <FormLabel>配件品质 *</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={isSubmitting}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择品质" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {qualityOptions.map((item) => (
+                        <SelectItem key={item} value={item}>
+                          {item}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />{" "}
+                </FormItem>
+              )}
+            />
+            {/* Supplier */}
+            <FormField
+              control={control}
+              name="supplier"
+              render={({ field }) => (
+                <FormItem>
+                  {" "}
+                  <FormLabel>供应商 *</FormLabel>
+                  <DataSelector
+                    options={suppliers}
+                    selectedValue={field.value}
+                    setValue={setValue}
+                    fieldName="supplier"
+                    isLocked={supplierLoading}
+                    disabled={isSubmitting || supplierLoading}
+                    placeholder="选择供应商"
+                  />
+                  <FormMessage />{" "}
+                </FormItem>
+              )}
+            />
+            {/* Stock */}
+            <FormField
+              control={control}
+              name="stock"
+              render={({ field }) => (
+                <FormItem>
+                  {" "}
+                  <FormLabel>库存数量 *</FormLabel>{" "}
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      {...field}
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>{" "}
+                  <FormMessage />{" "}
+                </FormItem>
+              )}
+            />
+            {/* Purchase Price */}
+            <FormField
+              control={control}
+              name="purchase_price"
+              render={({ field }) => (
+                <FormItem>
+                  {" "}
+                  <FormLabel>采购价格 (€) *</FormLabel>{" "}
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      {...field}
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>{" "}
+                  <FormMessage />{" "}
+                </FormItem>
+              )}
+            />
+
+            {/* Public Price */}
+            <FormField
+              control={control}
+              name="public_price"
+              render={({ field }) => (
+                <FormItem>
+                  {" "}
+                  <FormLabel>建议维修报价 (€) (可选)</FormLabel>{" "}
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      {...field}
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>{" "}
+                  <FormMessage />{" "}
+                </FormItem>
+              )}
+            />
+            {/* Alias */}
+            <FormField
+              control={control}
+              name="alias"
+              render={({ field }) => (
+                <FormItem>
+                  {" "}
+                  <FormLabel>配件别名 (可选)</FormLabel>{" "}
+                  <FormControl>
+                    <Input {...field} disabled={isSubmitting} />
+                  </FormControl>{" "}
+                  <FormMessage />{" "}
+                </FormItem>
+              )}
+            />
+          </div>
+          {/* Form Actions */}
+          <div className="flex justify-end gap-3 pt-4 pr-1">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => handleModalChange(false)}
+              disabled={isSubmitting}
+            >
+              {" "}
+              取消{" "}
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !isDirty}
+              className="min-w-[100px]"
+            >
+              {isSubmitting && <Loader className="mr-2 size-4 animate-spin" />}
+              保存修改
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </ResponsiveModal>
   );
 };

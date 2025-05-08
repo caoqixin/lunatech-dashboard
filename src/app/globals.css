@@ -1,246 +1,251 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 移除 input 数字类型旁边的上下箭头 (保持不变) */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
+  margin: 0; /* Firefox */
+}
+input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
 }
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* --- 核心色彩调整 --- */
+    /* 浅色模式 */
+    /* 使用柔和的灰白色背景替代纯白，增加呼吸感 */
+    --background: 210 20% 98%; /* HSL for #f8f9fa or similar */
+    --foreground: 224 71% 4%; /* Near black for text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --muted: 210 30% 94%; /* Slightly darker gray for muted backgrounds */
+    --muted-foreground: 215 16% 47%; /* Gray for muted text */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%; /* Popovers can remain white for contrast */
+    --popover-foreground: 224 71% 4%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --card: 0 0% 100%; /* Cards remain white */
+    --card-foreground: 224 71% 4%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* 边框使用更浅、更微妙的灰色 */
+    --border: 214 20% 91%; /* HSL for #e5e7eb or similar */
+    --input: 214 20% 89%; /* Input border slightly darker for clarity */
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* --- 主色调 (选择一个现代蓝色) --- */
+    /* 比默认的 new-york 蓝更亮、更现代 */
+    --primary: 217 91% 60%; /* HSL for a vibrant blue like #3b82f6 */
+    --primary-foreground: 0 0% 100%; /* White text on primary */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* 辅助色通常用于次要按钮、标签等 */
+    --secondary: 210 30% 94%; /* Same as muted bg */
+    --secondary-foreground: 224 71% 4%; /* Same as foreground */
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* 强调色，用于悬停、选中等 */
+    /* 可以使用主色的浅色变体或一个独立的强调色 */
+    --accent: 210 30% 94%; /* Same as muted bg, or a very light blue */
+    --accent-foreground: 217 91% 60%; /* Primary color for text on accent */
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* 破坏性操作颜色 (保持红色系) */
+    --destructive: 0 84% 60%; /* HSL for #f43f5e or similar */
+    --destructive-foreground: 0 0% 100%; /* White text on destructive */
 
-    --radius: 0.5rem;
+    /* 焦点环颜色，使用主色调 */
+    --ring: 217 91% 60%;
 
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    /* 圆角 (保持不变或按需调整) */
+    --radius: 0.5rem; /* 8px, 适合现代风格 */
 
-    /* 添加响应式断点适配 */
-    @media (max-width: 640px) {
-      html {
-        font-size: 14px;
-      }
-    }
+    /* --- 图表颜色 (可以保持或根据新主色调整) --- */
+    /* 可以选择与新 --primary 协调的色系 */
+    --chart-1: 217 91% 60%; /* Primary */
+    --chart-2: 173 58% 39%; /* Greenish */
+    --chart-3: 32 95% 50%; /* Orange */
+    --chart-4: 270 76% 50%; /* Purple */
+    --chart-5: 0 84% 60%; /* Red */
 
-    /* 添加动画变量，统一过渡效果 */
+    /* --- 响应式与过渡 (保持并使用变量) --- */
     --transition-fast: 150ms;
     --transition-normal: 250ms;
     --transition-slow: 350ms;
 
-    /* 添加统一阴影效果 */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-      0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03); /* 更柔和的阴影 */
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06),
+      0 2px 4px -1px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.07),
+      0 4px 6px -2px rgba(0, 0, 0, 0.04);
   }
 
-  /* Blue Accent Theme (Light Mode) */
+  /* --- 强调色主题 (浅色模式) --- */
+
+  /* Blue Accent (Matches Default) */
   [data-accent="blue"] {
-    --primary: 212 96% 44%;
-    --primary-foreground: 210 40% 98%;
-    --ring: 212 96% 44%;
-
-    --chart-1: 212 96% 44%;
-    --chart-2: 202 96% 44%;
-    --chart-3: 222 96% 44%;
-    --chart-4: 232 96% 44%;
-    --chart-5: 242 96% 44%;
+    --primary: 217 91% 60%; /* #3b82f6 */
+    --primary-foreground: 0 0% 100%;
+    --ring: 217 91% 60%;
+    --chart-1: 217 91% 60%;
+    /* chart-2 to chart-5 use default values or can be customized */
   }
 
-  /* Green Accent Theme (Light Mode) */
+  /* Green Accent */
   [data-accent="green"] {
-    --primary: 142 72% 29%;
-    --primary-foreground: 210 40% 98%;
-    --ring: 142 72% 29%;
-
-    --chart-1: 142 72% 29%;
-    --chart-2: 132 72% 29%;
-    --chart-3: 152 72% 29%;
-    --chart-4: 162 72% 29%;
-    --chart-5: 122 72% 29%;
+    --primary: 145 60% 40%; /* Vibrant Green */
+    --primary-foreground: 0 0% 100%;
+    --ring: 145 60% 40%;
+    --chart-1: 145 60% 40%;
+    /* chart-2 to chart-5 use default values or can be customized */
   }
 
-  /* Purple Accent Theme (Light Mode) */
+  /* Purple Accent */
   [data-accent="purple"] {
-    --primary: 270 76% 50%;
-    --primary-foreground: 210 40% 98%;
-    --ring: 270 76% 50%;
-
-    --chart-1: 270 76% 50%;
-    --chart-2: 280 76% 50%;
-    --chart-3: 260 76% 50%;
-    --chart-4: 290 76% 50%;
-    --chart-5: 250 76% 50%;
+    --primary: 262 75% 55%; /* Vibrant Purple */
+    --primary-foreground: 0 0% 100%;
+    --ring: 262 75% 55%;
+    --chart-1: 262 75% 55%;
+    /* chart-2 to chart-5 use default values or can be customized */
   }
 
-  /* Orange Accent Theme (Light Mode) */
+  /* Orange Accent */
   [data-accent="orange"] {
-    --primary: 32 95% 50%;
-    --primary-foreground: 210 40% 98%;
-    --ring: 32 95% 50%;
-
-    --chart-1: 32 95% 50%;
-    --chart-2: 22 95% 50%;
-    --chart-3: 42 95% 50%;
-    --chart-4: 12 95% 50%;
-    --chart-5: 52 95% 50%;
+    --primary: 28 90% 55%; /* Modern Orange */
+    --primary-foreground: 0 0% 100%; /* White still works, adjust if needed */
+    --ring: 28 90% 55%;
+    --chart-1: 28 90% 55%;
+    /* chart-2 to chart-5 use default values or can be customized */
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* --- 暗色模式色彩调整 --- */
+    --background: 222 47% 11%; /* Dark slate/navy */
+    --foreground: 210 40% 98%; /* Near white */
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --muted: 215 28% 17%; /* Slightly lighter dark gray */
+    --muted-foreground: 215 20% 65%; /* Light gray text */
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 224 71% 4%; /* Very dark background */
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --card: 224 71% 4%; /* Very dark background for cards */
+    --card-foreground: 210 40% 98%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    /* 暗色模式下边框更微妙 */
+    --border: 217 33% 17%; /* Slightly lighter than background */
+    --input: 217 33% 22%; /* Input border slightly more visible */
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    /* 主色调 (使用浅蓝色，对比度更高) */
+    --primary: 217 91% 65%; /* Lighter blue for dark mode */
+    --primary-foreground: 222 47% 11%; /* Dark text on primary */
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --secondary: 215 28% 17%; /* Same as muted */
+    --secondary-foreground: 210 40% 98%; /* Near white */
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --accent: 215 28% 17%; /* Same as muted */
+    --accent-foreground: 210 40% 98%; /* Near white */
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    /* 破坏性操作 (使用更亮的红色) */
+    --destructive: 0 72% 51%; /* Brighter red for dark mode */
+    --destructive-foreground: 210 40% 98%; /* Near white */
 
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    /* 焦点环颜色 */
+    --ring: 217 91% 65%;
 
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3),
-      0 2px 4px -1px rgba(0, 0, 0, 0.2);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3),
-      0 4px 6px -2px rgba(0, 0, 0, 0.2);
+    /* --- 图表颜色 (暗色模式) --- */
+    /* 调整为适合暗色背景的鲜艳颜色 */
+    --chart-1: 217 91% 65%; /* Primary */
+    --chart-2: 158 79% 44%; /* Bright Green */
+    --chart-3: 43 96% 56%; /* Bright Orange */
+    --chart-4: 270 89% 70%; /* Bright Purple */
+    --chart-5: 0 81% 63%; /* Bright Red */
+
+    /* --- 暗色模式阴影 --- */
+    /* 在暗色模式下，阴影通常不那么明显或使用发光效果，这里保持 subtle */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.15),
+      0 2px 4px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.15),
+      0 4px 6px -2px rgba(0, 0, 0, 0.1);
   }
 
-  /* Blue Accent Theme (Dark Mode) */
+  /* --- 强调色主题 (暗色模式) --- */
+
+  /* Blue Accent (Matches Default Dark) */
   .dark[data-accent="blue"] {
-    --primary: 212 90% 60%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --ring: 212 90% 60%;
-
-    --chart-1: 212 90% 60%;
-    --chart-2: 202 90% 60%;
-    --chart-3: 222 90% 60%;
-    --chart-4: 232 90% 60%;
-    --chart-5: 242 90% 60%;
+    --primary: 217 91% 65%;
+    --primary-foreground: 222 47% 11%;
+    --ring: 217 91% 65%;
+    --chart-1: 217 91% 65%;
+    /* chart-2 to chart-5 use default dark values or can be customized */
   }
 
-  /* Green Accent Theme (Dark Mode) */
+  /* Green Accent (Dark Mode) */
   .dark[data-accent="green"] {
-    --primary: 142 70% 45%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --ring: 142 70% 45%;
-
-    --chart-1: 142 70% 45%;
-    --chart-2: 132 70% 45%;
-    --chart-3: 152 70% 45%;
-    --chart-4: 162 70% 45%;
-    --chart-5: 122 70% 45%;
+    --primary: 145 60% 55%; /* Lighter/Brighter Green */
+    --primary-foreground: 222 47% 11%; /* Dark Text */
+    --ring: 145 60% 55%;
+    --chart-1: 145 60% 55%;
+    /* chart-2 to chart-5 use default dark values or can be customized */
   }
 
-  /* Purple Accent Theme (Dark Mode) */
+  /* Purple Accent (Dark Mode) */
   .dark[data-accent="purple"] {
-    --primary: 270 75% 60%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --ring: 270 75% 60%;
-
-    --chart-1: 270 75% 60%;
-    --chart-2: 280 75% 60%;
-    --chart-3: 260 75% 60%;
-    --chart-4: 290 75% 60%;
-    --chart-5: 250 75% 60%;
+    --primary: 262 75% 65%; /* Lighter/Brighter Purple */
+    --primary-foreground: 222 47% 11%; /* Dark Text */
+    --ring: 262 75% 65%;
+    --chart-1: 262 75% 65%;
+    /* chart-2 to chart-5 use default dark values or can be customized */
   }
 
-  /* Orange Accent Theme (Dark Mode) */
+  /* Orange Accent (Dark Mode) */
   .dark[data-accent="orange"] {
-    --primary: 32 90% 60%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --ring: 32 90% 60%;
-
-    --chart-1: 32 90% 60%;
-    --chart-2: 22 90% 60%;
-    --chart-3: 42 90% 60%;
-    --chart-4: 12 90% 60%;
-    --chart-5: 52 90% 60%;
+    --primary: 28 90% 65%; /* Lighter/Brighter Orange */
+    --primary-foreground: 222 47% 11%; /* Dark Text */
+    --ring: 28 90% 65%;
+    --chart-1: 28 90% 65%;
+    /* chart-2 to chart-5 use default dark values or can be customized */
   }
 }
 
 @layer base {
-  * {
+  /* 移除全局边框，在需要的地方添加 */
+  /* * {
     @apply border-border;
-  }
+  } */
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased; /* antialiased 在 layout.tsx 中也有，这里保留也可 */
+    min-height: 100vh; /* 确保 body 至少和视口一样高 */
+    font-feature-settings: "rlig" 1, "calt" 1; /* 启用连字等字体特性 (Inter 支持) */
   }
+
+  /* 基础 heading 样式，可选 */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold tracking-tight;
+  }
+  h1 {
+    @apply text-3xl;
+  }
+  h2 {
+    @apply text-2xl;
+  }
+  h3 {
+    @apply text-xl;
+  }
+  /* ... 等 */
 }
 
-/* 添加统一间距工具类 */
+/* --- 自定义工具类 (可选保留或移除) --- */
 @layer utilities {
-  .spacing-y {
-    @apply space-y-4;
-  }
-
-  .spacing-x {
-    @apply space-x-4;
-  }
-
-  .flex-center {
-    @apply flex items-center justify-center;
-  }
-
-  .transition-all-normal {
-    transition: all var(--transition-normal) ease-in-out;
-  }
-
-  /* Utilities for animations control */
+  /* 控制动画的类，可能有用 */
   .no-animations * {
     transition: none !important;
     animation: none !important;
   }
+
+  /* 可以在这里添加其他需要的全局工具类 */
 }

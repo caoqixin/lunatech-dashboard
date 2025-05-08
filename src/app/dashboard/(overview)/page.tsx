@@ -46,22 +46,25 @@ export default async function Page() {
 // 仪表盘骨架屏
 function DashboardSkeleton() {
   return (
-    <div className="space-y-8">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="space-y-6 animate-pulse">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {Array(6)
           .fill(0)
           .map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-lg" />
+            <Skeleton
+              key={i}
+              className="h-[116px] w-full rounded-lg bg-muted/80"
+            />
           ))}
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <Skeleton className="h-80 col-span-4 rounded-lg" />
-        <Skeleton className="h-80 lg:col-span-3 rounded-lg" />
+        <Skeleton className="h-[350px] rounded-lg bg-muted/80 lg:col-span-4" />
+        <Skeleton className="h-[400px] rounded-lg bg-muted/80 lg:col-span-3" />
       </div>
     </div>
   );
 }
 
 export const metadata: Metadata = {
-  title: "首页",
+  title: "仪表盘 | Luna Tech",
 };

@@ -1,8 +1,7 @@
-import { useRouter } from "next/navigation";
+"use client";
 import { useState } from "react";
 import { toast } from "sonner";
-
-import { Loader, Trash } from "lucide-react";
+import { Loader, Trash, AlertTriangle } from "lucide-react";
 import { CategoryType } from "@/views/category/schema/category.schema";
 import { ResponsiveModal } from "@/components/custom/responsive-modal";
 
@@ -10,123 +9,102 @@ import { deleteComponentCategory } from "@/views/category/api/component";
 import { deleteProblem } from "@/views/category/api/problem";
 
 import { Button } from "@/components/ui/button";
-import { CategoryComponent } from "@/lib/types";
+import type { CategoryComponent } from "@/lib/types";
 
 interface DeleteCategoryProps {
   category: CategoryComponent;
   type: CategoryType;
-  isDropDownMenu?: boolean;
-  onCancel?: () => void;
+  /**
+   * 触发按钮 (现在由父组件提供)
+   */
+  triggerButton: React.ReactNode;
+  /**
+   * 删除成功后的回调 (可选)
+   */
+  onSuccess?: () => void;
 }
 
 export const DeleteCategory = ({
   category,
   type,
-  isDropDownMenu = false,
-  onCancel,
+  triggerButton, // Use passed trigger
+  onSuccess,
 }: DeleteCategoryProps) => {
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const router = useRouter();
+  const title = `删除 ${category?.name ?? "分类"}`;
 
   const handleDelete = async () => {
     setIsDeleting(true);
 
-    if (type === CategoryType.COMPONENT) {
-      const { msg, status } = await deleteComponentCategory(category.id);
-      if (status == "success") {
-        toast.success(msg);
-        if (isDropDownMenu) {
-          onCancel?.();
-        } else {
-          setOpen(false);
-        }
-        router.refresh();
-      } else {
-        toast.error(msg);
-      }
-    } else if (type === CategoryType.REPAIR) {
-      const { msg, status } = await deleteProblem(category.id);
-      if (status == "success") {
-        toast.success(msg);
-        if (isDropDownMenu) {
-          onCancel?.();
-        } else {
-          setOpen(false);
-        }
-        router.refresh();
-      } else {
-        toast.error(msg);
-      }
-    }
+    try {
+      const action =
+        type === CategoryType.COMPONENT
+          ? deleteComponentCategory
+          : deleteProblem;
+      const { msg, status } = await action(category.id);
 
-    setIsDeleting(false);
+      if (status === "success") {
+        toast.success(msg);
+        setOpen(false); // Close modal
+        onSuccess?.(); // Call success callback
+      } else {
+        toast.error(msg);
+      }
+    } catch (error) {
+      toast.error("删除失败，请稍后重试。");
+      console.error("Delete category error:", error);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
-  if (isDropDownMenu) {
-    return (
-      <ResponsiveModal
-        open={open}
-        onOpen={setOpen}
-        dropdownMenu={isDropDownMenu}
-        triggerButton={
-          <Button
-            variant="destructive"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <Trash className="size-4" /> 删除
-          </Button>
-        }
-        title={`删除${category.name}`}
-      >
-        <div className="flex flex-col space-y-4 mx-4">
-          <p className="text-red-600">
-            确定要删除 [{category.name}] 吗?, 该操作是不可逆, 慎重考虑 !!!
-          </p>
-          <Button
-            variant="destructive"
-            className="flex w-full gap-2 items-center"
-            onClick={() => handleDelete()}
-          >
-            {isDeleting && <Loader className="animate-spin size-4" />}
-            确定
-          </Button>
-        </div>
-      </ResponsiveModal>
-    );
-  }
+  const handleModalChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      setIsDeleting(false); // Reset deleting state on close
+    }
+  };
 
   return (
     <ResponsiveModal
       open={open}
-      onOpen={setOpen}
-      triggerButton={
-        <Button
-          variant="destructive"
-          size="sm"
-          className="flex items-center gap-2"
-        >
-          <Trash className="size-4" /> 删除
-        </Button>
-      }
-      title={`删除${category.name}`}
+      onOpenChange={handleModalChange}
+      triggerButton={triggerButton} // Use passed trigger
+      title={title}
+      description="此操作不可逆，请谨慎确认。" // Add description
+      dialogClassName="sm:max-w-sm" // Limit width
+      showMobileFooter={false}
     >
-      <div className="flex flex-col space-y-4">
-        <p className="text-red-600">
-          确定要删除 [{category.name}] 吗?, 该操作是不可逆, 慎重考虑 !!!
-        </p>
-        <div className="flex w-full justify-end gap-3">
-          <Button variant="outline" onClick={() => setOpen(false)}>
+      <div className="space-y-4">
+        <div className="flex items-start gap-3 rounded-md border border-destructive/50 bg-destructive/5 p-3 text-destructive">
+          <AlertTriangle className="size-5 flex-shrink-0 mt-0.5" />
+          <p className="text-sm ">
+            确定要删除{" "}
+            <span className="font-semibold">
+              [{category?.name ?? "此分类"}]
+            </span>{" "}
+            吗? 与此分类相关的所有数据（如配件关联）可能也会受到影响。
+          </p>
+        </div>
+        {/* 底部按钮 */}
+        <div className="flex w-full justify-end gap-3 pt-2">
+          <Button
+            variant="outline"
+            onClick={() => handleModalChange(false)}
+            disabled={isDeleting}
+          >
             取消
           </Button>
           <Button
             variant="destructive"
-            className="flex gap-2 items-center"
-            onClick={() => handleDelete()}
+            onClick={handleDelete}
+            disabled={isDeleting}
           >
-            {isDeleting && <Loader className="animate-spin size-4" />}
-            确定
+            {isDeleting ? (
+              <Loader className="mr-2 animate-spin size-4" />
+            ) : null}
+            确认删除
           </Button>
         </div>
       </div>

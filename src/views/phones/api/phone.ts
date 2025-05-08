@@ -31,7 +31,7 @@ export async function fetchPhonesByBrandId(brandId: number) {
     .select("*")
     .eq("brandId", brandId);
 
-  return data;
+  return data ?? [];
 }
 
 export async function fetchPhonesByBrand(

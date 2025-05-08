@@ -1,9 +1,10 @@
 "use client";
 
-import { Skeleton } from "@/components/ui/skeleton";
-import { DifferentData } from "@/views/dashboard/api/data";
-import { CardWrapper } from "@/views/dashboard/components/card-wrapper";
 import { lazy, Suspense, useMemo } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { DifferentData, RevenueType } from "@/views/dashboard/api/data";
+import { CardWrapper } from "./card-wrapper";
+import { cn } from "@/lib/utils";
 
 // 懒加载组件
 const Revenue = lazy(() => import("@/views/dashboard/components/revenue"));
@@ -17,11 +18,17 @@ interface DashboardPageProps {
   componentsPrice: number;
   stock: number;
   topList: { name: string; count: number }[];
-  dataRevenue: {
-    month: string;
-    revenue?: number;
-    quantity?: number;
-  }[];
+  dataRevenue: RevenueType[];
+}
+
+// Skeleton specific for the Revenue Chart area
+function RevenueSkeleton() {
+  return <Skeleton className="h-[350px] w-full rounded-lg bg-muted/80" />;
+}
+
+// Skeleton specific for the TopList area
+function TopListSkeleton() {
+  return <Skeleton className="h-[400px] w-full rounded-lg bg-muted/80" />;
 }
 
 export function DashboardPage({
@@ -75,32 +82,34 @@ export function DashboardPage({
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 animate-in fade-in duration-500">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {cardData.map((card, index) => (
-          <Suspense
-            key={index}
-            fallback={<Skeleton className="h-32 w-full rounded-lg" />}
-          >
-            <CardWrapper
-              title={card.title}
-              value={card.value}
-              lastValue={card.lastValue}
-              type={card.type as "revenue" | "count"}
-              className="transform transition-all hover:shadow-md hover:-translate-y-1"
-            />
-          </Suspense>
+          <CardWrapper
+            key={card.title + index}
+            title={card.title}
+            value={card.value}
+            lastValue={card.lastValue}
+            type={card.type as "revenue" | "count"}
+            className="transition-all hover:-translate-y-1 hover:shadow-lg"
+          />
         ))}
       </div>
 
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-7 auto-cols-min">
-        <Suspense
-          fallback={<Skeleton className="h-[350px] col-span-4  rounded-lg" />}
-        >
-          <Revenue data={dataRevenue} className="col-span-4" />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-7">
+        <Suspense fallback={<RevenueSkeleton />}>
+          <Revenue
+            data={dataRevenue}
+            className="lg:col-span-4 animate-in fade-in-50 duration-500"
+          />
         </Suspense>
 
-        <TopList data={topList} className="col-span-3" />
+        <Suspense fallback={<TopListSkeleton />}>
+          <TopList
+            data={topList}
+            className="lg:col-span-3 animate-in fade-in-75 duration-500"
+          />
+        </Suspense>
       </div>
     </div>
   );

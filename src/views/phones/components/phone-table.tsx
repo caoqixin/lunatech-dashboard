@@ -10,9 +10,10 @@ import { Phone } from "@/lib/types";
 interface PhoneTableProps {
   data: Phone[];
   count: number;
+  isLoading?: boolean;
 }
 
-export const PhoneTable = ({ data, count }: PhoneTableProps) => {
+export const PhoneTable = ({ data, count, isLoading }: PhoneTableProps) => {
   const columns = useMemo<ColumnDef<Phone, unknown>[]>(() => phoneColumns, []);
 
   const { table } = useDataTable({
@@ -22,7 +23,15 @@ export const PhoneTable = ({ data, count }: PhoneTableProps) => {
     searchableColumns: phoneSearchColumns,
   });
 
+  console.log(isLoading);
+
   return (
-    <DataTable table={table} columns={columns} searchKey={phoneSearchColumns} />
+    <DataTable
+      table={table}
+      columns={columns}
+      searchableColumns={phoneSearchColumns}
+      isLoading={isLoading} // Pass loading state
+      noDataText="未找到该品牌的手机型号"
+    />
   );
 };

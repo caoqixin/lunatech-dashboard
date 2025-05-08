@@ -1,61 +1,48 @@
+"use client";
+
 import BreadCrumb, { BreadCrumbType } from "@/components/breadcrumb";
 import { Header } from "@/components/custom/header";
 import { Separator } from "@/components/ui/separator";
-import {
-  CategorySearchParams,
-  CategoryType,
-} from "@/views/category/schema/category.schema";
-import {
-  countComponentCategory,
-  fetchComponentCategories,
-} from "@/views/category/api/component";
-import { countProblems, fetchProblems } from "@/views/category/api/problem";
-import { CreateCategory } from "@/views/category/components/create-category";
-import { SwitchCategory } from "@/views/category/components/switch-category";
+import { CategorySearchParams } from "@/views/category/schema/category.schema";
+import { CreateCategory } from "./create-category";
+import { SwitchCategory } from "./switch-category";
+import { useRouter } from "next/navigation";
+import type { CategoryComponent } from "@/lib/types";
 
 interface CategoryPageProps {
   search: CategorySearchParams;
+  initialData: CategoryComponent[]; // Receive initial data
+  initialCount: number; // Receive initial count
 }
 
 const breadcrumbItems: BreadCrumbType[] = [
   { title: "分类管理", link: "/dashboard/categories" },
 ];
 
-async function fetchCategoryData(type: string, params: CategorySearchParams) {
-  if (type === CategoryType.COMPONENT) {
-    return await Promise.all([
-      fetchComponentCategories(params),
-      countComponentCategory(params.per_page),
-    ]);
-  } else if (type === CategoryType.REPAIR) {
-    return await Promise.all([
-      fetchProblems(params),
-      countProblems(params.per_page),
-    ]);
-  }
-
-  return [];
-}
-
-export const CategoryPage = async ({ search }: CategoryPageProps) => {
+export const CategoryPage = ({
+  search,
+  initialData,
+  initialCount,
+}: CategoryPageProps) => {
+  const router = useRouter();
   const { type } = search;
 
-  const categoryData = await fetchCategoryData(type, search);
-
-  if (!categoryData) {
-    return null;
-  }
-
-  const [data, count] = categoryData;
+  // Callback for successful creation/edit/deletion
+  const handleSuccess = () => {
+    router.refresh(); // Centralized refresh logic
+  };
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    // Removed p-4/p-8 here, assuming parent layout provides padding
+    <div className="flex-1 space-y-4 pt-6">
       <BreadCrumb items={breadcrumbItems} />
       <Header title="分类管理">
-        <CreateCategory type={type} />
+        {/* Pass type and onSuccess callback */}
+        <CreateCategory type={type} onSuccess={handleSuccess} />
       </Header>
       <Separator />
-      <SwitchCategory type={type} data={data} count={count} />
+      {/* Pass initial data and count */}
+      <SwitchCategory type={type} data={initialData} count={initialCount} />
     </div>
   );
 };

@@ -1,228 +1,199 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import BreadCrumb, { BreadCrumbType } from "@/components/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Header } from "@/components/custom/header";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+
 import { Button } from "@/components/ui/button";
+import type { AppearanceSettings } from "./types";
+import { SystemSettingsTab } from "./system-settings-tab";
 import {
-  AccentColorType,
-  AppearanceSettings,
-  FontSizeType,
-  SystemSettings,
-  ThemeType,
-} from "./types";
-import { AppearanceSettingsComponent } from "./appearance-setting";
+  AppearanceSettingsTab,
+  applyAppearanceSettings,
+} from "./appearance-settings-tab";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import useTabQueryParam from "@/hooks/use-tab-query-param";
 import SecuritySetting from "./security-setting";
+import { Loader } from "lucide-react";
 
 const breadcrumbItems: BreadCrumbType[] = [
   { title: "设置", link: "/dashboard/setting" },
 ];
 
+// Initial loading of settings from localStorage
+const loadInitialAppearanceSettings = (): AppearanceSettings => {
+  if (typeof window === "undefined")
+    return {
+      theme: "system",
+      fontSize: "medium",
+      accentColor: "default",
+      animations: true,
+    };
+  const saved = localStorage.getItem("appearanceSettings");
+  if (saved) {
+    try {
+      return JSON.parse(saved) as AppearanceSettings;
+    } catch (e) {
+      /* Ignore */
+    }
+  }
+  return {
+    theme: "system",
+    fontSize: "medium",
+    accentColor: "default",
+    animations: true,
+  };
+};
+
 const SettingPage: React.FC = () => {
   const { setTheme, theme } = useTheme();
-  const [darkMode, setDarkMode] = useState<boolean>(Boolean(theme == "dark"));
-  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isSavingSystem, setIsSavingSystem] = useState<boolean>(false);
+  // Initialize dark mode based on localStorage or system preference initially
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false; // Default for SSR
+    const saved = localStorage.getItem("appSettings"); // Use 'appSettings' as before?
+    if (saved) {
+      try {
+        return (JSON.parse(saved) as { darkMode: boolean }).darkMode || false;
+      } catch (e) {
+        /*Ignore*/
+      }
+    }
+    // Fallback to system preference before hydration
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  });
+  // State for Appearance Settings Tab - Initialized from helper
+  const [appearanceSettings, setAppearanceSettings] =
+    useState<AppearanceSettings>(loadInitialAppearanceSettings);
+  // Apply initial appearance settings on mount
+  useEffect(() => {
+    applyAppearanceSettings(appearanceSettings); // Apply loaded/default settings
+    // Sync next-themes state if needed
+    if (appearanceSettings.theme !== "system") {
+      setTheme(appearanceSettings.theme);
+    } else {
+      // Need to explicitly set system theme for next-themes if that's the saved value
+      setTheme("system");
+    }
+    // Update darkMode state based on loaded theme AFTER initial apply+setTheme
+    const currentTheme =
+      appearanceSettings.theme === "system"
+        ? window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light"
+        : appearanceSettings.theme;
+    setDarkMode(currentTheme === "dark");
+  }, []); // Run only once on mount
 
   const { tab, setTab } = useTabQueryParam({
-    defaultTab: "system",
+    defaultTab: "appearance",
   });
 
-  // 监听theme状态变化
-  useEffect(() => {
-    setDarkMode(Boolean(theme == "dark"));
-  }, [theme]);
-
-  // 从本地存储加载设置
-  useEffect(() => {
-    const savedSettings = localStorage.getItem("appSettings");
-
-    if (savedSettings) {
-      try {
-        const settings = JSON.parse(savedSettings) as SystemSettings;
-        setDarkMode(settings.darkMode || false);
-
-        // 应用深色模式
-        if (settings.darkMode) {
-          setTheme("dark");
-        } else {
-          setTheme("light");
-        }
-      } catch (error) {
-        console.error("Failed to parse saved settings:", error);
-      }
-    }
-  }, []);
-
-  // 处理深色模式切换
+  // Handle Dark Mode change triggered from SystemSettingsTab
   const handleDarkModeChange = (checked: boolean): void => {
     setDarkMode(checked);
-    if (checked) {
-      setTheme("dark");
-    } else {
-      setTheme("light");
-    }
+    // Update theme immediately
+    setTheme(checked ? "dark" : "light");
+    // Note: System save button now only saves this preference,
+    // actual theme change is handled by next-themes + this callback
   };
 
-  // 保存系统设置
-  const handleSystemSave = (): void => {
-    setIsSaving(true);
-
-    // 模拟保存过程
-    setTimeout(() => {
-      // 保存到本地存储
-      const settings: SystemSettings = { darkMode };
+  // System Save Handler (now only saves the dark mode preference conceptually)
+  const handleSystemSave = useCallback((): void => {
+    setIsSavingSystem(true);
+    try {
+      // Save only the dark mode preference if that's the only setting here
+      // Or save other general app settings if added
+      const settings = { darkMode }; // Simplified system settings
       localStorage.setItem("appSettings", JSON.stringify(settings));
+      toast.success("系统设置偏好已保存。");
+    } catch (error) {
+      toast.error("无法保存系统设置。");
+      console.error("Save system settings error:", error);
+    } finally {
+      setIsSavingSystem(false);
+    }
+  }, [darkMode]); // Depends on darkMode state
 
-      setIsSaving(false);
-      toast.success("系统设置已成功更新。");
-    }, 500);
-  };
-  // 应用界面设置
-  const handleAppearanceSave = (
-    theme: ThemeType,
-    fontSize: FontSizeType,
-    accentColor: AccentColorType,
-    animations: boolean
-  ): void => {
-    setIsSaving(true);
-
-    // 应用主题
-    if (theme === "dark") {
-      setTheme("dark");
-      setDarkMode(true);
-    } else if (theme === "light") {
-      setTheme("light");
-      setDarkMode(false);
-    } else if (theme === "system") {
-      const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches;
-      if (prefersDark) {
-        setTheme("dark");
-        setDarkMode(true);
-      } else {
-        setTheme("light");
-        setDarkMode(false);
+  // Appearance Save Handler
+  const handleAppearanceSave = useCallback(
+    async (newSettings: AppearanceSettings) => {
+      // No need for separate setIsSaving here, handled within AppearanceSettingsTab
+      try {
+        localStorage.setItem("appearanceSettings", JSON.stringify(newSettings));
+        setAppearanceSettings(newSettings); // Update parent state if needed elsewhere
+        // Theme is set within AppearanceSettingsTab now
+        // Dark mode state sync based on theme
+        const currentTheme =
+          newSettings.theme === "system"
+            ? window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light"
+            : newSettings.theme;
+        setDarkMode(currentTheme === "dark");
+      } catch (error) {
+        console.error(
+          "Failed to save appearance settings to localStorage:",
+          error
+        );
+        throw error; // Re-throw to be caught in AppearanceSettingsTab
       }
-    }
-
-    // 应用字体大小
-    document.documentElement.style.fontSize =
-      fontSize === "small" ? "14px" : fontSize === "large" ? "18px" : "16px";
-
-    // 应用主题色
-    if (accentColor === "default") {
-      document.documentElement.removeAttribute("data-accent");
-    } else {
-      document.documentElement.setAttribute("data-accent", accentColor);
-    }
-
-    // 应用动画设置
-    if (animations) {
-      document.documentElement.classList.remove("no-animations");
-    } else {
-      document.documentElement.classList.add("no-animations");
-    }
-
-    // 保存设置
-    const appearanceSettings: AppearanceSettings = {
-      theme,
-      fontSize,
-      accentColor,
-      animations,
-    };
-    localStorage.setItem(
-      "appearanceSettings",
-      JSON.stringify(appearanceSettings)
-    );
-
-    setIsSaving(false);
-    toast.success("界面设置已成功更新。");
-  };
+    },
+    []
+  ); // Doesn't depend on internal component state
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="flex-1 space-y-4 pt-6 p-4 md:p-8">
+      {/* Add padding back here */}
       <BreadCrumb items={breadcrumbItems} />
-      <Header title="设置">{""}</Header>
+      {/* Remove Header children prop as Save is per-tab */}
+      <Header title="系统设置" description="管理系统、安全和界面外观配置。" />
       <Separator />
-      <ScrollArea className="h-full">
-        <div className="flex-1">
-          <Tabs value={tab} onValueChange={setTab} className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="system">系统设置</TabsTrigger>
-              <TabsTrigger value="security">安全设置</TabsTrigger>
-              <TabsTrigger value="appearance">界面设置</TabsTrigger>
-            </TabsList>
+      {/* Use Tabs component */}
+      <Tabs value={tab} onValueChange={setTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="appearance">界面外观</TabsTrigger>
+          <TabsTrigger value="security">账户安全</TabsTrigger>
+          {/* Keep system tab if needed for other general settings */}
+          <TabsTrigger value="system">系统主题</TabsTrigger>
+        </TabsList>
 
-            {/* 系统设置选项卡 */}
-            <TabsContent value="system" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>系统设置</CardTitle>
-                  <CardDescription>
-                    管理系统的常规配置和偏好设置
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="dark-mode">深色模式</Label>
-                      <p className="text-sm text-gray-500">
-                        启用后将使用深色主题
-                      </p>
-                    </div>
-                    <Switch
-                      id="dark-mode"
-                      checked={darkMode}
-                      onCheckedChange={handleDarkModeChange}
-                    />
-                  </div>
+        {/* Appearance Tab */}
+        <TabsContent value="appearance" className="mt-0">
+          {/* Remove extra margin */}
+          <AppearanceSettingsTab
+            initialSettings={appearanceSettings}
+            onSave={handleAppearanceSave}
+          />
+        </TabsContent>
 
-                  <Button onClick={handleSystemSave} disabled={isSaving}>
-                    {isSaving ? "保存中..." : "保存设置"}
-                  </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
+        {/* Security Tab */}
+        <TabsContent value="security" className="mt-0">
+          <SecuritySetting />
+        </TabsContent>
 
-            {/* 安全设置选项卡 */}
-            <TabsContent value="security" className="space-y-4">
-              <SecuritySetting />
-            </TabsContent>
-
-            {/* 界面设置选项卡 */}
-            <TabsContent value="appearance" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>界面设置</CardTitle>
-                  <CardDescription>自定义应用程序的外观</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <AppearanceSettingsComponent
-                    onSave={handleAppearanceSave}
-                    isDisabled={isSaving}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </ScrollArea>
+        {/* System Tab (Simplified) */}
+        <TabsContent value="system" className="mt-0">
+          <SystemSettingsTab
+            darkMode={darkMode}
+            onDarkModeChange={handleDarkModeChange}
+            onSave={handleSystemSave}
+            isSaving={isSavingSystem}
+          />
+          {/* Note: The save button might feel redundant if theme changes instantly */}
+          <div className="pt-4 flex justify-end">
+            <Button onClick={handleSystemSave} disabled={isSavingSystem}>
+              {isSavingSystem ? (
+                <Loader className="mr-2 size-4 animate-spin" />
+              ) : null}
+              保存主题偏好 {/* Changed text */}
+            </Button>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

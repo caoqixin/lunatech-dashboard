@@ -104,5 +104,6 @@ export async function checkout() {
 
   return {
     msg: `出库操作已完成. 订单ID${orderId}, 共有${items.length} 个配件出库, 价值 ${amount} €`,
+    status: "success",
   };
 }

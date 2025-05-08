@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
@@ -27,23 +26,28 @@ import {
 } from "@/views/category/schema/category.schema";
 import { updateComponentCategory } from "../api/component";
 import { updateProblem } from "../api/problem";
-import { CategoryComponent } from "@/lib/types";
+import type { CategoryComponent } from "@/lib/types";
 
 interface EditCategoryProps {
   category: CategoryComponent;
   type: CategoryType;
-  isDropDownMenu?: boolean;
-  onCancel?: () => void;
+  /**
+   * 触发按钮 (现在由父组件提供)
+   */
+  triggerButton: React.ReactNode;
+  /**
+   * 编辑成功后的回调 (可选)
+   */
+  onSuccess?: () => void;
 }
 
 export const EditCategory = ({
   category,
   type,
-  isDropDownMenu = false,
-  onCancel,
+  triggerButton, // 接收 trigger
+  onSuccess,
 }: EditCategoryProps) => {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
 
   const form = useForm<Category>({
     resolver: zodResolver(CategorySchema),
@@ -53,145 +57,84 @@ export const EditCategory = ({
   });
 
   const {
-    formState: { isSubmitting },
+    formState: { isSubmitting, isDirty },
   } = form;
 
-  const onSubmit = async (values: Category) => {
-    if (type === CategoryType.COMPONENT) {
-      const { msg, status } = await updateComponentCategory(
-        values,
-        category.id
-      );
-      if (status == "success") {
-        toast.success(msg);
-        if (isDropDownMenu) {
-          onCancel?.();
-        } else {
-          setOpen(false);
-        }
-        form.reset();
-      } else {
-        toast.error(msg);
-      }
-    } else if (type === CategoryType.REPAIR) {
-      const { msg, status } = await updateProblem(values, category.id);
-      if (status == "success") {
-        toast.success(msg);
-        if (isDropDownMenu) {
-          onCancel?.();
-        } else {
-          setOpen(false);
-        }
-        router.refresh();
-      } else {
-        toast.error(msg);
-      }
+  const isComponent = type === CategoryType.COMPONENT;
+  const title = isComponent ? "修改配件分类" : "修改维修故障";
+  const label = isComponent ? "分类名称" : "故障名称";
+
+  // Reset form when category changes or modal opens/closes
+  useEffect(() => {
+    if (category) {
+      form.reset({ name: category.name ?? "" });
+    }
+  }, [category, form.reset]);
+
+  const handleModalChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      form.reset({ name: category?.name ?? "" }); // 关闭时重置为原始值
     }
   };
 
-  useEffect(() => {
-    form.reset({
-      name: category.name ?? "",
-    });
-  }, [category]);
+  const onSubmit = async (values: Category) => {
+    // Prevent submission if nothing changed
+    if (!isDirty) {
+      handleModalChange(false);
+      return;
+    }
 
-  if (isDropDownMenu) {
-    return (
-      <ResponsiveModal
-        open={open}
-        onOpen={setOpen}
-        dropdownMenu={isDropDownMenu}
-        title={
-          type === CategoryType.COMPONENT
-            ? "修改配件分类名称"
-            : "修改维修故障名称"
-        }
-      >
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="flex flex-col gap-4"
-          >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem className="flex items-center gap-2 mx-2">
-                  <FormLabel className="text-nowrap flex h-full items-center justify-end">
-                    {type === CategoryType.COMPONENT
-                      ? "配件分类名称"
-                      : "维修故障名称"}
-                  </FormLabel>
-                  <div className="flex flex-col gap-1 w-full">
-                    <FormControl>
-                      <Input {...field} disabled={isSubmitting} />
-                    </FormControl>
-                    <FormMessage />
-                  </div>
-                </FormItem>
-              )}
-            />
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex gap-2 items-center"
-            >
-              {isSubmitting && <Loader className="animate-spin" />}
-              修改
-            </Button>
-          </form>
-        </Form>
-      </ResponsiveModal>
-    );
-  }
+    try {
+      const action = isComponent ? updateComponentCategory : updateProblem;
+      const { msg, status } = await action(values, category.id);
+
+      if (status == "success") {
+        toast.success(msg);
+        handleModalChange(false); // Close modal
+        onSuccess?.(); // Call success callback
+      } else {
+        toast.error(msg);
+      }
+    } catch (error) {
+      toast.error("操作失败，请稍后重试。");
+      console.error("Update category error:", error);
+    }
+  };
 
   return (
     <ResponsiveModal
       open={open}
-      onOpen={setOpen}
-      triggerButton={
-        <Button variant="default" size="sm" className="flex items-center gap-2">
-          <Pencil className="size-4" /> 修改
-        </Button>
-      }
-      title={
-        type === CategoryType.COMPONENT
-          ? "修改配件分类名称"
-          : "修改维修故障名称"
-      }
+      onOpenChange={handleModalChange}
+      triggerButton={triggerButton}
+      title={title}
+      dialogClassName="sm:max-w-sm"
     >
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col gap-4"
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField
             control={form.control}
             name="name"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-2 mx-2">
-                <FormLabel className="text-nowrap flex h-full items-center justify-end">
-                  {type === CategoryType.COMPONENT
-                    ? "配件分类名称"
-                    : "维修故障名称"}
-                </FormLabel>
-                <div className="flex flex-col gap-1 w-full">
-                  <FormControl>
-                    <Input {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </div>
+              <FormItem>
+                <FormLabel>{label}</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder={`请输入新的${label}`}
+                    {...field}
+                    disabled={isSubmitting}
+                  />
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
 
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex gap-2 items-center"
-          >
-            {isSubmitting && <Loader className="animate-spin" />}
-            修改
+          <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? (
+              <Loader className="mr-2 size-4 animate-spin" />
+            ) : null}
+            保存修改
           </Button>
         </form>
       </Form>

@@ -4,45 +4,62 @@ import { useMemo } from "react";
 import { useDataTable } from "@/hooks/use-data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/data-table";
-import { Component } from "@/lib/types";
+import type { Component } from "@/lib/types";
 import {
   componentColumns,
   componentInitialHidenColumn,
   componentSearchColumn,
 } from "@/views/component/table/column";
-import { DataTableFilterableColumn } from "@/components/data-table/type";
+import type { DataTableFilterableColumn } from "@/components/data-table/type";
 
 interface ComponentTableProps {
   data: Component[];
   count: number;
   filterColumn?: DataTableFilterableColumn<Component>[];
+  isLoading?: boolean;
+  refetchData?: () => void;
 }
 
 export const ComponentTable = ({
   data,
   count,
   filterColumn,
+  isLoading,
+  refetchData,
 }: ComponentTableProps) => {
   const columns = useMemo<ColumnDef<Component, unknown>[]>(
     () => componentColumns,
     []
   );
 
+  const searchableColumns = useMemo(() => componentSearchColumn, []);
+  const initialHideColumns = useMemo(() => componentInitialHidenColumn, []);
+
+  const tableMeta = useMemo(
+    () => ({
+      onSuccess: refetchData, // Pass refetchData as onSuccess in meta
+    }),
+    [refetchData]
+  );
+
   const { table } = useDataTable({
     data,
     columns,
     pageCount: count,
-    searchableColumns: componentSearchColumn,
+    searchableColumns: searchableColumns,
     filterableColumns: filterColumn,
-    initialHideColumns: componentInitialHidenColumn,
+    initialHideColumns: initialHideColumns,
+    meta: tableMeta,
   });
 
   return (
     <DataTable
       table={table}
       columns={columns}
-      searchKey={componentSearchColumn}
+      searchableColumns={componentSearchColumn}
       filterableColumns={filterColumn}
+      isLoading={isLoading}
+      noDataText="未找到配件信息"
     />
   );
 };

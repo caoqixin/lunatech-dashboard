@@ -7,8 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerClose,
@@ -18,77 +18,97 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "../ui/drawer";
+} from "@/components/ui/drawer";
+import { cn } from "@/lib/utils";
 
 interface ResponsiveModalProps {
-  width?: string;
-  triggerButton?: React.ReactNode;
+  /**
+   * 触发器按钮或元素
+   */
+  triggerButton: React.ReactNode;
+  /**
+   * 模态框标题
+   */
   title: string;
+  /**
+   * 模态框描述 (可选)
+   */
   description?: string;
-  dropdownMenu?: boolean;
+  /**
+   * 模态框内容
+   */
   children: React.ReactNode;
+  /**
+   * 控制模态框打开状态
+   */
   open: boolean;
-  onOpen: (open: boolean) => void;
+  /**
+   * 打开状态变化时的回调函数
+   */
+  onOpenChange: (open: boolean) => void;
+  /**
+   * 对话框模式下的宽度 (Tailwind 类, e.g., 'sm:max-w-md', 'sm:max-w-lg') (可选)
+   * 默认为 sm:max-w-[465px] (接近 sm:max-w-md)
+   */
+  dialogClassName?: string;
+  /**
+   * 控制是否在移动端 (Drawer) 显示默认的页脚（包含一个取消按钮）
+   * @default true
+   */
+  showMobileFooter?: boolean;
 }
 
 export const ResponsiveModal = ({
-  width,
+  triggerButton,
   title,
   description,
-  triggerButton,
   children,
   open,
-  onOpen,
-  dropdownMenu = false,
+  onOpenChange,
+  dialogClassName = "sm:max-w-md",
+  showMobileFooter = true,
 }: ResponsiveModalProps) => {
+  // 使用 useMedia 或其他 hook 检测屏幕尺寸，ssr 时默认为 true (桌面)
   const isDesktop = useMedia("(min-width: 768px)", true);
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={onOpen}>
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogTrigger asChild>{triggerButton}</DialogTrigger>
-        <DialogContent className={`sm:max-w-[${width ?? 465}px]`}>
-          <DialogHeader>
+        {/* 应用传入的 Tailwind 宽度类 */}
+        <DialogContent className={cn("p-0", dialogClassName)}>
+          {/* 将 Header 移到 Content 内部以应用圆角 */}
+          <DialogHeader className="p-6 pb-4">
             <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description ?? ""}</DialogDescription>
+            {description && (
+              <DialogDescription>{description}</DialogDescription>
+            )}
           </DialogHeader>
-          {children}
+          {/* 内容区域添加内边距 */}
+          <div className="px-6 pb-6">{children}</div>
         </DialogContent>
       </Dialog>
     );
   }
 
-  if (dropdownMenu) {
-    return (
-      <DrawerContent>
-        <DrawerHeader className="text-left">
-          <DrawerTitle>{title}</DrawerTitle>
-          <DrawerDescription>{description ?? ""}</DrawerDescription>
-        </DrawerHeader>
-        {children}
-        <DrawerFooter className="pt-2">
-          <DrawerClose asChild>
-            <Button variant="outline">取消</Button>
-          </DrawerClose>
-        </DrawerFooter>
-      </DrawerContent>
-    );
-  }
-
   return (
-    <Drawer open={open} onOpenChange={onOpen}>
+    <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="text-left">
           <DrawerTitle>{title}</DrawerTitle>
-          <DrawerDescription>{description ?? ""}</DrawerDescription>
+          {description && <DrawerDescription>{description}</DrawerDescription>}
         </DrawerHeader>
-        {children}
-        <DrawerFooter className="pt-2">
-          <DrawerClose asChild>
-            <Button variant="outline">取消</Button>
-          </DrawerClose>
-        </DrawerFooter>
+        {/* 内容区域添加内边距 */}
+        <div className="px-4 pb-4">{children}</div>
+        {/* --- 条件渲染 Footer --- */}
+        {showMobileFooter && (
+          <DrawerFooter className="pt-2">
+            <DrawerClose asChild>
+              <Button variant="outline">取消</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        )}
       </DrawerContent>
     </Drawer>
   );

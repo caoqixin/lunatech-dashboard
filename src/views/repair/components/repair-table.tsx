@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import React from "react";
+import { useMemo } from "react";
 import { useDataTable } from "@/hooks/use-data-table";
 import { RepairWithCustomer } from "@/lib/types";
 import { repairColumn } from "@/views/repair/table/columns";
@@ -11,22 +11,31 @@ interface RepairTableProps {
   data: RepairWithCustomer[];
   count: number;
   isLoading?: boolean;
+  refetchData?: () => void;
 }
 
 export const RepairTable = ({
   data,
   count,
   isLoading = false,
+  refetchData,
 }: RepairTableProps) => {
-  const columns = React.useMemo<ColumnDef<RepairWithCustomer, unknown>[]>(
+  const columns = useMemo<ColumnDef<RepairWithCustomer, unknown>[]>(
     () => repairColumn,
     []
   );
+  const tableMeta = useMemo(
+    () => ({
+      onSuccess: refetchData, // Pass refetchData as onSuccess in meta
+    }),
+    [refetchData]
+  );
 
   const { table } = useDataTable({
-    data,
+    data: data ?? [],
     columns,
-    pageCount: Math.max(1, count),
+    pageCount: count ?? 0,
+    meta: tableMeta,
   });
 
   return (

@@ -3,26 +3,60 @@
 import { Badge } from "@/components/ui/badge";
 import { RepairWithCustomer } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
-import { ShowMoreProblemButton } from "@/views/repair/components/show-more-problem-button";
-import { TableSelectStatus } from "@/views/repair/components/table-select-status";
-import { RepairActionWrapper } from "@/views/repair/components/repair-action-wrapper";
-import { toEUR } from "@/lib/utils";
+
+import { capitalizeName, toEUR } from "@/lib/utils";
 import date from "@/lib/date";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Lazy load client components used in cells
+const LazyShowMoreProblemButton = dynamic(
+  () =>
+    import("@/views/repair/components/show-more-problem-button").then(
+      (mod) => mod.ShowMoreProblemButton
+    ),
+  { loading: () => <Skeleton className="h-7 w-10" />, ssr: false }
+);
+const LazyTableSelectStatus = dynamic(
+  () =>
+    import("@/views/repair/components/table-select-status").then(
+      (mod) => mod.TableSelectStatus
+    ),
+  { loading: () => <Skeleton className="h-8 w-28" />, ssr: false }
+);
+const LazyRepairActionWrapper = dynamic(
+  () =>
+    import("@/views/repair/components/repair-action-wrapper").then(
+      (mod) => mod.RepairActionWrapper
+    ),
+  {
+    loading: () => (
+      <div className="flex justify-end">
+        <Skeleton className="h-8 w-24" />
+      </div>
+    ),
+    ssr: false,
+  }
+);
 
 export const repairColumn: ColumnDef<RepairWithCustomer>[] = [
   {
     accessorKey: "customers.tel",
-    header: "联系方式",
-    cell: ({ getValue }) => {
-      const tel = getValue();
+    id: "customerTel",
+    header: "联系电话",
+    cell: ({ row }) => {
+      const name = row.original.customers?.name;
+      const tel = row.original.customers?.tel;
 
       return (
-        <span
-          className="font-semibold font-mono text-lg w-[10ch]
-         cursor-pointer"
-        >
-          {tel as string}
-        </span>
+        <div className="flex flex-col gap-y-0.5">
+          <span className="font-mono font-medium">{tel ?? "-"}</span>
+          {name && (
+            <span className="text-xs text-muted-foreground">
+              {capitalizeName(name)}
+            </span>
+          )}
+        </div>
       );
     },
   },
@@ -31,36 +65,35 @@ export const repairColumn: ColumnDef<RepairWithCustomer>[] = [
     header: () => {
       return <span className="text-nowrap">手机型号</span>;
     },
-    cell: ({ getValue }) => {
-      const phone = getValue();
-
-      return (
-        <span className="font-mono cursor-pointer">{phone as string}</span>
-      );
-    },
+    cell: ({ getValue }) => (
+      <div className="font-medium truncate max-w-[150px]">
+        {(getValue() as string) ?? "-"}
+      </div>
+    ),
   },
   {
     accessorKey: "problem",
     header: "维修故障",
     cell: ({ getValue, row }) => {
-      const problems = getValue() as string[];
+      const problems = getValue() as string[] | null;
+
+      if (!problems || problems.length === 0)
+        return (
+          <Badge variant="secondary" className="text-xs">
+            未指定
+          </Badge>
+        );
       return (
-        <div>
-          {problems ? (
-            problems.length > 1 ? (
-              <div className="flex gap-2 w-44">
-                <Badge variant="outline">{problems[0]}</Badge>
-                <ShowMoreProblemButton
-                  problems={problems}
-                  id={row.original.id}
-                  phone={row.original.phone}
-                />
-              </div>
-            ) : (
-              <Badge variant="outline">{problems[0]}</Badge>
-            )
-          ) : (
-            <Badge variant="outline">通用</Badge>
+        <div className="flex items-center flex-wrap gap-1 max-w-[200px]">
+          <Badge variant="outline" className="text-xs">
+            {problems[0]}
+          </Badge>
+          {problems.length > 1 && (
+            <LazyShowMoreProblemButton
+              problems={problems}
+              id={row.original.id}
+              phone={row.original.phone}
+            />
           )}
         </div>
       );
@@ -71,16 +104,18 @@ export const repairColumn: ColumnDef<RepairWithCustomer>[] = [
     header: () => {
       return <span className="text-nowrap">维修状态</span>;
     },
-    cell: ({ row, getValue }) => {
-      const value = getValue();
-      const { id, isRework } = row.original;
+    cell: ({ row, getValue, table }) => {
+      const tableMeta = table.options.meta as
+        | { onSuccess?: () => void }
+        | undefined;
 
       return (
-        <TableSelectStatus
-          key={id}
-          initialValue={value}
-          id={id}
-          isRework={isRework}
+        <LazyTableSelectStatus
+          key={row.original.id} // Key needed for state management within cell
+          initialValue={getValue()}
+          id={row.original.id}
+          isRework={row.original.isRework ?? false}
+          onSuccess={tableMeta?.onSuccess} // Pass onSuccess from meta
         />
       );
     },
@@ -90,27 +125,54 @@ export const repairColumn: ColumnDef<RepairWithCustomer>[] = [
     header: "更新时间",
     cell: ({ getValue }) => {
       const formatDate = date(getValue() as string).format("DD/MM/YYYY");
-      return <span className="font-mono text-sm">{formatDate}</span>;
-    },
-  },
-  {
-    header: "应付款",
-    cell: ({ row }) => {
-      const { deposit, price, isRework } = row.original;
-
-      const formattedNumber = toEUR(price - deposit);
-
       return (
-        <span className="font-mono font-bold text-lg text-left">
-          {!isRework && formattedNumber}
+        <span className="font-mono text-xs whitespace-nowrap">
+          {formatDate}
         </span>
       );
     },
   },
   {
-    id: "actions",
+    header: "应付款 (€)",
     cell: ({ row }) => {
-      return <RepairActionWrapper repair={row.original} />;
+      const { deposit, price, isRework } = row.original;
+
+      const amountDue = price - deposit;
+
+      return (
+        <div className="flex flex-col items-end gap-y-0.5">
+          <span className="font-mono font-semibold text-sm">
+            {toEUR(price)}
+          </span>
+          {/* Show deposit and due amount subtly */}
+          {!isRework && (
+            <>
+              <span className="text-xs text-muted-foreground">
+                订金: {toEUR(deposit)}
+              </span>
+              {amountDue > 0 && (
+                <span className="text-xs text-green-600 dark:text-green-400">
+                  应付: {toEUR(amountDue)}
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    id: "actions",
+    cell: ({ row, table }) => {
+      const tableMeta = table.options.meta as
+        | { onSuccess?: () => void }
+        | undefined;
+      return (
+        <LazyRepairActionWrapper
+          repair={row.original}
+          onSuccess={tableMeta?.onSuccess}
+        />
+      );
     },
   },
 ];

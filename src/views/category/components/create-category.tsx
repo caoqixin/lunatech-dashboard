@@ -9,7 +9,6 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 import { Loader, PlusIcon } from "lucide-react";
 import { ResponsiveModal } from "@/components/custom/responsive-modal";
@@ -29,11 +28,14 @@ import { createProblem } from "@/views/category/api/problem";
 
 interface CreateCategoryProps {
   type: CategoryType;
+  /**
+   * 创建成功后的回调函数 (可选)
+   */
+  onSuccess?: () => void;
 }
 
-export const CreateCategory = ({ type }: CreateCategoryProps) => {
+export const CreateCategory = ({ type, onSuccess }: CreateCategoryProps) => {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
   const form = useForm<Category>({
     resolver: zodResolver(CategorySchema),
     defaultValues: {
@@ -45,77 +47,70 @@ export const CreateCategory = ({ type }: CreateCategoryProps) => {
     formState: { isSubmitting },
   } = form;
 
+  const isComponent = type === CategoryType.COMPONENT;
+  const title = isComponent ? "新增配件分类" : "新增维修故障分类";
+  const label = isComponent ? "配件分类名称" : "维修故障名称";
+
+  const handleModalChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      form.reset(); // 关闭时重置表单
+    }
+  };
+
   const onSubmit = async (values: Category) => {
-    if (type === CategoryType.COMPONENT) {
-      const { msg, status } = await createComponentCategory(values);
-      if (status == "success") {
+    try {
+      const action = isComponent ? createComponentCategory : createProblem;
+      const { msg, status } = await action(values);
+      if (status === "success") {
         toast.success(msg);
-        setOpen(false);
-        form.reset();
-        router.refresh();
+        handleModalChange(false); // 关闭模态框
+        onSuccess?.(); // 调用成功回调
       } else {
         toast.error(msg);
       }
-    } else if (type === CategoryType.REPAIR) {
-      const { msg, status } = await createProblem(values);
-      if (status == "success") {
-        toast.success(msg);
-        setOpen(false);
-        form.reset();
-        router.refresh();
-      } else {
-        toast.error(msg);
-      }
+    } catch (error) {
+      toast.error("操作失败，请稍后重试。");
+      console.error("Create category error:", error);
     }
   };
 
   return (
     <ResponsiveModal
       open={open}
-      onOpen={setOpen}
+      onOpenChange={handleModalChange}
       triggerButton={
-        <Button className="text-xs md:text-sm">
-          <PlusIcon className="mr-2 h-4 w-4" />{" "}
-          {type === CategoryType.COMPONENT
-            ? "新增配件分类"
-            : "新增维修故障分类"}
+        <Button size="sm" className="text-xs md:text-sm">
+          <PlusIcon className="mr-1.5 size-4" /> {title}
         </Button>
       }
-      title={
-        type === CategoryType.COMPONENT ? "新增配件分类" : "新增维修故障分类"
-      }
+      title={title}
+      dialogClassName="sm:max-w-sm"
     >
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col gap-4"
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField
             control={form.control}
             name="name"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-2 mx-2">
-                <FormLabel className="text-nowrap flex h-full items-center justify-end">
-                  {type === CategoryType.COMPONENT
-                    ? "配件分类名称"
-                    : "维修故障名称"}
-                </FormLabel>
-                <div className="flex flex-col gap-1 w-full">
-                  <FormControl>
-                    <Input {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </div>
+              <FormItem>
+                <FormLabel>{label}</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder={`请输入${label}`}
+                    {...field}
+                    disabled={isSubmitting}
+                  />
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
 
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex gap-2 items-center mx-4"
-          >
-            {isSubmitting && <Loader className="animate-spin" />}
+          <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? (
+              <Loader className="mr-2 size-4 animate-spin" />
+            ) : null}
             添加
           </Button>
         </form>

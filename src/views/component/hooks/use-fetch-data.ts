@@ -1,31 +1,46 @@
-import { Option } from "@/components/custom/multi-selector";
-import { useState, useEffect } from "react";
+import type { Option } from "@/components/custom/multi-selector";
+import { useState, useEffect, useCallback } from "react";
+
+interface FetchDataResult {
+  data: Option[] | null;
+  isLoading: boolean;
+  error: string | null;
+}
 
 export const useFetchOptionData = (
   fetchFn: () => Promise<Option[]>,
   shouldFetch: boolean = true
-) => {
+): FetchDataResult => {
   const [data, setData] = useState<Option[] | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!shouldFetch) return;
-
-    async function loadData() {
-      setIsLoading(true);
-      try {
-        const result = await fetchFn();
-        setData(result.length > 0 ? result : null);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setData(null);
-      } finally {
-        setIsLoading(false);
-      }
+  const loadData = useCallback(async () => {
+    if (!shouldFetch) {
+      // Reset if fetch condition becomes false
+      setData(null); // Decide if you want to clear data when shouldFetch is false
+      setIsLoading(false);
+      setError(null);
+      return;
     }
 
-    loadData();
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await fetchFn();
+      setData(result ?? []); // Default to empty array if fetch returns null/undefined
+    } catch (error) {
+      console.error("Error fetching option data:", error);
+      setError("无法加载选项数据");
+      setData(null); // Set null on error
+    } finally {
+      setIsLoading(false);
+    }
   }, [shouldFetch, fetchFn]);
 
-  return { data, isLoading };
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  return { data, isLoading, error };
 };

@@ -1,112 +1,95 @@
-import { useRouter } from "next/navigation";
+"use client";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Loader, Trash } from "lucide-react";
+import { Loader, AlertTriangle } from "lucide-react";
 import { ResponsiveModal } from "@/components/custom/responsive-modal";
 import { deleteSupplier } from "@/views/supplier/api/supplier";
 
 import { Button } from "@/components/ui/button";
-import { Supplier } from "@/lib/types";
+import type { Supplier } from "@/lib/types";
 
 interface DeleteSupplierProps {
   supplier: Supplier;
-  isDropDownMenu?: boolean;
-  onCancel?: () => void;
+  triggerButton: React.ReactNode; // Expect trigger
+  onSuccess?: () => void; // Success callback
 }
 
 export const DeleteSupplier = ({
   supplier,
-  isDropDownMenu = false,
-  onCancel,
+  triggerButton,
+  onSuccess,
 }: DeleteSupplierProps) => {
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const router = useRouter();
+  const title = `删除供应商 ${supplier?.name ?? ""}`;
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    const { msg, status } = await deleteSupplier(supplier.id);
-
-    if (status == "success") {
-      toast.success(msg);
-      if (isDropDownMenu) {
-        onCancel?.();
+    try {
+      const { msg, status } = await deleteSupplier(supplier.id);
+      if (status === "success") {
+        toast.success(msg);
+        setOpen(false); // Close modal
+        onSuccess?.(); // Trigger refresh
       } else {
-        setOpen(false);
+        toast.error(msg);
       }
-      router.refresh();
-    } else {
-      toast.error(msg);
+    } catch (error) {
+      toast.error("删除失败，请稍后重试。");
+      console.error("Delete supplier error:", error);
+    } finally {
+      setIsDeleting(false);
     }
-
-    setIsDeleting(false);
   };
 
-  if (isDropDownMenu) {
-    return (
-      <ResponsiveModal
-        open={open}
-        onOpen={setOpen}
-        dropdownMenu={isDropDownMenu}
-        triggerButton={
-          <Button
-            variant="destructive"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <Trash className="size-4" /> 删除
-          </Button>
-        }
-        title={`删除${supplier.name}`}
-      >
-        <div className="flex flex-col space-y-4 mx-4">
-          <p className="text-red-600">
-            确定要删除供应商 [{supplier.name}] 吗?, 该操作是不可逆, 慎重考虑 !!!
-          </p>
-          <Button
-            variant="destructive"
-            className="flex w-full gap-2 items-center"
-            onClick={() => handleDelete()}
-          >
-            {isDeleting && <Loader className="animate-spin size-4" />}
-            确定
-          </Button>
-        </div>
-      </ResponsiveModal>
-    );
-  }
+  const handleModalChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      setIsDeleting(false); // Reset deleting state
+    }
+  };
 
   return (
     <ResponsiveModal
       open={open}
-      onOpen={setOpen}
-      triggerButton={
-        <Button
-          variant="destructive"
-          size="sm"
-          className="flex items-center gap-2"
-        >
-          <Trash className="size-4" /> 删除
-        </Button>
-      }
-      title={`删除${supplier.name}`}
+      onOpenChange={handleModalChange}
+      triggerButton={triggerButton} // Use passed trigger
+      title={title}
+      description="此操作不可逆，删除后供应商信息将无法恢复。" // Clear description
+      dialogClassName="sm:max-w-sm" // Limit width
+      showMobileFooter={false}
     >
-      <div className="flex flex-col space-y-4">
-        <p className="text-red-600">
-          确定要删除供应商 [{supplier.name}] 吗?, 该操作是不可逆, 慎重考虑 !!!
-        </p>
-        <div className="flex w-full justify-end gap-3">
-          <Button variant="outline" onClick={() => setOpen(false)}>
+      <div className="space-y-4">
+        {/* Warning message */}
+        <div className="flex items-start gap-3 rounded-md border border-destructive/50 bg-destructive/5 p-3 text-destructive">
+          <AlertTriangle className="size-5 flex-shrink-0 mt-0.5" />
+          <p className="text-sm ">
+            确定要永久删除供应商{" "}
+            <span className="font-semibold">
+              [{supplier?.name ?? "此供应商"}]
+            </span>{" "}
+            吗?
+          </p>
+        </div>
+        {/* Action buttons */}
+        <div className="flex w-full justify-end gap-3 pt-2">
+          <Button
+            variant="outline"
+            onClick={() => handleModalChange(false)}
+            disabled={isDeleting}
+          >
             取消
           </Button>
           <Button
             variant="destructive"
-            className="flex gap-2 items-center"
-            onClick={() => handleDelete()}
+            onClick={handleDelete}
+            disabled={isDeleting}
           >
-            {isDeleting && <Loader className="animate-spin size-4" />}
-            确定
+            {isDeleting ? (
+              <Loader className="mr-2 animate-spin size-4" />
+            ) : null}
+            确认删除
           </Button>
         </div>
       </div>

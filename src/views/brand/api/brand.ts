@@ -101,7 +101,7 @@ export async function deleteBrand(id: number): Promise<DataReturnType> {
   // 确认是否有手机型号存在
   const hasPhones = await fetchPhonesByBrandId(id);
 
-  if (hasPhones) {
+  if (hasPhones?.length > 0) {
     return {
       msg: `品牌删除失败, 失败原因: 该品牌下还有手机型号存在, 请删除手机型号后再试`,
       status: "error",

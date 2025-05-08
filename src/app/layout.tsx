@@ -21,14 +21,15 @@ export const metadata: Metadata = {
     template: "%s | Luna Tech",
     default: "Luna Tech",
   },
-  description: "个人手机维修店",
+  description: "Luna Tech 手机维修店后台管理系统", // 更清晰的描述
 };
 
 // 视口配置
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "white" },
-    { media: "(prefers-color-scheme: dark)", color: "#111827" },
+    // 根据你的 CSS 变量调整颜色值
+    { media: "(prefers-color-scheme: light)", color: "#f8f9fa" }, // 匹配 --background (light)
+    { media: "(prefers-color-scheme: dark)", color: "#111827" }, // 匹配 --background (dark) HSL(222 47% 11%)
   ],
   width: "device-width",
   initialScale: 1,
@@ -40,10 +41,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={inter.variable}>
-      <body
-        className={`min-h-screen bg-background font-sans antialiased ${inter.className}`}
-      >
+    <html
+      lang="zh-CN"
+      suppressHydrationWarning
+      className={`${inter.variable} font-sans`}
+    >
+      <body className="min-h-screen antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
