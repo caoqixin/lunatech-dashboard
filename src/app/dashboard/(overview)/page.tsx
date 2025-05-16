@@ -25,6 +25,8 @@ export default async function Page() {
     componentsPrice,
     revenue,
     topRepair,
+    productsStock,
+    productsTotalPrice,
   } = await fetchDashboardData();
 
   return (
@@ -38,6 +40,8 @@ export default async function Page() {
         stock={componentsStock}
         topList={topRepair}
         dataRevenue={revenue}
+        sellProductStock={productsStock}
+        sellProductTotalPrice={productsTotalPrice}
       />
     </Suspense>
   );

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Popover,
   PopoverTrigger,
@@ -27,6 +27,7 @@ interface DataSelectorProps {
   isLocked?: boolean;
   placeholder?: string;
   disabled?: boolean;
+  tabIndex?: number;
 }
 
 const DataSelector: React.FC<DataSelectorProps> = ({
@@ -37,9 +38,11 @@ const DataSelector: React.FC<DataSelectorProps> = ({
   isLocked = false,
   placeholder,
   disabled,
+  tabIndex,
 }) => {
+  const [open, setOpen] = useState(false);
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <FormControl>
           <Button
@@ -50,6 +53,7 @@ const DataSelector: React.FC<DataSelectorProps> = ({
               !selectedValue && "text-muted-foreground"
             )}
             disabled={isLocked || disabled}
+            tabIndex={tabIndex}
           >
             {selectedValue
               ? options &&
@@ -78,8 +82,13 @@ const DataSelector: React.FC<DataSelectorProps> = ({
                     onSelect={() => {
                       setValue(
                         fieldName,
-                        brand.name === selectedValue ? "" : brand.name
+                        brand.name === selectedValue ? "" : brand.name,
+                        {
+                          shouldDirty: true,
+                        }
                       );
+
+                      setOpen(false);
                     }}
                   >
                     {brand.name}

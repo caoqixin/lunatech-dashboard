@@ -31,3 +31,5 @@ export type Warranty = Database["public"]["Tables"]["warranties"]["Row"] & {
       })
     | null;
 };
+
+export type SellStock = Database["public"]["Tables"]["sell_stocks"]["Row"];

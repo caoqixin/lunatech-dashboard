@@ -17,6 +17,8 @@ interface DashboardPageProps {
   monthlyRepairs: DifferentData;
   componentsPrice: number;
   stock: number;
+  sellProductStock: number;
+  sellProductTotalPrice: number;
   topList: { name: string; count: number }[];
   dataRevenue: RevenueType[];
 }
@@ -40,6 +42,8 @@ export function DashboardPage({
   stock,
   topList,
   dataRevenue,
+  sellProductStock,
+  sellProductTotalPrice,
 }: DashboardPageProps) {
   // 使用useMemo缓存卡片数据
   const cardData = useMemo(
@@ -70,6 +74,12 @@ export function DashboardPage({
       },
       { title: "配件总价值", value: componentsPrice, type: "revenue" },
       { title: "库存总量", value: stock, type: "count" },
+      {
+        title: "前台配件总价值",
+        value: sellProductTotalPrice,
+        type: "revenue",
+      },
+      { title: "前台配件库存总量", value: sellProductStock, type: "count" },
     ],
     [
       annualyPrice,
