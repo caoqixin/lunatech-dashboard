@@ -11,6 +11,7 @@ import {
   Warehouse,
   Building2,
   PackageSearch,
+  ShoppingCart,
 } from "lucide-react";
 
 export const NAVIGATION_ITEMS = [
@@ -73,6 +74,12 @@ export const NAVIGATION_ITEMS = [
     label: "报价中心",
     href: "/",
     icon: Search,
+    target: "_blank",
+  },
+  {
+    label: "销售",
+    href: "/sell",
+    icon: ShoppingCart,
     target: "_blank",
   },
 ];
@@ -203,3 +210,23 @@ export const SELLABLE_ITEM_CATEGORIES: SellableItemCategory[] = [
   // --- 通用配件 ---
   { id: 99, name: "Accessori Vari", zh_alias: "其他配件/杂项" }, // 用于不好归类的
 ];
+
+export const SALES_KEY = "sales";
+export const MANUEL_PRODUCT_PREFIX = "MANUAL_";
+export const COOKIE_PREFERENCES_KEY = "cookie_preferences";
+
+// Dati del negozio (potrebbero venire da un CMS o file di configurazione in futuro)
+export const STORE_NAME = "Luna Tech";
+export const STORE_SLOGAN =
+  "Riparazioni rapide, accessori di qualità, consulenza esperta.";
+export const ADDRESS = "Via Ferrarese, 149/D, 40128 Bologna BO";
+export const PHONE_NUMBER = "+39 3314238522";
+export const EMAIL_ADDRESS = "mediatech012c@gmail.com";
+export const OPENING_HOURS = "Lun-Sab: 9:30-20:00";
+export const PRIVACY_POLICY_LINK = "/privacy-policy"; // Link alla tua pagina della privacy
+export const COOKIE_POLICY_LINK = "/cookie-policy"; // Link alla tua pagina dei cookie
+
+// DATI PER PRIVARY
+export const LAST_UPDATED = "19/05/2025";
+export const RAGIONE_SOCIALE = "MEDIATECH DI CAOQIXIN";
+export const SEDE_LEGALE = "VIA FERRARESE 149/D, 40128, BOLOGNA";

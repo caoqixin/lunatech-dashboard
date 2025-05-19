@@ -33,3 +33,6 @@ export type Warranty = Database["public"]["Tables"]["warranties"]["Row"] & {
 };
 
 export type SellStock = Database["public"]["Tables"]["sell_stocks"]["Row"];
+export type SaleRecords = Database["public"]["Tables"]["sales_records"]["Row"];
+export type SaleRecordItem =
+  Database["public"]["Tables"]["sale_record_items"]["Row"];

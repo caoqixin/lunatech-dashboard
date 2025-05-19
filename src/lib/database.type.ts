@@ -335,6 +335,81 @@ export type Database = {
           }
         ];
       };
+      sale_record_items: {
+        Row: {
+          created_at: string;
+          id: string;
+          item_name: string;
+          price_at_sale: number;
+          quantity_sold: number;
+          sales_record_id: string;
+          sellable_item_id: string | null;
+          subtotal: number;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          item_name: string;
+          price_at_sale: number;
+          quantity_sold: number;
+          sales_record_id: string;
+          sellable_item_id?: string | null;
+          subtotal: number;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          item_name?: string;
+          price_at_sale?: number;
+          quantity_sold?: number;
+          sales_record_id?: string;
+          sellable_item_id?: string | null;
+          subtotal?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sale_record_items_sales_record_id_fkey";
+            columns: ["sales_record_id"];
+            isOneToOne: false;
+            referencedRelation: "sales_records";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "sale_record_items_sellable_item_id_fkey";
+            columns: ["sellable_item_id"];
+            isOneToOne: false;
+            referencedRelation: "sell_stocks";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      sales_records: {
+        Row: {
+          created_at: string;
+          id: string;
+          items_count: number;
+          sold_at: string;
+          total_amount: number;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          items_count: number;
+          sold_at?: string;
+          total_amount: number;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          items_count?: number;
+          sold_at?: string;
+          total_amount?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       sell_stocks: {
         Row: {
           category: string | null;
@@ -477,6 +552,10 @@ export type Database = {
       countStock: {
         Args: Record<PropertyKey, never>;
         Returns: number;
+      };
+      decrementProductQuantity: {
+        Args: { item_id_to_update: string; quantity_to_decrement: number };
+        Returns: undefined;
       };
       getAnnuallyRepairPrice: {
         Args: { year?: number };

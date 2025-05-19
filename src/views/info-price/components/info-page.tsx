@@ -14,7 +14,15 @@ import { Navbar } from "@/components/layout/navbar";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchPhonesByName } from "@/views/phones/api/phone";
 import { fetchComponentsByPhoneName } from "@/views/component/api/component";
-import { CheckCircle, Loader, Search, Filter, X } from "lucide-react";
+import {
+  CheckCircle,
+  Loader,
+  Search,
+  Filter,
+  X,
+  ShoppingBasket,
+  ShoppingBag,
+} from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { gotoRepair } from "../api/price";
@@ -194,7 +202,22 @@ export const InfoPage = () => {
     <div className="flex min-h-screen w-full flex-col bg-background">
       {/* 假设此页面独立于 Dashboard 布局，需要自己的 Navbar */}
       {/* 如果是在 Dashboard 内部，移除这个 Navbar */}
-      <Navbar showBackButton={true} />
+      <Navbar
+        showBackButton={true}
+        customComponents={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              router.push("/sell");
+            }}
+            className="flex items-center gap-2"
+          >
+            <ShoppingBag className="size-4" />
+            销售单
+          </Button>
+        }
+      />
 
       {/* 主内容区域，使用更一致的内边距 */}
       <div className="container mx-auto flex-1 px-4 py-6 md:px-6 lg:px-8 lg:py-8">
