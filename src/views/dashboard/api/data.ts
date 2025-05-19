@@ -118,6 +118,25 @@ export async function fetchAllComponentsPrice() {
   return data ?? 0;
 }
 
+export async function fetchAllProductsStock() {
+  noStore();
+
+  const supabase = await createClient();
+
+  const { data } = await supabase.rpc("countSellProductStock");
+
+  return data ?? 0;
+}
+
+export async function fetchAllProductsPrice() {
+  noStore();
+
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("countSellProductTotalPrice");
+
+  return data ?? 0;
+}
+
 export async function fetchRevenue(year: number = date().year()) {
   noStore();
 
@@ -164,6 +183,8 @@ export async function fetchDashboardData() {
       componentsPrice,
       revenue,
       topRepair,
+      productsStock,
+      productsTotalPrice,
     ] = await Promise.all([
       fetchAnnualy(),
       fetchMonthly(),
@@ -173,6 +194,8 @@ export async function fetchDashboardData() {
       fetchAllComponentsPrice(),
       fetchRevenue(),
       fetchAllTopRepair(),
+      fetchAllProductsStock(),
+      fetchAllProductsPrice(),
     ]);
 
     return {
@@ -184,6 +207,8 @@ export async function fetchDashboardData() {
       componentsPrice,
       revenue,
       topRepair,
+      productsStock,
+      productsTotalPrice,
     };
   } catch (error) {
     console.error("Error fetching dashboard data:", error);

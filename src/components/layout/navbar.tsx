@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, memo, Fragment } from "react"; // 引入 Fragment
+import React, { useState, useEffect, memo, Fragment } from "react"; // 引入 Fragment
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { MobileNavigation } from "./mobile-sidebar";
@@ -13,11 +13,13 @@ import { cn } from "@/lib/utils";
 interface NavbarProps {
   showBackButton?: boolean;
   titleButton?: React.ReactNode; // 可以接受一个自定义节点作为标题区域
+  customComponents?: React.ReactNode;
 }
 
 export const Navbar = memo(function Navbar({
   showBackButton = false, // 默认不显示返回按钮
   titleButton,
+  customComponents,
 }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
@@ -83,6 +85,7 @@ export const Navbar = memo(function Navbar({
 
       {/* 右侧内容区域：主题切换、用户菜单 */}
       <div className="flex items-center gap-2">
+        {customComponents}
         <ModeToggle />
         <UserButton />
       </div>

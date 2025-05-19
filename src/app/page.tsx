@@ -6,7 +6,7 @@ import { InfoPage } from "@/views/info-price/components/info-page";
 
 export default async function RootPage() {
   if (!(await isLoggedIn())) {
-    redirect("/login");
+    redirect("/welcome");
   }
 
   return <InfoPage />;

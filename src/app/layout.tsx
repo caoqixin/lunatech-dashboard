@@ -5,9 +5,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Analytics } from "@vercel/analytics/react";
-
 import "./globals.css";
+import { CustomAnalystics } from "@/components/custom-analytics";
 
 // 加载字体并优化子集
 const inter = Inter({
@@ -57,7 +56,7 @@ export default function RootLayout({
           <Toaster position="top-center" closeButton richColors />
         </ThemeProvider>
         <SpeedInsights />
-        <Analytics />
+        <CustomAnalystics />
       </body>
     </html>
   );

@@ -7,6 +7,7 @@ import {
 } from "@/views/supplier/schema/supplier.schema";
 import { DataReturnType } from "@/lib/definitions";
 import { createClient } from "@/lib/supabase/server";
+import { Option } from "@/components/custom/multi-selector";
 
 export async function fetchSuppliers(params: SupplierSearchParams) {
   noStore();
@@ -22,6 +23,26 @@ export async function fetchSuppliers(params: SupplierSearchParams) {
     .order("id");
 
   return data ?? [];
+}
+
+export async function fetchSupplierOptions(): Promise<Option[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("suppliers")
+    .select("*")
+    .order("name");
+
+  if (error) throw error;
+
+  if (!data) {
+    return [];
+  }
+
+  return data.map((item) => ({
+    id: item.id,
+    name: item.name,
+  }));
 }
 
 export async function fetchSuppliersForCreateComponent() {
