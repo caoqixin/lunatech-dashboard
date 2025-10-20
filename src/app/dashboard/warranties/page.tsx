@@ -12,7 +12,6 @@ export interface WarrantyPageProps {
   searchParams: SearchParams;
 }
 
-export const runtime = "edge";
 export default async function Page({ searchParams }: WarrantyPageProps) {
   if (!(await isLoggedIn())) {
     redirect("/login");

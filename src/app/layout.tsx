@@ -5,7 +5,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 import "./globals.css";
-import { CustomAnalystics } from "@/components/custom-analytics";
 
 // 加载字体并优化子集
 const inter = Inter({
@@ -54,7 +53,6 @@ export default function RootLayout({
           {children}
           <Toaster position="top-center" closeButton richColors />
         </ThemeProvider>
-        <CustomAnalystics />
       </body>
     </html>
   );

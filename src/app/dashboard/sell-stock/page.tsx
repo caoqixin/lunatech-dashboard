@@ -18,8 +18,6 @@ export interface SellStockPageProps {
   searchParams: SearchParams;
 }
 
-export const runtime = "edge";
-
 export default async function Page({ searchParams }: SellStockPageProps) {
   if (!(await isLoggedIn())) {
     redirect("/login");

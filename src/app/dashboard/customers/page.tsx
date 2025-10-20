@@ -13,8 +13,6 @@ export interface CustomerPageProps {
   searchParams: SearchParams;
 }
 
-export const runtime = "edge";
-
 export default async function Page({ searchParams }: CustomerPageProps) {
   if (!(await isLoggedIn())) {
     redirect("/login");
