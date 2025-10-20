@@ -61,6 +61,8 @@ async function fetchCategoryData(
   }
 }
 
+export const runtime = "edge";
+
 export default async function Page({ searchParams }: CategoryPageProps) {
   if (!(await isLoggedIn())) {
     redirect("/login");

@@ -12,6 +12,9 @@ export const metadata: Metadata = {
 export interface SupplierPageProps {
   searchParams: SearchParams;
 }
+
+export const runtime = "edge";
+
 export default async function Page({ searchParams }: SupplierPageProps) {
   if (!(await isLoggedIn())) {
     redirect("/login");

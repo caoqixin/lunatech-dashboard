@@ -13,6 +13,8 @@ export interface OrderPageProps {
   searchParams: SearchParams;
 }
 
+export const runtime = "edge";
+
 export default async function Page({ searchParams }: OrderPageProps) {
   if (!(await isLoggedIn())) {
     redirect("/login");

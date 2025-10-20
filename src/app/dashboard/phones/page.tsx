@@ -15,6 +15,8 @@ interface PageProps {
   searchParams: BrandSearch;
 }
 
+export const runtime = "edge";
+
 export default async function Page({ searchParams }: PageProps) {
   if (!(await isLoggedIn())) {
     redirect("/login");

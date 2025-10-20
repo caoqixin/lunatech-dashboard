@@ -14,6 +14,7 @@ export interface PhonePageProps {
     brandId: string;
   };
 }
+export const runtime = "edge";
 
 // --- Server-side Data Fetching Functions ---
 async function safeFetchBrandTitleById(

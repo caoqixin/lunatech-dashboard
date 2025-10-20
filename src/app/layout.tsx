@@ -4,7 +4,6 @@ import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { CustomAnalystics } from "@/components/custom-analytics";
 
@@ -55,7 +54,6 @@ export default function RootLayout({
           {children}
           <Toaster position="top-center" closeButton richColors />
         </ThemeProvider>
-        <SpeedInsights />
         <CustomAnalystics />
       </body>
     </html>

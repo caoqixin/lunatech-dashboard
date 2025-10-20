@@ -14,6 +14,9 @@ export const metadata: Metadata = {
 export interface RepairPageProps {
   searchParams: SearchParams;
 }
+
+export const runtime = "edge";
+
 export default async function Page({ searchParams }: RepairPageProps) {
   if (!(await isLoggedIn())) {
     redirect("/login");

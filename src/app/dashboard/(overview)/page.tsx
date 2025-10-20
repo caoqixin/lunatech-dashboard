@@ -10,6 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 // 指定为动态渲染
 export const dynamic = "force-dynamic";
 
+export const runtime = "edge";
+
 export default async function Page() {
   if (!(await isLoggedIn())) {
     redirect("/login");
